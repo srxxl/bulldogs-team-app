@@ -2,14 +2,22 @@
 
 import { and, eq, max } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { forbidden } from "next/navigation";
 import { z } from "zod";
 import { type ActionResult, fail, ok } from "@/lib/action-result";
 import { blank, parseForm } from "@/lib/form";
-import { canModerate } from "@/lib/roles";
-import { requireRole } from "@/server/auth/session";
+import { canModerate, canPlanSessions } from "@/lib/roles";
+import { requireMember } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { drill, sessionDrill } from "@/server/db/schema";
 import { getEvent } from "@/server/queries/events";
+
+/** Captains, coaches and admins plan sessions; everyone else gets a 403. */
+async function requirePlanner() {
+  const me = await requireMember();
+  if (!canPlanSessions(me)) forbidden();
+  return me;
+}
 
 const refresh = (eventId: string) => {
   revalidatePath(`/fixture/${eventId}`);
@@ -45,7 +53,7 @@ const drillSchema = z.object({
 
 /** Writes a new drill into the catalog and adds it to this session. */
 export async function createDrill(_prev: unknown, formData: FormData): Promise<ActionResult> {
-  const me = await requireRole("captain");
+  const me = await requirePlanner();
   const parsed = parseForm(drillSchema, formData);
   if ("error" in parsed) return parsed.error;
   const { eventId, ...values } = parsed.data;
@@ -61,7 +69,7 @@ export async function createDrill(_prev: unknown, formData: FormData): Promise<A
 }
 
 export async function addDrillToSession(eventId: string, drillId: string): Promise<ActionResult> {
-  await requireRole("captain");
+  await requirePlanner();
   if (!(await trainingSession(eventId))) return fail("That training session doesn't exist");
   await append(eventId, drillId);
   refresh(eventId);
@@ -69,7 +77,7 @@ export async function addDrillToSession(eventId: string, drillId: string): Promi
 }
 
 export async function removeDrillFromSession(eventId: string, drillId: string): Promise<ActionResult> {
-  await requireRole("captain");
+  await requirePlanner();
   await db.delete(sessionDrill).where(and(eq(sessionDrill.eventId, eventId), eq(sessionDrill.drillId, drillId)));
   refresh(eventId);
   return ok("Drill removed from this session");
@@ -77,7 +85,7 @@ export async function removeDrillFromSession(eventId: string, drillId: string): 
 
 /** Saves a new running order for the session's drills. */
 export async function reorderSessionDrills(eventId: string, drillIds: string[]): Promise<ActionResult> {
-  await requireRole("captain");
+  await requirePlanner();
   await db.transaction(async (tx) => {
     for (const [position, drillId] of drillIds.entries()) {
       await tx
@@ -92,7 +100,7 @@ export async function reorderSessionDrills(eventId: string, drillIds: string[]):
 
 /** Removes a drill from the catalog (and every session). Authors, coaches and admins only. */
 export async function deleteDrill(drillId: string): Promise<ActionResult> {
-  const me = await requireRole("captain");
+  const me = await requirePlanner();
   const where = canModerate(me) ? eq(drill.id, drillId) : and(eq(drill.id, drillId), eq(drill.authorId, me.id));
   const [gone] = await db.delete(drill).where(where).returning({ id: drill.id });
   if (!gone) return fail("You can only delete drills you wrote");

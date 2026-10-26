@@ -6,7 +6,7 @@ import { RsvpButtons } from "@/components/rsvp-buttons";
 import { SessionPlan } from "@/components/session-plan";
 import { ButtonLink, Chip, Panel, SectionTitle } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { canLead } from "@/lib/roles";
+import { canLead, canPlanSessions } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
@@ -39,7 +39,7 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
     isGame ? getPastGamesAgainst(ev.opponent as string, ev.startsAt) : [],
     isGame ? getLadder() : [],
     isTraining ? getSessionDrills(id) : [],
-    isTraining && canLead(me.role) ? getDrillCatalog() : [],
+    isTraining && canPlanSessions(me) ? getDrillCatalog() : [],
   ]);
   const mine = rsvps.find((r) => r.userId === me.id)?.status ?? null;
   const upcoming = (ev.endsAt ?? ev.startsAt) > new Date();
@@ -221,7 +221,9 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
         </div>
       </div>
 
-      {isTraining && <SessionPlan eventId={id} drills={sessionDrills} catalog={catalog} editable={canLead(me.role)} />}
+      {isTraining && (
+        <SessionPlan eventId={id} drills={sessionDrills} catalog={catalog} editable={canPlanSessions(me)} />
+      )}
     </div>
   );
 }

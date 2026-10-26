@@ -7,6 +7,8 @@ export const hasRole = (role: Role, atLeast: Role) => RANK[role] >= RANK[atLeast
 export const canLead = (role: Role) => hasRole(role, "captain");
 /** Coaches only: the vote tally and the anonymous notes inbox. Admins don't get these. */
 export const isCoach = (role: Role) => role === "coach";
+/** Plan training sessions (add, order and remove drills): captains, coaches and admins. */
+export const canPlanSessions = (me: { role: Role; isAdmin: boolean }) => me.isAdmin || canLead(me.role);
 /** Remove anyone's pins and notes: coaches and admins. */
 export const canModerate = (me: { role: Role; isAdmin: boolean }) => me.isAdmin || isCoach(me.role);
 
