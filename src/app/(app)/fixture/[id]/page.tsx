@@ -118,8 +118,6 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
         </div>
       </header>
 
-      {isTraining && <SessionPlan eventId={id} drills={sessionDrills} catalog={catalog} editable={canLead(me.role)} />}
-
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <Panel>
           <SectionTitle>{upcoming ? "Who's coming" : "Who said they'd come"}</SectionTitle>
@@ -222,6 +220,8 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
           )}
         </div>
       </div>
+
+      {isTraining && <SessionPlan eventId={id} drills={sessionDrills} catalog={catalog} editable={canLead(me.role)} />}
     </div>
   );
 }
