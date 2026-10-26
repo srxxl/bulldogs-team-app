@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { type ActionResult, fail, ok } from "@/lib/action-result";
 import { blank, parseForm } from "@/lib/form";
-import { canLead, canModerate } from "@/lib/roles";
+import { canModerate } from "@/lib/roles";
 import { perthToday } from "@/lib/time";
 import { requireMember, requireRole } from "@/server/auth/session";
 import { db } from "@/server/db";
@@ -43,7 +43,7 @@ export async function deleteNote(id: string): Promise<ActionResult> {
   return ok("Note deleted");
 }
 
-/* Pins (fitness / nutrition / drills) ------------------------------------- */
+/* Pins (fitness / nutrition boards) ------------------------------------- */
 
 const pinSchema = z.object({
   board: z.enum(boardEnum.enumValues),
@@ -57,12 +57,11 @@ export async function createPin(_prev: unknown, formData: FormData): Promise<Act
   const me = await requireMember();
   const parsed = parseForm(pinSchema, formData);
   if ("error" in parsed) return parsed.error;
-  if (parsed.data.board === "drills" && !canLead(me.role)) return fail("Only coaches and captains add drills");
   const image = await storeImage(formData.get("image"), "pins");
   if (image && "error" in image) return fail(image.error, { image: [image.error] });
 
   await db.insert(pin).values({ ...parsed.data, authorId: me.id, imageUrl: image?.url });
-  revalidatePath(parsed.data.board === "drills" ? "/training/drills" : `/boards/${parsed.data.board}`);
+  revalidatePath(`/boards/${parsed.data.board}`);
   return ok("Pinned");
 }
 
@@ -71,7 +70,7 @@ export async function deletePin(id: string): Promise<ActionResult> {
   const where = canModerate(me) ? eq(pin.id, id) : and(eq(pin.id, id), eq(pin.authorId, me.id));
   const [deleted] = await db.delete(pin).where(where).returning({ board: pin.board });
   if (!deleted) return fail("You can only remove your own pins");
-  revalidatePath(deleted.board === "drills" ? "/training/drills" : `/boards/${deleted.board}`);
+  revalidatePath(`/boards/${deleted.board}`);
   return ok("Removed");
 }
 

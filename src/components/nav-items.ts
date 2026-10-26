@@ -1,7 +1,6 @@
 import {
   Apple,
   CalendarDays,
-  ClipboardList,
   Dumbbell,
   Home,
   type LucideIcon,
@@ -40,7 +39,6 @@ export const ALL: NavItem[] = [
   { href: "/fixture", label: "Fixture", icon: CalendarDays },
   { href: "/ladder", label: "Ladder", icon: Trophy },
   { href: "/training", label: "Training", icon: Dumbbell },
-  { href: "/training/drills", label: "Drills", icon: ClipboardList },
   { href: "/squad", label: "Squad", icon: Users },
   { href: "/notes", label: "Coach's notes", icon: NotebookPen },
   { href: "/boards/fitness", label: "Fitness board", icon: Dumbbell },

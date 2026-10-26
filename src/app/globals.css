@@ -428,3 +428,10 @@ dialog::backdrop {
     opacity: 0;
   }
 }
+/* The eye patch belongs to the dog's left eye: hidden when we see its right side (facing left). */
+.mascot .m-patch {
+  opacity: 0;
+}
+.mascot-right .m-patch {
+  opacity: 1;
+}

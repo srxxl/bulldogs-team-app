@@ -228,7 +228,7 @@ export const note = pgTable(
   (t) => [index().on(t.createdAt)],
 );
 
-export const boardEnum = pgEnum("board", ["fitness", "nutrition", "drills"]);
+export const boardEnum = pgEnum("board", ["fitness", "nutrition"]);
 
 export const pin = pgTable(
   "pin",
@@ -246,6 +246,39 @@ export const pin = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index().on(t.board, t.createdAt)],
+);
+
+/** Drill catalog: every drill a coach or captain writes, reusable across sessions. */
+export const drill = pgTable(
+  "drill",
+  {
+    id: id(),
+    authorId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text().notNull(),
+    howTo: text(),
+    minutes: smallint(),
+    focus: text(),
+    link: text(),
+    createdAt: createdAt(),
+  },
+  (t) => [index().on(t.title)],
+);
+
+/** The ordered drills planned for one training session. */
+export const sessionDrill = pgTable(
+  "session_drill",
+  {
+    eventId: text()
+      .notNull()
+      .references(() => event.id, { onDelete: "cascade" }),
+    drillId: text()
+      .notNull()
+      .references(() => drill.id, { onDelete: "cascade" }),
+    position: smallint().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.drillId] }), index().on(t.eventId, t.position)],
 );
 
 export const feedbackKindEnum = pgEnum("feedback_kind", ["reflection", "suggestion", "shoutout"]);
@@ -310,3 +343,4 @@ export type Board = (typeof boardEnum.enumValues)[number];
 export type FeedbackKind = (typeof feedbackKindEnum.enumValues)[number];
 export type EventRow = typeof event.$inferSelect;
 export type LadderRow = typeof ladderRow.$inferSelect;
+export type DrillRow = typeof drill.$inferSelect;

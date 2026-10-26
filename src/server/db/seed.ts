@@ -133,15 +133,18 @@ async function main() {
     kind: t.event.kind,
   });
 
-  await db.insert(t.event).values(
-    upcomingTrainingSlots(now, 14).map((s) => ({
-      kind: "training" as const,
-      title: "Training",
-      ...s,
-      venueName: TRAINING.venueName,
-      venueAddress: TRAINING.venueAddress,
-    })),
-  );
+  const trainingIds = await db
+    .insert(t.event)
+    .values(
+      upcomingTrainingSlots(now, 14).map((s) => ({
+        kind: "training" as const,
+        title: "Training",
+        ...s,
+        venueName: TRAINING.venueName,
+        venueAddress: TRAINING.venueAddress,
+      })),
+    )
+    .returning({ id: t.event.id, startsAt: t.event.startsAt });
   await db.insert(t.appSetting).values([
     { key: "training_enabled", value: true },
     {
@@ -239,21 +242,60 @@ async function main() {
       body: "The AFL's Prep to Play program. 15 minutes, cuts knee injuries a lot.",
       tag: "Injury prevention",
     },
-    {
-      board: "drills",
-      authorId: users[0].id,
-      title: "Kick to advantage",
-      body: "Pairs, 25m. Leading player calls a side, kicker has to hit that side. Swap after 10.",
-      tag: "Skills",
-    },
-    {
-      board: "drills",
-      authorId: users[0].id,
-      title: "Stoppage 3v3",
-      body: "Coach bounces. Ruck taps to a call, mids work on blocking and first possession.",
-      tag: "Contested",
-    },
   ]);
+  const catalog = await db
+    .insert(t.drill)
+    .values([
+      {
+        authorId: users[0].id,
+        title: "Dynamic warm-up",
+        minutes: 10,
+        focus: "Warm-up",
+        howTo: "Jog laps, high knees, butt kicks, leg swings, then Prep to Play hops and landings.",
+      },
+      {
+        authorId: users[0].id,
+        title: "Kick to advantage",
+        minutes: 15,
+        focus: "Skills",
+        howTo: "Pairs, 25m. Leading player calls a side, kicker has to hit that side. Swap after 10.",
+      },
+      {
+        authorId: users[0].id,
+        title: "Stoppage 3v3",
+        minutes: 15,
+        focus: "Contested",
+        howTo: "Coach bounces. Ruck taps to a call, mids work on blocking and first possession.",
+      },
+      {
+        authorId: users[1].id,
+        title: "Handball circle",
+        minutes: 10,
+        focus: "Skills",
+        howTo: "Circle of 8 with two balls. Call a name, handball, follow your ball to their spot.",
+      },
+      {
+        authorId: users[0].id,
+        title: "Kick-in to the wing",
+        minutes: 15,
+        focus: "Match sim",
+        howTo: "Backs set up the kick-in; mids lead to the wing. Run it three times each side.",
+      },
+      {
+        authorId: users[0].id,
+        title: "Goal kicking from 30m",
+        minutes: 10,
+        focus: "Skills",
+        howTo: "Two lines on the 30m arc, one each side. Three shots each, then rotate.",
+        link: "https://www.afl.com.au/",
+      },
+    ])
+    .returning({ id: t.drill.id });
+  if (trainingIds[0]) {
+    await db
+      .insert(t.sessionDrill)
+      .values([0, 1, 2, 5].map((n, position) => ({ eventId: trainingIds[0].id, drillId: catalog[n].id, position })));
+  }
   await db.insert(t.feedback).values([
     {
       kind: "suggestion",

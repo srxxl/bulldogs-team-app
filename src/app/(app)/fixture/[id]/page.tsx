@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { RsvpButtons } from "@/components/rsvp-buttons";
+import { SessionPlan } from "@/components/session-plan";
 import { ButtonLink, Chip, Panel, SectionTitle } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { canLead } from "@/lib/roles";
@@ -11,6 +12,7 @@ import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
 import { getLadder } from "@/server/queries/content";
+import { getDrillCatalog, getSessionDrills } from "@/server/queries/drills";
 import { getEvent, getPastGamesAgainst, getRsvps } from "@/server/queries/events";
 
 export async function generateMetadata({ params }: PageProps<"/fixture/[id]">): Promise<Metadata> {
@@ -31,10 +33,13 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
   if (!ev) notFound();
 
   const isGame = ev.kind === "game" && ev.opponent;
-  const [rsvps, history, ladder] = await Promise.all([
+  const isTraining = ev.kind === "training";
+  const [rsvps, history, ladder, sessionDrills, catalog] = await Promise.all([
     getRsvps(id),
     isGame ? getPastGamesAgainst(ev.opponent as string, ev.startsAt) : [],
     isGame ? getLadder() : [],
+    isTraining ? getSessionDrills(id) : [],
+    isTraining && canLead(me.role) ? getDrillCatalog() : [],
   ]);
   const mine = rsvps.find((r) => r.userId === me.id)?.status ?? null;
   const upcoming = (ev.endsAt ?? ev.startsAt) > new Date();
@@ -112,6 +117,8 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
           )}
         </div>
       </header>
+
+      {isTraining && <SessionPlan eventId={id} drills={sessionDrills} catalog={catalog} editable={canLead(me.role)} />}
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <Panel>

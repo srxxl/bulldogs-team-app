@@ -10,7 +10,7 @@ import { ALL, PRIMARY, visibleNav } from "./nav-items";
 const isActive = (pathname: string, href: string) =>
   href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
-/** The most specific nav entry wins, so /training/drills doesn't also light up Training. */
+/** The most specific nav entry wins, so /boards/fitness doesn't also light up a parent entry. */
 function activeHref(pathname: string, hrefs: string[]) {
   return hrefs.filter((h) => isActive(pathname, h)).sort((a, b) => b.length - a.length)[0];
 }

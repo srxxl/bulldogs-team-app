@@ -1,5 +1,5 @@
 CREATE TYPE "public"."availability_status" AS ENUM('yes', 'maybe', 'no');--> statement-breakpoint
-CREATE TYPE "public"."board" AS ENUM('fitness', 'nutrition', 'drills');--> statement-breakpoint
+CREATE TYPE "public"."board" AS ENUM('fitness', 'nutrition');--> statement-breakpoint
 CREATE TYPE "public"."event_kind" AS ENUM('game', 'training', 'social', 'other');--> statement-breakpoint
 CREATE TYPE "public"."feedback_kind" AS ENUM('reflection', 'suggestion', 'shoutout');--> statement-breakpoint
 CREATE TYPE "public"."position" AS ENUM('defender', 'midfielder', 'ruck', 'forward', 'utility');--> statement-breakpoint
@@ -33,6 +33,17 @@ CREATE TABLE "availability" (
 	"note" text,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "availability_event_id_user_id_pk" PRIMARY KEY("event_id","user_id")
+);
+--> statement-breakpoint
+CREATE TABLE "drill" (
+	"id" text PRIMARY KEY NOT NULL,
+	"author_id" text NOT NULL,
+	"title" text NOT NULL,
+	"how_to" text,
+	"minutes" smallint,
+	"focus" text,
+	"link" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "event" (
@@ -139,6 +150,13 @@ CREATE TABLE "session" (
 	CONSTRAINT "session_token_unique" UNIQUE("token")
 );
 --> statement-breakpoint
+CREATE TABLE "session_drill" (
+	"event_id" text NOT NULL,
+	"drill_id" text NOT NULL,
+	"position" smallint NOT NULL,
+	CONSTRAINT "session_drill_event_id_drill_id_pk" PRIMARY KEY("event_id","drill_id")
+);
+--> statement-breakpoint
 CREATE TABLE "user" (
 	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
@@ -175,6 +193,7 @@ CREATE TABLE "vote" (
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "availability" ADD CONSTRAINT "availability_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "availability" ADD CONSTRAINT "availability_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "drill" ADD CONSTRAINT "drill_author_id_user_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "feedback" ADD CONSTRAINT "feedback_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "lineup_slot" ADD CONSTRAINT "lineup_slot_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "lineup_slot" ADD CONSTRAINT "lineup_slot_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -182,10 +201,13 @@ ALTER TABLE "note" ADD CONSTRAINT "note_author_id_user_id_fk" FOREIGN KEY ("auth
 ALTER TABLE "pin" ADD CONSTRAINT "pin_author_id_user_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "player_profile" ADD CONSTRAINT "player_profile_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "session_drill" ADD CONSTRAINT "session_drill_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "session_drill" ADD CONSTRAINT "session_drill_drill_id_drill_id_fk" FOREIGN KEY ("drill_id") REFERENCES "public"."drill"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "vote" ADD CONSTRAINT "vote_event_id_event_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."event"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "vote" ADD CONSTRAINT "vote_voter_id_user_id_fk" FOREIGN KEY ("voter_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "vote" ADD CONSTRAINT "vote_nominee_id_user_id_fk" FOREIGN KEY ("nominee_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "account_user_id_index" ON "account" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "drill_title_index" ON "drill" USING btree ("title");--> statement-breakpoint
 CREATE INDEX "event_starts_at_index" ON "event" USING btree ("starts_at");--> statement-breakpoint
 CREATE INDEX "event_kind_starts_at_index" ON "event" USING btree ("kind","starts_at");--> statement-breakpoint
 CREATE INDEX "event_opponent_index" ON "event" USING btree ("opponent");--> statement-breakpoint
@@ -194,6 +216,7 @@ CREATE INDEX "note_created_at_index" ON "note" USING btree ("created_at");--> st
 CREATE INDEX "pin_board_created_at_index" ON "pin" USING btree ("board","created_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "player_profile_guernsey_index" ON "player_profile" USING btree ("guernsey");--> statement-breakpoint
 CREATE INDEX "session_user_id_index" ON "session" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "session_drill_event_id_position_index" ON "session_drill" USING btree ("event_id","position");--> statement-breakpoint
 CREATE INDEX "verification_identifier_index" ON "verification" USING btree ("identifier");--> statement-breakpoint
 CREATE UNIQUE INDEX "vote_event_id_voter_id_nominee_id_index" ON "vote" USING btree ("event_id","voter_id","nominee_id");--> statement-breakpoint
 CREATE INDEX "vote_nominee_id_index" ON "vote" USING btree ("nominee_id");
