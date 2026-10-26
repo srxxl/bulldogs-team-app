@@ -46,6 +46,7 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       role: { type: "string", input: false, defaultValue: "pending" },
+      isAdmin: { type: "boolean", input: false, defaultValue: false },
     },
   },
   session: {
@@ -56,10 +57,10 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user) => ({
-          data: {
-            ...user,
-            role: adminEmails.has(user.email.toLowerCase()) ? "admin" : "pending",
-          },
+          // People in ADMIN_EMAILS join as approved players who also run the app.
+          data: adminEmails.has(user.email.toLowerCase())
+            ? { ...user, role: "player", isAdmin: true }
+            : { ...user, role: "pending", isAdmin: false },
         }),
       },
     },

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { EventForm } from "@/components/event-form";
 import { PageHeader } from "@/components/ui";
-import { requireRole } from "@/server/auth/session";
+import { requireAdmin } from "@/server/auth/session";
 
 export const metadata: Metadata = { title: "Add event" };
 
 export default async function NewEventPage() {
-  await requireRole("coach");
+  await requireAdmin();
   return (
     <>
       <PageHeader title="Add event" />

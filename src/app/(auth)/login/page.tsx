@@ -36,7 +36,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <div className="w-full max-w-sm">
           <h2 className="text-4xl font-extrabold text-navy">Sign in</h2>
           <p className="mt-2 mb-8 text-ink/70">
-            Use the account you play with. New here? Sign in and a coach will let you in.
+            Use the account you play with. New here? Sign in and the team admin will let you in.
           </p>
           <SignInButtons providers={enabledProviders} next={next} />
           {devLoginEnabled && <DevSignIn next={next} />}

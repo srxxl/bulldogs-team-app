@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { hasRole } from "@/lib/roles";
 import type { Role } from "@/server/db/schema";
 import { Avatar } from "./avatar";
-import { ALL, PRIMARY } from "./nav-items";
+import { ALL, PRIMARY, visibleNav } from "./nav-items";
 
 const isActive = (pathname: string, href: string) =>
   href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -18,17 +17,19 @@ function activeHref(pathname: string, hrefs: string[]) {
 
 export function SideNav({
   role,
+  isAdmin,
   name,
   image,
   crest,
 }: {
   role: Role;
+  isAdmin: boolean;
   name: string;
   image: string | null;
   crest: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const items = ALL.filter((i) => !i.minRole || hasRole(role, i.minRole));
+  const items = visibleNav(ALL, { role, isAdmin });
   const current = activeHref(
     pathname,
     items.map((i) => i.href),

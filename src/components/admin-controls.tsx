@@ -8,6 +8,7 @@ import {
   importLadder,
   removeMember,
   runPlayHqSync,
+  setAdmin,
   setRole,
   setSeasonStart,
   setTrainingEnabled,
@@ -16,7 +17,7 @@ import type { Role } from "@/server/db/schema";
 import { Field, FormMessage, Input, Select, SubmitButton, Textarea } from "./forms";
 import { Button } from "./ui";
 
-const ROLES: Role[] = ["pending", "player", "captain", "coach", "admin"];
+const ROLES: Role[] = ["pending", "player", "captain", "coach"];
 
 function useAction() {
   const [pending, start] = useTransition();
@@ -44,12 +45,13 @@ export function ApproveButtons({ userId }: { userId: string }) {
   );
 }
 
-export function RoleSelect({ userId, role, canRemove }: { userId: string; role: Role; canRemove: boolean }) {
+/** Team role, admin access and removal for one member. */
+export function MemberControls({ userId, role, isAdmin }: { userId: string; role: Role; isAdmin: boolean }) {
   const { pending, result, run } = useAction();
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Select
-        aria-label="Role"
+        aria-label="Team role"
         defaultValue={role}
         disabled={pending}
         onChange={(e) => run(() => setRole(userId, e.target.value as Role))}
@@ -61,17 +63,25 @@ export function RoleSelect({ userId, role, canRemove }: { userId: string; role: 
           </option>
         ))}
       </Select>
-      {canRemove && (
-        <button
-          type="button"
-          aria-label="Remove member"
+      <label className="flex min-h-10 items-center gap-2 rounded-xl px-2 text-sm font-medium">
+        <input
+          type="checkbox"
+          className="size-5 accent-navy"
+          defaultChecked={isAdmin}
           disabled={pending}
-          onClick={() => confirm("Remove this member and all their data?") && run(() => removeMember(userId))}
-          className="grid size-10 place-items-center rounded-xl text-ink/40 hover:bg-mist hover:text-red"
-        >
-          <Trash2 size={16} />
-        </button>
-      )}
+          onChange={(e) => run(() => setAdmin(userId, e.target.checked))}
+        />
+        Admin
+      </label>
+      <button
+        type="button"
+        aria-label="Remove member"
+        disabled={pending}
+        onClick={() => confirm("Remove this member and all their data?") && run(() => removeMember(userId))}
+        className="grid size-10 place-items-center rounded-xl text-ink/40 hover:bg-mist hover:text-red"
+      >
+        <Trash2 size={16} />
+      </button>
       {result && !result.ok && <span className="text-sm text-red">{result.error}</span>}
     </div>
   );

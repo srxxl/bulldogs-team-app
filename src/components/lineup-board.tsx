@@ -16,7 +16,7 @@ import {
 import { RotateCcw, Save } from "lucide-react";
 import { useId, useMemo, useState, useTransition } from "react";
 import { cn } from "@/lib/cn";
-import { BENCH_SLOTS, FIELD_SLOTS } from "@/lib/positions";
+import { BENCH_SLOTS, FIELD_SLOTS, fieldPosition, GROUND, MARKER } from "@/lib/positions";
 import { saveLineup } from "@/server/actions/lineup";
 import type { AvailabilityStatus, Position } from "@/server/db/schema";
 import { Avatar } from "./avatar";
@@ -136,24 +136,22 @@ export function LineupBoard({
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div>
         <Oval>
-          <div className="relative grid grid-rows-6 gap-y-2 px-3 py-10 sm:px-10">
-            {[0, 1, 2, 3, 4, 5].map((row) => (
-              <div key={row} className="grid grid-cols-3 gap-2 sm:gap-4">
-                {FIELD_SLOTS.filter((s) => s.row === row).map((s) => (
-                  <Slot
-                    key={s.id}
-                    id={s.id}
-                    label={s.short}
-                    title={s.label}
-                    player={byId.get(lineup[s.id])}
-                    editable={editable}
-                    selected={selected}
-                    onTap={tapSlot}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
+          {FIELD_SLOTS.map((s) => {
+            const { x, y } = fieldPosition(s);
+            return (
+              <Slot
+                key={s.id}
+                id={s.id}
+                label={s.short}
+                title={s.label}
+                player={byId.get(lineup[s.id])}
+                editable={editable}
+                selected={selected}
+                onTap={tapSlot}
+                style={{ left: `${x * 100}%`, top: `${y * 100}%`, width: `${MARKER * 100}%` }}
+              />
+            );
+          })}
         </Oval>
         <div className="mt-4">
           <h3 className="mb-2 text-xl font-bold text-navy">Interchange</h3>
@@ -237,24 +235,29 @@ export function LineupBoard({
   );
 }
 
+const { width: GW, height: GH } = GROUND;
+
+/** A portrait AFL oval with real markings. The SVG shares the box's aspect ratio, so circles stay round. */
 function Oval({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative overflow-hidden rounded-[50%/22%] bg-navy">
-      {/* Ground markings: centre square, centre circle, 50m arcs, goal squares */}
-      <svg
-        aria-hidden
-        viewBox="0 0 300 420"
-        preserveAspectRatio="none"
-        className="absolute inset-0 h-full w-full text-white/20"
-      >
-        <g fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke">
-          <rect x="105" y="165" width="90" height="90" />
-          <circle cx="150" cy="210" r="14" />
-          <line x1="150" y1="196" x2="150" y2="224" />
-          <path d="M60 0 A 90 90 0 0 0 240 0" transform="translate(0 6)" />
-          <path d="M60 420 A 90 90 0 0 1 240 420" transform="translate(0 -6)" />
-          <rect x="135" y="2" width="30" height="16" />
-          <rect x="135" y="402" width="30" height="16" />
+    <div className="relative mx-auto aspect-[4/5] w-full max-w-[560px] rounded-[50%] bg-navy">
+      <svg aria-hidden viewBox={`0 0 ${GW} ${GH}`} className="absolute inset-0 size-full text-white/20">
+        <defs>
+          <clipPath id="ground">
+            <ellipse cx={GW / 2} cy={GH / 2} rx={GW / 2} ry={GH / 2} />
+          </clipPath>
+        </defs>
+        <g fill="none" stroke="currentColor" strokeWidth="1.5" clipPath="url(#ground)">
+          {/* 50m arcs, centred on each goal */}
+          <circle cx={GW / 2} cy={0} r={165} />
+          <circle cx={GW / 2} cy={GH} r={165} />
+          {/* Goal squares */}
+          <rect x={GW / 2 - 12} y={2} width={24} height={12} />
+          <rect x={GW / 2 - 12} y={GH - 14} width={24} height={12} />
+          {/* Centre square, circle and line */}
+          <rect x={GW / 2 - 50} y={GH / 2 - 50} width={100} height={100} />
+          <circle cx={GW / 2} cy={GH / 2} r={18} />
+          <line x1={GW / 2} y1={GH / 2 - 18} x2={GW / 2} y2={GH / 2 + 18} />
         </g>
       </svg>
       {children}
@@ -271,6 +274,7 @@ function Slot({
   selected,
   onTap,
   bench,
+  style,
 }: {
   id: string;
   label: string;
@@ -280,6 +284,8 @@ function Slot({
   selected: string | null;
   onTap: (slot: string) => void;
   bench?: boolean;
+  /** Field markers are absolutely positioned on the oval; bench slots flow in a grid. */
+  style?: React.CSSProperties;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id, disabled: !editable });
   const content = player ? (
@@ -293,7 +299,7 @@ function Slot({
       type="button"
       onClick={() => onTap(id)}
       aria-label={`${title}, empty${selected ? ". Place the selected player here" : ""}`}
-      className={cn("size-full rounded-xl text-xs font-bold", bench ? "text-navy/40" : "text-white/50")}
+      className={cn("size-full rounded-[inherit] text-xs font-bold", bench ? "text-navy/40" : "text-white/50")}
     >
       {label}
     </button>
@@ -304,9 +310,12 @@ function Slot({
     <div
       ref={editable ? setNodeRef : undefined}
       title={player ? `${title}: ${player.name}` : title}
+      style={style}
       className={cn(
-        "grid min-h-16 place-items-center rounded-2xl border-2 border-dashed p-0.5 transition-colors",
-        bench ? "border-navy/20 bg-white" : "border-white/25",
+        "grid place-items-center border-2 border-dashed p-0.5 transition-colors",
+        bench
+          ? "min-h-16 rounded-2xl border-navy/20 bg-white"
+          : "absolute aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border-white/30 bg-navy",
         player && "border-transparent",
         isOver && "border-red bg-red/20",
         selected && !player && editable && "border-white/70",

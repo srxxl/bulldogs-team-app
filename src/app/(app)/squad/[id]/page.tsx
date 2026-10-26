@@ -18,7 +18,7 @@ export default async function PlayerPage({ params }: PageProps<"/squad/[id]">) {
   const p = await getMember((await params).id);
   if (!p) notFound();
 
-  const isCoach = p.role === "coach" || p.role === "admin";
+  const isCoach = p.role === "coach";
   const positions = [p.position, p.secondaryPosition]
     .filter((x) => x !== null)
     .map(positionLabel)

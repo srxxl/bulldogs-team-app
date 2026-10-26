@@ -6,8 +6,7 @@ import type { SquadMember } from "@/server/queries/squad";
 
 /** Trading-card style: photo, oversized outlined guernsey number. */
 export function PlayerCard({ player, className }: { player: SquadMember; className?: string }) {
-  const leader =
-    player.role === "captain" ? "Captain" : player.role === "coach" || player.role === "admin" ? "Coach" : null;
+  const leader = player.role === "captain" ? "Captain" : player.role === "coach" ? "Coach" : null;
   return (
     <Link
       href={`/squad/${player.id}`}

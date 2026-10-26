@@ -22,7 +22,7 @@ export default async function VotesPage() {
     <>
       <PageHeader
         title="Player's player"
-        intro={`Season tally since ${seasonStart}. Only coaches can see this, so keep it a surprise for presentation night.`}
+        intro={`Season tally since ${seasonStart}. Only coaches can see this, not even admins, so it stays a surprise for presentation night.`}
       />
       {rows.length === 0 ? (
         <EmptyState title="No votes yet">Votes open two hours after each game.</EmptyState>

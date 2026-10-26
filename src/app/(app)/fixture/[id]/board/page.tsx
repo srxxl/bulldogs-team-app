@@ -20,7 +20,7 @@ export default async function BoardPage({ params }: PageProps<"/fixture/[id]/boa
 
   const status = new Map(rsvps.map((r) => [r.userId, r.status]));
   const players = squad
-    .filter((p) => (p.role !== "coach" && p.role !== "admin") || status.has(p.id))
+    .filter((p) => p.role !== "coach" || status.has(p.id))
     .map((p) => ({
       id: p.id,
       name: p.displayName,

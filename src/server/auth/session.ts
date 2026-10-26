@@ -14,6 +14,8 @@ export type Me = {
   email: string;
   image: string | null;
   role: Role;
+  /** Runs the app: approvals, fixture, PFL data, settings. Independent of team role. */
+  isAdmin: boolean;
 };
 
 /**
@@ -30,11 +32,19 @@ export const getMe = cache(async (): Promise<Me | null> => {
       email: user.email,
       image: user.image,
       role: user.role,
+      isAdmin: user.isAdmin,
     })
     .from(user)
     .where(eq(user.id, session.user.id));
   return row ?? null;
 });
+
+/** People who run the app, otherwise a 403. */
+export async function requireAdmin(): Promise<Me> {
+  const me = await requireMember();
+  if (!me.isAdmin) forbidden();
+  return me;
+}
 
 /** Any approved member. Redirects guests to /login and pending users to /pending. */
 export async function requireMember(): Promise<Me> {

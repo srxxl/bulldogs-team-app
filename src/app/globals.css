@@ -100,3 +100,364 @@ dialog::backdrop {
   background: rgb(21 27 69 / 0.55);
   backdrop-filter: blur(2px);
 }
+
+/* Ambient "film light leak" background (AmbientBackground component). Radial gradients only, no blur filters,
+   so it stays cheap on phones; only transform and opacity animate. */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.leak {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform, opacity;
+  animation: leak-breathe var(--t) ease-in-out infinite alternate;
+}
+.leak-red-top {
+  --t: 7s;
+  --dx: -22vmax;
+  --dy: 18vmax;
+  top: -28vmax;
+  right: -24vmax;
+  width: 70vmax;
+  height: 70vmax;
+  background: radial-gradient(circle, rgb(211 36 39 / 0.3), rgb(211 36 39 / 0.14) 40%, transparent 70%);
+}
+.leak-powder-bottom {
+  --t: 9s;
+  --dx: 26vmax;
+  --dy: -20vmax;
+  bottom: -30vmax;
+  left: -26vmax;
+  width: 80vmax;
+  height: 80vmax;
+  background: radial-gradient(circle, rgb(201 212 239 / 1), rgb(201 212 239 / 0.6) 40%, transparent 70%);
+}
+.leak-powder-top {
+  --t: 8s;
+  --dx: 24vmax;
+  --dy: 22vmax;
+  top: -18vmax;
+  left: -10vmax;
+  width: 50vmax;
+  height: 50vmax;
+  background: radial-gradient(circle, rgb(201 212 239 / 0.85), rgb(201 212 239 / 0.45) 40%, transparent 70%);
+}
+.leak-red-bottom {
+  --t: 10s;
+  --dx: -20vmax;
+  --dy: -24vmax;
+  bottom: -20vmax;
+  right: -14vmax;
+  width: 45vmax;
+  height: 45vmax;
+  background: radial-gradient(circle, rgb(211 36 39 / 0.16), rgb(211 36 39 / 0.07) 40%, transparent 70%);
+}
+/* Each glow roams to an offset and back while swelling, so the light visibly shifts around the screen. */
+@keyframes leak-breathe {
+  from {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(calc(var(--dx) * 0.6), calc(var(--dy) * -0.4)) scale(1.05);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx), var(--dy)) scale(1.25);
+    opacity: 0.8;
+  }
+}
+.grain {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.11;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .08 0 0 0 0 .1 0 0 0 0 .27 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  will-change: transform;
+  animation: grain-jitter 0.9s steps(4) infinite;
+}
+@keyframes grain-jitter {
+  25% {
+    transform: translate(-3%, 2%);
+  }
+  50% {
+    transform: translate(2%, -3%);
+  }
+  75% {
+    transform: translate(-2%, -1%);
+  }
+}
+
+/* Bulldog easter egg (BulldogEasterEgg component). The stage sits just above the phone tab bar,
+   clips the pup so he can rise out of nowhere, and lets taps through except on the pup himself. */
+.pup-stage {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  height: 7rem;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 30;
+  @media (width >= 48rem) {
+    bottom: 0;
+    left: 16rem; /* clear the side rail */
+  }
+}
+.pup {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+.pup-body {
+  pointer-events: auto;
+  cursor: pointer;
+  display: block;
+}
+.pup-body svg {
+  display: block;
+}
+.pup .pup-tail,
+.pup .pup-leg-a,
+.pup .pup-leg-b,
+.pup .pup-head {
+  transform-box: fill-box;
+}
+.pup-tail {
+  transform-origin: right bottom;
+  animation: pup-wag 0.25s ease-in-out infinite alternate;
+}
+@keyframes pup-wag {
+  to {
+    transform: rotate(-28deg);
+  }
+}
+
+/* Walking: legs swing, body bobs, the whole pup crosses the stage */
+.pup-trot,
+.pup-footy,
+.pup-zoomies {
+  left: 0;
+  animation: pup-cross 11s linear forwards;
+}
+.pup-footy {
+  animation-duration: 8s;
+}
+.pup-zoomies {
+  animation-duration: 3.4s;
+  animation-timing-function: cubic-bezier(0.5, 0, 0.6, 1);
+}
+.pup-rtl {
+  animation-name: pup-cross-rtl;
+  flex-direction: row-reverse;
+}
+.pup-rtl .pup-body svg {
+  transform: scaleX(-1);
+}
+@keyframes pup-cross {
+  from {
+    transform: translateX(-6rem);
+  }
+  to {
+    transform: translateX(calc(100vw + 1rem));
+  }
+}
+@keyframes pup-cross-rtl {
+  from {
+    transform: translateX(calc(100vw + 1rem));
+  }
+  to {
+    transform: translateX(-6rem);
+  }
+}
+.pup-trot .pup-body svg,
+.pup-footy .pup-body svg,
+.pup-zoomies .pup-body svg {
+  animation: pup-bob 0.32s ease-in-out infinite alternate;
+}
+.pup-zoomies .pup-body svg {
+  animation-duration: 0.14s;
+}
+.pup-rtl.pup-trot .pup-body svg,
+.pup-rtl.pup-footy .pup-body svg,
+.pup-rtl.pup-zoomies .pup-body svg {
+  animation-name: pup-bob-rtl;
+}
+@keyframes pup-bob {
+  to {
+    transform: translateY(-3px);
+  }
+}
+@keyframes pup-bob-rtl {
+  from {
+    transform: scaleX(-1);
+  }
+  to {
+    transform: scaleX(-1) translateY(-3px);
+  }
+}
+.pup-leg-a,
+.pup-leg-b {
+  transform-origin: top center;
+  animation: pup-step 0.32s ease-in-out infinite alternate;
+}
+.pup-leg-b {
+  animation-direction: alternate-reverse;
+}
+.pup-zoomies .pup-leg-a,
+.pup-zoomies .pup-leg-b {
+  animation-duration: 0.14s;
+}
+@keyframes pup-step {
+  from {
+    transform: rotate(-22deg);
+  }
+  to {
+    transform: rotate(22deg);
+  }
+}
+.pup-ball {
+  margin-bottom: 0.25rem;
+  animation:
+    pup-bounce 0.5s cubic-bezier(0.3, 0, 0.7, 1) infinite alternate,
+    pup-spin 0.9s linear infinite;
+}
+@keyframes pup-bounce {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -1.75rem;
+  }
+}
+@keyframes pup-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Peek: rise over the edge, look around, duck back down */
+.pup-peek {
+  translate: -50% 0;
+  animation: pup-peek 5.5s ease-in-out forwards;
+}
+@keyframes pup-peek {
+  0%,
+  100% {
+    transform: translateY(110%);
+  }
+  14%,
+  86% {
+    transform: translateY(0.6rem);
+  }
+}
+.pup-peek .pup-head {
+  transform-origin: center bottom;
+  animation: pup-look 5.5s ease-in-out forwards;
+}
+@keyframes pup-look {
+  0%,
+  25%,
+  75%,
+  100% {
+    transform: rotate(0);
+  }
+  35%,
+  45% {
+    transform: rotate(-12deg);
+  }
+  55%,
+  65% {
+    transform: rotate(12deg);
+  }
+}
+
+/* Nap: fade in, breathe, float some z's, fade out */
+.pup-nap {
+  translate: -50% 0;
+  animation: pup-nap 10s ease-in-out forwards;
+}
+@keyframes pup-nap {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  8%,
+  92% {
+    opacity: 1;
+  }
+}
+.pup-nap .pup-body svg {
+  transform-origin: bottom center;
+  animation: pup-breathe 1.8s ease-in-out infinite alternate;
+}
+@keyframes pup-breathe {
+  to {
+    transform: scaleY(1.06);
+  }
+}
+.pup-nap .pup-tail {
+  animation: none;
+}
+.pup-zzz {
+  position: absolute;
+  left: 3.25rem;
+  bottom: 2.25rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--color-navy);
+}
+.pup-zzz i {
+  position: absolute;
+  font-style: normal;
+  opacity: 0;
+  animation: pup-z 2.4s ease-out infinite;
+}
+.pup-zzz i:nth-child(2) {
+  animation-delay: 0.8s;
+  font-size: 1.1em;
+}
+.pup-zzz i:nth-child(3) {
+  animation-delay: 1.6s;
+  font-size: 1.35em;
+}
+@keyframes pup-z {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0.9rem, -2.4rem);
+  }
+}
+
+/* Tap: a quick bark bubble */
+.pup-woof {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  translate: -50% -0.25rem;
+  white-space: nowrap;
+  border-radius: 0.75rem;
+  background: var(--color-red);
+  padding: 0.2rem 0.6rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  color: white;
+  animation: pup-pop 0.25s var(--ease-snap) both;
+}
+@keyframes pup-pop {
+  from {
+    scale: 0.4;
+    opacity: 0;
+  }
+}

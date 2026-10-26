@@ -2,7 +2,7 @@ import { Pin } from "lucide-react";
 import type { Metadata } from "next";
 import { DeleteNoteButton, NoteForm } from "@/components/note-form";
 import { EmptyState, PageHeader } from "@/components/ui";
-import { canLead, canManage } from "@/lib/roles";
+import { canLead, canModerate } from "@/lib/roles";
 import { formatDay } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
 import { getNotes } from "@/server/queries/content";
@@ -37,7 +37,7 @@ export default async function NotesPage() {
                         <Pin size={12} /> On home
                       </span>
                     )}
-                    {(n.authorId === me.id || canManage(me.role)) && <DeleteNoteButton id={n.id} />}
+                    {(n.authorId === me.id || canModerate(me)) && <DeleteNoteButton id={n.id} />}
                   </div>
                 </div>
                 <h2 className="mt-2 text-4xl font-extrabold text-navy">{n.title}</h2>

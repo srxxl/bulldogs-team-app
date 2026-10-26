@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { EventForm } from "@/components/event-form";
 import { PageHeader } from "@/components/ui";
 import { toLocalInput } from "@/lib/time";
-import { requireRole } from "@/server/auth/session";
+import { requireAdmin } from "@/server/auth/session";
 import { getEvent } from "@/server/queries/events";
 
 export const metadata: Metadata = { title: "Edit event" };
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Edit event" };
 const str = (v: number | string | null) => (v == null ? "" : String(v));
 
 export default async function EditEventPage({ params }: PageProps<"/admin/events/[id]">) {
-  await requireRole("coach");
+  await requireAdmin();
   const ev = await getEvent((await params).id);
   if (!ev) notFound();
   return (

@@ -5,7 +5,7 @@ import { Avatar } from "@/components/avatar";
 import { RsvpButtons } from "@/components/rsvp-buttons";
 import { ButtonLink, Chip, Panel, SectionTitle } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { canLead, canManage } from "@/lib/roles";
+import { canLead } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
@@ -105,7 +105,7 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
           >
             <CalendarPlus size={18} /> Add to calendar
           </ButtonLink>
-          {canManage(me.role) && (
+          {me.isAdmin && (
             <ButtonLink href={`/admin/events/${id}`} variant="ghost" className="text-white hover:bg-white/10">
               <Pencil size={16} /> Edit
             </ButtonLink>

@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Avatar } from "@/components/avatar";
-import { ALL } from "@/components/nav-items";
-import { hasRole } from "@/lib/roles";
+import { ALL, visibleNav } from "@/components/nav-items";
 import { requireMember } from "@/server/auth/session";
 
 export const metadata: Metadata = { title: "More" };
 
 export default async function MorePage() {
   const me = await requireMember();
-  const items = ALL.filter(
-    (i) => !["/", "/fixture", "/training", "/squad"].includes(i.href) && (!i.minRole || hasRole(me.role, i.minRole)),
-  );
+  const items = visibleNav(ALL, me).filter((i) => !["/", "/fixture", "/training", "/squad"].includes(i.href));
   return (
     <>
       <Link href="/me" className="mb-6 flex items-center gap-4 rounded-2xl bg-navy p-4 text-white">

@@ -40,6 +40,24 @@ export const FIELD_SLOTS: FieldSlot[] = [
   { id: "BPR", label: "Back pocket", short: "BP", row: 5, col: 2 },
 ];
 
+/** The ground is drawn as a portrait ellipse in a 400 × 500 box (forwards at the top). */
+export const GROUND = { width: 400, height: 500 } as const;
+/** Position markers are circles this fraction of the ground's width. */
+export const MARKER = 0.16;
+
+const ROW_Y = [0.13, 0.28, 0.43, 0.57, 0.72, 0.87];
+const SPREAD = 0.62;
+
+/**
+ * Where a field slot sits on the ground, as fractions of width/height.
+ * Flank columns follow the curve of the boundary: wide at the wings, tucked in at the pockets.
+ */
+export function fieldPosition(slot: Pick<FieldSlot, "row" | "col">) {
+  const y = ROW_Y[slot.row];
+  const halfWidth = 0.5 * Math.sqrt(1 - ((y - 0.5) / 0.5) ** 2);
+  return { x: 0.5 + (slot.col - 1) * SPREAD * halfWidth, y };
+}
+
 export const BENCH_SLOTS = Array.from({ length: 8 }, (_, i) => `I${i + 1}`);
 export const ALL_SLOTS = new Set([...FIELD_SLOTS.map((s) => s.id), ...BENCH_SLOTS]);
 

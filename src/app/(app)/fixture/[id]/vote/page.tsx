@@ -27,7 +27,7 @@ export default async function VotePage({ params }: PageProps<"/fixture/[id]/vote
   // Players named on the team board come first; everyone else is still votable.
   const played = new Set(Object.values(lineup));
   const candidates = squad
-    .filter((p) => p.id !== me.id && p.role !== "coach" && p.role !== "admin")
+    .filter((p) => p.id !== me.id && p.role !== "coach")
     .sort((a, b) => Number(played.has(b.id)) - Number(played.has(a.id)) || (a.guernsey ?? 99) - (b.guernsey ?? 99))
     .map((p) => ({
       id: p.id,

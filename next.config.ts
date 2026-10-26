@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  serverExternalPackages: ["@electric-sql/pglite"],
   experimental: {
     serverActions: { bodySizeLimit: "6mb" },
     authInterrupts: true,

@@ -1,22 +1,18 @@
-import { createDb, PGLITE_DIR } from "./client";
-
-const migrationsFolder = "drizzle";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { createDb } from "./client";
 
 async function main() {
-  const db = await createDb();
-  if (process.env.DATABASE_URL) {
-    const { migrate } = await import("drizzle-orm/neon-serverless/migrator");
-    await migrate(db as Parameters<typeof migrate>[0], { migrationsFolder });
-  } else {
-    const { migrate } = await import("drizzle-orm/pglite/migrator");
-    await migrate(db as Parameters<typeof migrate>[0], { migrationsFolder });
-    console.log(`Local database at ${PGLITE_DIR}`);
-  }
+  const db = createDb();
+  await migrate(db, { migrationsFolder: "drizzle" });
   console.log("Migrations applied");
-  process.exit(0);
+  await db.$client.end();
 }
 
 main().catch((err) => {
-  console.error(err);
+  console.error(
+    err instanceof Error && "code" in err && err.code === "ECONNREFUSED"
+      ? "Can't reach the database. Locally, start it with `pnpm dev` (or `pnpm db:server`) first."
+      : err,
+  );
   process.exit(1);
 });

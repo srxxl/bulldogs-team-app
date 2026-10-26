@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { type ActionResult, fail, ok } from "@/lib/action-result";
 import { blank, parseForm } from "@/lib/form";
-import { canLead, canManage } from "@/lib/roles";
+import { canLead, canModerate } from "@/lib/roles";
 import { perthToday } from "@/lib/time";
 import { requireMember, requireRole } from "@/server/auth/session";
 import { db } from "@/server/db";
@@ -36,7 +36,7 @@ export async function createNote(_prev: unknown, formData: FormData): Promise<Ac
 
 export async function deleteNote(id: string): Promise<ActionResult> {
   const me = await requireRole("captain");
-  const where = canManage(me.role) ? eq(note.id, id) : and(eq(note.id, id), eq(note.authorId, me.id));
+  const where = canModerate(me) ? eq(note.id, id) : and(eq(note.id, id), eq(note.authorId, me.id));
   await db.delete(note).where(where);
   revalidatePath("/notes");
   revalidatePath("/");
@@ -68,7 +68,7 @@ export async function createPin(_prev: unknown, formData: FormData): Promise<Act
 
 export async function deletePin(id: string): Promise<ActionResult> {
   const me = await requireMember();
-  const where = canManage(me.role) ? eq(pin.id, id) : and(eq(pin.id, id), eq(pin.authorId, me.id));
+  const where = canModerate(me) ? eq(pin.id, id) : and(eq(pin.id, id), eq(pin.authorId, me.id));
   const [deleted] = await db.delete(pin).where(where).returning({ board: pin.board });
   if (!deleted) return fail("You can only remove your own pins");
   revalidatePath(deleted.board === "drills" ? "/training/drills" : `/boards/${deleted.board}`);

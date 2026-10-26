@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { EventRowLink } from "@/components/event-row";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { CLUB } from "@/lib/club";
-import { canManage } from "@/lib/roles";
 import { formatMonth, monthKey } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
 import { getMyRsvps, getSeason, getYesCounts } from "@/server/queries/events";
@@ -24,7 +23,7 @@ export default async function FixturePage() {
   return (
     <>
       <PageHeader title="Fixture" intro={`${CLUB.grade}, ${CLUB.league}. Games, socials and club events.`}>
-        {canManage(me.role) && <ButtonLink href="/admin/events/new">Add event</ButtonLink>}
+        {me.isAdmin && <ButtonLink href="/admin/events/new">Add event</ButtonLink>}
       </PageHeader>
       {season.length === 0 ? (
         <EmptyState title="The fixture's empty">Games appear here once the PFL releases the draw.</EmptyState>

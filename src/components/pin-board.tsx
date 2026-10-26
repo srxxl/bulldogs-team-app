@@ -1,7 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/cn";
-import { canManage } from "@/lib/roles";
+import { canModerate } from "@/lib/roles";
 import type { Me } from "@/server/auth/session";
 import type { getPins } from "@/server/queries/content";
 import { DeletePinButton } from "./pin-actions";
@@ -74,7 +74,7 @@ export function PinBoard({ pins, me, empty }: { pins: Pin[]; me: Me; empty: { ti
                 className={cn("mt-4 flex items-center justify-between text-xs", dark ? "text-white/60" : "text-ink/50")}
               >
                 <span>Pinned by {p.preferredName || p.name.split(" ")[0]}</span>
-                {(p.authorId === me.id || canManage(me.role)) && <DeletePinButton id={p.id} />}
+                {(p.authorId === me.id || canModerate(me)) && <DeletePinButton id={p.id} />}
               </div>
             </div>
           </article>

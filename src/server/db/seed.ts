@@ -6,19 +6,19 @@ import { hashPassword } from "better-auth/crypto";
 import { sql } from "drizzle-orm";
 import { perthAt } from "@/lib/time";
 import { TRAINING, upcomingTrainingSlots } from "@/lib/training";
-import { createDb } from "./client";
+import { createDb, isLocalDb } from "./client";
 import * as t from "./schema";
 
-if (process.env.DATABASE_URL) {
-  console.error("Seed only runs against the local PGlite database.");
+if (!isLocalDb()) {
+  console.error("Seed only runs against the local database (DATABASE_URL on localhost).");
   process.exit(1);
 }
 
 const PLAYERS: [string, number, t.Position, string?][] = [
   ["Coach Jess Marlow", 0, "utility", "coach@bulldogs.test"],
   ["Ash Tran", 7, "midfielder", "captain@bulldogs.test"],
-  ["Mia Kowalski", 12, "forward", "player@bulldogs.test"],
-  ["Priya Nair", 3, "midfielder"],
+  ["Mia Kowalski", 12, "forward", "admin@bulldogs.test"],
+  ["Priya Nair", 3, "midfielder", "player@bulldogs.test"],
   ["Tayla Brooks", 21, "ruck"],
   ["Georgia Hale", 5, "defender"],
   ["Sophie Lam", 9, "forward"],
@@ -47,7 +47,7 @@ const OPPONENTS = [
 ];
 
 async function main() {
-  const db = await createDb();
+  const db = createDb();
   await db.execute(sql`truncate "user", event, ladder_row, app_setting, feedback cascade`);
 
   const password = await hashPassword("bulldogs-dev");
@@ -56,7 +56,9 @@ async function main() {
     name,
     email: email ?? `${name.toLowerCase().replace(/[^a-z]+/g, ".")}@bulldogs.test`,
     emailVerified: true,
-    role: (i === 0 ? "admin" : i === 1 ? "captain" : "player") as t.Role,
+    role: (i === 0 ? "coach" : i === 1 ? "captain" : "player") as t.Role,
+    // Mia is a player who also runs the app; the coach isn't an admin.
+    isAdmin: i === 2,
   }));
   users.push({
     id: crypto.randomUUID(),
@@ -64,6 +66,7 @@ async function main() {
     email: "newbie@bulldogs.test",
     emailVerified: true,
     role: "pending",
+    isAdmin: false,
   });
   await db.insert(t.user).values(users);
   await db.insert(t.account).values(

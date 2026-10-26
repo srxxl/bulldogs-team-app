@@ -9,14 +9,14 @@ player's player votes, fitness and nutrition boards, coach's notes, the ladder a
 ```bash
 pnpm install
 cp .env.example .env.local      # then set BETTER_AUTH_SECRET (openssl rand -base64 32)
-pnpm db:migrate                 # creates a local database in .data/ (no Postgres needed)
+pnpm dev                        # starts a local database (.data/, no Postgres install needed) + http://localhost:3000
+pnpm db:migrate                 # in a second terminal, while dev is running
 pnpm db:seed                    # demo squad, fixture and content
-pnpm dev                        # http://localhost:3000
 ```
 
 With `ENABLE_DEV_LOGIN=true` the sign-in page shows a **Local dev login** box. Pick Coach, Captain,
-Player or a pending sign-up. The local database allows one process at a time, so stop `pnpm dev`
-before running `db:migrate` or `db:seed`.
+Player, the admin (a player who runs the app) or a pending sign-up. Re-run `pnpm db:seed` any time to reset
+the demo data.
 
 `pnpm check` runs lint, types and tests.
 
@@ -36,11 +36,13 @@ before running `db:migrate` or `db:seed`.
 6. **Other env vars** (Settings → Environment Variables):
    - `BETTER_AUTH_SECRET`: `openssl rand -base64 32`
    - `BETTER_AUTH_URL`: `https://<your-domain>`
-   - `ADMIN_EMAILS`: your email (comma-separate several). These accounts are admins on first sign-in.
+   - `ADMIN_EMAILS`: your email (comma-separate several). These people run the app: they join as approved
+     players with admin access. The coach doesn't need to be an admin; give them the Coach role instead.
    - `CRON_SECRET`: any long random string (secures the daily sync).
 7. Redeploy, sign in with your admin email, then in **Admin**:
    - Switch on training polls when pre-season starts.
-   - Approve players as they sign up and promote captains and coaches.
+   - Approve players as they sign up, set captains and coaches, and tick Admin for anyone else who helps run the app.
+     Admins don't see the player's player tally or the anonymous notes; those are for coaches only.
 
 ## PlayHQ (fixture + ladder)
 

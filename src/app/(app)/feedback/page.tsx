@@ -2,7 +2,7 @@ import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { FeedbackForm, MarkReadButton } from "@/components/feedback-form";
 import { Chip, EmptyState, PageHeader, Panel, SectionTitle } from "@/components/ui";
-import { canManage } from "@/lib/roles";
+import { isCoach } from "@/lib/roles";
 import { formatDateOnly } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
 import { getFeedback } from "@/server/queries/content";
@@ -18,7 +18,7 @@ const KIND = {
 
 export default async function FeedbackPage() {
   const me = await requireMember();
-  const coach = canManage(me.role);
+  const coach = isCoach(me.role);
   const [games, entries] = await Promise.all([getSeason(), coach ? getFeedback() : []]);
   const recentGames = games
     .filter((g) => g.kind === "game" && g.startsAt < new Date())

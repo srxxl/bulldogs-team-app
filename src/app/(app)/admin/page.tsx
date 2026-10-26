@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import {
   ApproveButtons,
   LadderPasteForm,
-  RoleSelect,
+  MemberControls,
   SeasonStartForm,
   SyncButton,
   TrainingToggle,
@@ -10,7 +10,7 @@ import {
 import { Avatar } from "@/components/avatar";
 import { ButtonLink, PageHeader, Panel, SectionTitle } from "@/components/ui";
 import { formatDay, formatTime } from "@/lib/time";
-import { requireRole } from "@/server/auth/session";
+import { requireAdmin } from "@/server/auth/session";
 import { playHqConfig } from "@/server/playhq/client";
 import { getSetting } from "@/server/queries/settings";
 import { getAllUsers } from "@/server/queries/squad";
@@ -18,7 +18,7 @@ import { getAllUsers } from "@/server/queries/squad";
 export const metadata: Metadata = { title: "Admin" };
 
 export default async function AdminPage() {
-  const me = await requireRole("coach");
+  const me = await requireAdmin();
   const [users, trainingEnabled, seasonStart, lastSync] = await Promise.all([
     getAllUsers(),
     getSetting("training_enabled"),
@@ -110,7 +110,7 @@ export default async function AdminPage() {
                   </p>
                   <p className="truncate text-sm text-ink/60">{u.email}</p>
                 </div>
-                {u.id !== me.id && <RoleSelect userId={u.id} role={u.role} canRemove={me.role === "admin"} />}
+                {u.id !== me.id && <MemberControls userId={u.id} role={u.role} isAdmin={u.isAdmin} />}
               </li>
             ))}
           </ul>

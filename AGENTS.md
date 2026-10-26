@@ -18,7 +18,7 @@ Read `PLAN.md` for the feature map and roadmap.
 
 | Task                                                   | Command                            |
 | ------------------------------------------------------ | ---------------------------------- |
-| Dev server (uses local PGlite if `DATABASE_URL` unset) | `pnpm dev`                         |
+| Dev server + local database (PGlite on :54329) | `pnpm dev` |
 | Apply migrations                                       | `pnpm db:migrate`                  |
 | New migration after editing `schema.ts`                | `pnpm db:generate`                 |
 | Seed local data (dev only)                             | `pnpm db:seed`                     |
@@ -35,7 +35,7 @@ Run `pnpm check` before calling any task done. Do not leave the tree with type e
 - `cacheComponents` is **off on purpose**: every page is behind auth and per-user, so pages are dynamic. After a mutation call `revalidatePath` for the affected route(s).
 - Request interception lives in `src/proxy.ts` (Next 16 renamed `middleware` → `proxy`). It only does an optimistic cookie check; **real authorisation happens in the DAL** (`src/server/auth/session.ts`). Never trust the proxy alone.
 - **Better Auth** (`src/server/auth/index.ts`) with Google + Microsoft Entra ID. A dev-only email/password login exists when `ENABLE_DEV_LOGIN=true` and `NODE_ENV !== "production"`.
-- **Drizzle ORM + Postgres**. Production: Neon via `drizzle-orm/neon-serverless` (supports transactions). Local: PGlite in `.data/pglite`. Both are typed as `Db` in `src/server/db/index.ts`; never import a driver anywhere else.
+- **Drizzle ORM + Postgres** through the standard `pg` driver everywhere (`src/server/db/client.ts`). Production: Neon. Local: `pnpm dev` starts a PGlite socket server on port 54329 with data in `.data/pglite`, so every Next.js process shares one database. Never open PGlite in-process: Next 16 runs some routes in separate processes and two openers corrupt the data folder. `pnpm db:migrate` / `db:seed` work while `pnpm dev` is running; seed refuses any non-localhost URL.
 - **Tailwind v4** with tokens in `src/app/globals.css` (`@theme`). No component library.
 - **dnd-kit** for the team board. **Vercel Blob** for uploads (falls back to `public/uploads` locally).
 - **zod** validates every server action input and every external payload (PlayHQ).
@@ -69,7 +69,7 @@ Rules of thumb:
 
 ## Domain rules (do not break)
 
-- **Roles**: `pending` < `player` < `captain` < `coach` < `admin`. New sign-ups are `pending` unless their email is in `ADMIN_EMAILS`. Pending users see only the waiting screen.
+- **Roles**: team role `pending` < `player` < `captain` < `coach`, plus a separate **`isAdmin` flag** for whoever runs the app (approvals, fixture and scores, PFL data, settings). Admin is deliberately not a rank above coach: the person running the app is usually a player, so admins do **not** see the vote tally or the anonymous inbox (coach-only, `isCoach`), and the coach doesn't need to touch admin screens. Guards: `requireMember`, `requireRole`, `requireAdmin`. People in `ADMIN_EMAILS` join as approved players with `isAdmin`; everyone else starts `pending`. Admins can't remove their own admin flag, so there's always one left.
 - **Anonymous feedback is anonymous**: the `feedback` table has no user column and stores only a _date_ (not a timestamp) so entries can't be matched to logins. Do not add logging, user ids or precise timestamps to that path.
 - **Player's player votes**: 3-2-1 per game, can't vote for yourself, one ballot per voter per game. Window opens 2h after bounce and closes 4 days later (`src/lib/votes.ts`). Tallies are visible to coaches/admins only.
 - **Training**: Tues + Thurs 18:00–19:30, Karoonda Reserve Oval 2 (West). Sessions are generated 14 days ahead by the daily cron while the `training_enabled` setting is on.

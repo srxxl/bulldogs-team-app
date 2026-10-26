@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Squad" };
 export default async function SquadPage() {
   await requireMember();
   const squad = await getSquad();
-  const coaches = squad.filter((p) => p.role === "coach" || p.role === "admin");
+  const coaches = squad.filter((p) => p.role === "coach");
   const players = squad.filter((p) => !coaches.includes(p));
 
   return (

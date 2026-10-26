@@ -31,7 +31,8 @@ const updatedAt = () =>
 /* Better Auth                                                               */
 /* ------------------------------------------------------------------------ */
 
-export const roleEnum = pgEnum("role", ["pending", "player", "captain", "coach", "admin"]);
+/** Team role. Admin is a separate flag (`user.isAdmin`) so a player can run the app without seeing coach-only data. */
+export const roleEnum = pgEnum("role", ["pending", "player", "captain", "coach"]);
 
 export const user = pgTable("user", {
   id: text().primaryKey(),
@@ -40,6 +41,7 @@ export const user = pgTable("user", {
   emailVerified: boolean().notNull().default(false),
   image: text(),
   role: roleEnum().notNull().default("pending"),
+  isAdmin: boolean().notNull().default(false),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });

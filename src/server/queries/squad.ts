@@ -78,6 +78,7 @@ export function getAllUsers() {
       email: user.email,
       image: user.image,
       role: user.role,
+      isAdmin: user.isAdmin,
       createdAt: user.createdAt,
     })
     .from(user)

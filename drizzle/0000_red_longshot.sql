@@ -3,7 +3,7 @@ CREATE TYPE "public"."board" AS ENUM('fitness', 'nutrition', 'drills');--> state
 CREATE TYPE "public"."event_kind" AS ENUM('game', 'training', 'social', 'other');--> statement-breakpoint
 CREATE TYPE "public"."feedback_kind" AS ENUM('reflection', 'suggestion', 'shoutout');--> statement-breakpoint
 CREATE TYPE "public"."position" AS ENUM('defender', 'midfielder', 'ruck', 'forward', 'utility');--> statement-breakpoint
-CREATE TYPE "public"."role" AS ENUM('pending', 'player', 'captain', 'coach', 'admin');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('pending', 'player', 'captain', 'coach');--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
@@ -146,6 +146,7 @@ CREATE TABLE "user" (
 	"email_verified" boolean DEFAULT false NOT NULL,
 	"image" text,
 	"role" "role" DEFAULT 'pending' NOT NULL,
+	"is_admin" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "user_email_unique" UNIQUE("email")

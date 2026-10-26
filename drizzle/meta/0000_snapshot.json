@@ -1,5 +1,5 @@
 {
-  "id": "6bd7a472-ce97-43e9-a819-b3f872b37042",
+  "id": "7c29d826-32dc-4057-bf15-9f7e1bde3456",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -111,8 +111,12 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -198,8 +202,12 @@
           "name": "availability_event_id_event_id_fk",
           "tableFrom": "availability",
           "tableTo": "event",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -207,8 +215,12 @@
           "name": "availability_user_id_user_id_fk",
           "tableFrom": "availability",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -216,7 +228,10 @@
       "compositePrimaryKeys": {
         "availability_event_id_user_id_pk": {
           "name": "availability_event_id_user_id_pk",
-          "columns": ["event_id", "user_id"]
+          "columns": [
+            "event_id",
+            "user_id"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -413,7 +428,9 @@
         "event_playhqGameId_unique": {
           "name": "event_playhqGameId_unique",
           "nullsNotDistinct": false,
-          "columns": ["playhq_game_id"]
+          "columns": [
+            "playhq_game_id"
+          ]
         }
       },
       "policies": {},
@@ -470,8 +487,12 @@
           "name": "feedback_event_id_event_id_fk",
           "tableFrom": "feedback",
           "tableTo": "event",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -621,8 +642,12 @@
           "name": "lineup_slot_event_id_event_id_fk",
           "tableFrom": "lineup_slot",
           "tableTo": "event",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -630,8 +655,12 @@
           "name": "lineup_slot_user_id_user_id_fk",
           "tableFrom": "lineup_slot",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -639,7 +668,10 @@
       "compositePrimaryKeys": {
         "lineup_slot_event_id_slot_pk": {
           "name": "lineup_slot_event_id_slot_pk",
-          "columns": ["event_id", "slot"]
+          "columns": [
+            "event_id",
+            "slot"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -719,8 +751,12 @@
           "name": "note_author_id_user_id_fk",
           "tableFrom": "note",
           "tableTo": "user",
-          "columnsFrom": ["author_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -820,8 +856,12 @@
           "name": "pin_author_id_user_id_fk",
           "tableFrom": "pin",
           "tableTo": "user",
-          "columnsFrom": ["author_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -935,8 +975,12 @@
           "name": "player_profile_user_id_user_id_fk",
           "tableFrom": "player_profile",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1029,8 +1073,12 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1040,7 +1088,9 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": [
+            "token"
+          ]
         }
       },
       "policies": {},
@@ -1090,6 +1140,13 @@
           "notNull": true,
           "default": "'pending'"
         },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1112,7 +1169,9 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       },
       "policies": {},
@@ -1271,8 +1330,12 @@
           "name": "vote_event_id_event_id_fk",
           "tableFrom": "vote",
           "tableTo": "event",
-          "columnsFrom": ["event_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1280,8 +1343,12 @@
           "name": "vote_voter_id_user_id_fk",
           "tableFrom": "vote",
           "tableTo": "user",
-          "columnsFrom": ["voter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "voter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1289,8 +1356,12 @@
           "name": "vote_nominee_id_user_id_fk",
           "tableFrom": "vote",
           "tableTo": "user",
-          "columnsFrom": ["nominee_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "nominee_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1298,7 +1369,11 @@
       "compositePrimaryKeys": {
         "vote_event_id_voter_id_points_pk": {
           "name": "vote_event_id_voter_id_points_pk",
-          "columns": ["event_id", "voter_id", "points"]
+          "columns": [
+            "event_id",
+            "voter_id",
+            "points"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1320,32 +1395,60 @@
     "public.availability_status": {
       "name": "availability_status",
       "schema": "public",
-      "values": ["yes", "maybe", "no"]
+      "values": [
+        "yes",
+        "maybe",
+        "no"
+      ]
     },
     "public.board": {
       "name": "board",
       "schema": "public",
-      "values": ["fitness", "nutrition", "drills"]
+      "values": [
+        "fitness",
+        "nutrition",
+        "drills"
+      ]
     },
     "public.event_kind": {
       "name": "event_kind",
       "schema": "public",
-      "values": ["game", "training", "social", "other"]
+      "values": [
+        "game",
+        "training",
+        "social",
+        "other"
+      ]
     },
     "public.feedback_kind": {
       "name": "feedback_kind",
       "schema": "public",
-      "values": ["reflection", "suggestion", "shoutout"]
+      "values": [
+        "reflection",
+        "suggestion",
+        "shoutout"
+      ]
     },
     "public.position": {
       "name": "position",
       "schema": "public",
-      "values": ["defender", "midfielder", "ruck", "forward", "utility"]
+      "values": [
+        "defender",
+        "midfielder",
+        "ruck",
+        "forward",
+        "utility"
+      ]
     },
     "public.role": {
       "name": "role",
       "schema": "public",
-      "values": ["pending", "player", "captain", "coach", "admin"]
+      "values": [
+        "pending",
+        "player",
+        "captain",
+        "coach"
+      ]
     }
   },
   "schemas": {},

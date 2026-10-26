@@ -7,7 +7,7 @@ import { type ActionResult, fail, ok } from "@/lib/action-result";
 import { blank, parseForm } from "@/lib/form";
 import { parseLadderPaste } from "@/lib/ladder-paste";
 import { fromLocalInput } from "@/lib/time";
-import { requireRole } from "@/server/auth/session";
+import { requireAdmin } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { event, eventKindEnum, roleEnum, user } from "@/server/db/schema";
 import { setSetting } from "@/server/queries/settings";
@@ -16,20 +16,27 @@ import { clearFutureTraining, ensureTraining, replaceLadder, syncPlayHq } from "
 /* Members ----------------------------------------------------------------- */
 
 export async function setRole(userId: string, role: (typeof roleEnum.enumValues)[number]): Promise<ActionResult> {
-  const me = await requireRole("coach");
+  const me = await requireAdmin();
   if (!roleEnum.enumValues.includes(role)) return fail("Unknown role");
-  if (userId === me.id) return fail("You can't change your own role");
-  if (role === "admin" && me.role !== "admin") return fail("Only admins can make admins");
-  const [target] = await db.select({ role: user.role }).from(user).where(eq(user.id, userId));
-  if (!target) return fail("That member doesn't exist");
-  if (target.role === "admin" && me.role !== "admin") return fail("Only admins can change an admin");
-  await db.update(user).set({ role }).where(eq(user.id, userId));
+  if (userId === me.id && role === "pending") return fail("You can't remove your own access");
+  const [updated] = await db.update(user).set({ role }).where(eq(user.id, userId)).returning({ id: user.id });
+  if (!updated) return fail("That member doesn't exist");
   revalidatePath("/", "layout");
   return ok(role === "pending" ? "Access removed" : "Role updated");
 }
 
+/** Lets someone else help run the app. Admins can't drop their own admin, so there's always at least one. */
+export async function setAdmin(userId: string, isAdmin: boolean): Promise<ActionResult> {
+  const me = await requireAdmin();
+  if (userId === me.id) return fail("Ask another admin to change your access");
+  const [updated] = await db.update(user).set({ isAdmin }).where(eq(user.id, userId)).returning({ id: user.id });
+  if (!updated) return fail("That member doesn't exist");
+  revalidatePath("/", "layout");
+  return ok(isAdmin ? "Now an admin" : "No longer an admin");
+}
+
 export async function removeMember(userId: string): Promise<ActionResult> {
-  const me = await requireRole("admin");
+  const me = await requireAdmin();
   if (userId === me.id) return fail("You can't remove yourself");
   await db.delete(user).where(eq(user.id, userId));
   revalidatePath("/", "layout");
@@ -76,7 +83,7 @@ const eventSchema = z
   });
 
 export async function saveEvent(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
-  await requireRole("coach");
+  await requireAdmin();
   const parsed = parseForm(eventSchema, formData);
   if ("error" in parsed) return parsed.error;
   const { id, startsAt, endsAt, ...rest } = parsed.data;
@@ -105,7 +112,7 @@ export async function saveEvent(_prev: unknown, formData: FormData): Promise<Act
 }
 
 export async function deleteEvent(id: string): Promise<ActionResult> {
-  await requireRole("coach");
+  await requireAdmin();
   await db.delete(event).where(eq(event.id, id));
   revalidatePath("/", "layout");
   return ok("Event deleted");
@@ -114,7 +121,7 @@ export async function deleteEvent(id: string): Promise<ActionResult> {
 /* Settings + PFL data ----------------------------------------------------- */
 
 export async function setTrainingEnabled(enabled: boolean): Promise<ActionResult> {
-  await requireRole("coach");
+  await requireAdmin();
   await setSetting("training_enabled", enabled);
   revalidatePath("/", "layout");
   if (!enabled) {
@@ -126,7 +133,7 @@ export async function setTrainingEnabled(enabled: boolean): Promise<ActionResult
 }
 
 export async function setSeasonStart(_prev: unknown, formData: FormData): Promise<ActionResult> {
-  await requireRole("coach");
+  await requireAdmin();
   const v = String(formData.get("seasonStart") ?? "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return fail("Pick a date");
   await setSetting("season_start", v);
@@ -135,14 +142,14 @@ export async function setSeasonStart(_prev: unknown, formData: FormData): Promis
 }
 
 export async function runPlayHqSync(): Promise<ActionResult> {
-  await requireRole("coach");
+  await requireAdmin();
   const res = await syncPlayHq();
   revalidatePath("/", "layout");
   return res.ok ? ok(res.message) : fail(res.message);
 }
 
 export async function importLadder(_prev: unknown, formData: FormData): Promise<ActionResult> {
-  await requireRole("coach");
+  await requireAdmin();
   const result = parseLadderPaste(String(formData.get("ladder") ?? ""));
   if ("error" in result) return fail(result.error, { ladder: [result.error] });
   await replaceLadder(result.rows);

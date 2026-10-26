@@ -61,7 +61,7 @@ export default async function HomePage() {
         />
       ) : (
         <EmptyState title="No games on the fixture yet">
-          The PFL fixture shows up here once it's released. Coaches can add games in Admin.
+          The PFL fixture shows up here once it's released. Your team admin can add games in Admin.
         </EmptyState>
       )}
 
