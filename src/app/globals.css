@@ -191,271 +191,238 @@ dialog::backdrop {
   }
 }
 
-/* Bulldog easter egg (BulldogEasterEgg component). The stage sits just above the phone tab bar,
-   clips the pup so he can rise out of nowhere, and lets taps through except on the pup himself. */
-.pup-stage {
-  position: fixed;
-  inset-inline: 0;
-  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-  height: 7rem;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 30;
+/* Home-screen bulldog (HomeMascot). SVG parts carry .m-* classes; each pose is a .mascot-{pose} class. */
+.mascot-stage {
+  position: relative;
+  height: 8.5rem;
   @media (width >= 48rem) {
-    bottom: 0;
-    left: 16rem; /* clear the side rail */
+    height: 10rem;
   }
 }
-.pup {
+.mascot {
   position: absolute;
-  bottom: 0;
-  display: flex;
-  align-items: flex-end;
-  gap: 0.25rem;
+  bottom: 0.25rem;
+  transition-property: left, translate;
+  transition-timing-function: linear;
 }
-.pup-body {
-  pointer-events: auto;
+/* soft ground shadow */
+.mascot::after {
+  content: "";
+  position: absolute;
+  inset-inline: 12%;
+  bottom: -0.2rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: rgb(21 27 69 / 0.1);
+  z-index: -1;
+}
+.mascot-dog {
+  display: block;
   cursor: pointer;
-  display: block;
+  border-radius: 1rem;
+  -webkit-tap-highlight-color: transparent;
 }
-.pup-body svg {
+.mascot-side-svg {
   display: block;
+  width: 9rem;
+  overflow: visible;
+  @media (width >= 48rem) {
+    width: 11rem;
+  }
 }
-.pup .pup-tail,
-.pup .pup-leg-a,
-.pup .pup-leg-b,
-.pup .pup-head {
+.mascot-sit-svg {
+  display: block;
+  width: 5.5rem;
+  margin-inline: 1.75rem;
+  @media (width >= 48rem) {
+    width: 6.5rem;
+    margin-inline: 2.25rem;
+  }
+}
+.mascot-right .mascot-side-svg {
+  scale: -1 1;
+}
+.mascot .m-leg,
+.mascot .m-head,
+.mascot .m-tail,
+.mascot .m-upper {
   transform-box: fill-box;
 }
-.pup-tail {
-  transform-origin: right bottom;
-  animation: pup-wag 0.25s ease-in-out infinite alternate;
+
+/* standing: tail wags */
+.m-tail {
+  transform-origin: left bottom;
 }
-@keyframes pup-wag {
+.mascot-stand .m-tail,
+.mascot-bark .m-tail,
+.mascot-walk .m-tail {
+  animation: m-wag 0.28s ease-in-out infinite alternate;
+}
+@keyframes m-wag {
   to {
-    transform: rotate(-28deg);
+    rotate: 22deg;
   }
 }
 
-/* Walking: legs swing, body bobs, the whole pup crosses the stage */
-.pup-trot,
-.pup-footy,
-.pup-zoomies {
-  left: 0;
-  animation: pup-cross 11s linear forwards;
-}
-.pup-footy {
-  animation-duration: 8s;
-}
-.pup-zoomies {
-  animation-duration: 3.4s;
-  animation-timing-function: cubic-bezier(0.5, 0, 0.6, 1);
-}
-.pup-rtl {
-  animation-name: pup-cross-rtl;
-  flex-direction: row-reverse;
-}
-.pup-rtl .pup-body svg {
-  transform: scaleX(-1);
-}
-@keyframes pup-cross {
-  from {
-    transform: translateX(-6rem);
-  }
-  to {
-    transform: translateX(calc(100vw + 1rem));
-  }
-}
-@keyframes pup-cross-rtl {
-  from {
-    transform: translateX(calc(100vw + 1rem));
-  }
-  to {
-    transform: translateX(-6rem);
-  }
-}
-.pup-trot .pup-body svg,
-.pup-footy .pup-body svg,
-.pup-zoomies .pup-body svg {
-  animation: pup-bob 0.32s ease-in-out infinite alternate;
-}
-.pup-zoomies .pup-body svg {
-  animation-duration: 0.14s;
-}
-.pup-rtl.pup-trot .pup-body svg,
-.pup-rtl.pup-footy .pup-body svg,
-.pup-rtl.pup-zoomies .pup-body svg {
-  animation-name: pup-bob-rtl;
-}
-@keyframes pup-bob {
-  to {
-    transform: translateY(-3px);
-  }
-}
-@keyframes pup-bob-rtl {
-  from {
-    transform: scaleX(-1);
-  }
-  to {
-    transform: scaleX(-1) translateY(-3px);
-  }
-}
-.pup-leg-a,
-.pup-leg-b {
+/* walking: legs swing in pairs, body bobs */
+.m-leg {
   transform-origin: top center;
-  animation: pup-step 0.32s ease-in-out infinite alternate;
 }
-.pup-leg-b {
+.mascot-walk .m-leg-a,
+.mascot-walk .m-leg-b {
+  animation: m-step 0.34s ease-in-out infinite alternate;
+}
+.mascot-walk .m-leg-b {
   animation-direction: alternate-reverse;
 }
-.pup-zoomies .pup-leg-a,
-.pup-zoomies .pup-leg-b {
-  animation-duration: 0.14s;
-}
-@keyframes pup-step {
+@keyframes m-step {
   from {
-    transform: rotate(-22deg);
+    rotate: -14deg;
   }
   to {
-    transform: rotate(22deg);
+    rotate: 14deg;
   }
 }
-.pup-ball {
-  margin-bottom: 0.25rem;
-  animation:
-    pup-bounce 0.5s cubic-bezier(0.3, 0, 0.7, 1) infinite alternate,
-    pup-spin 0.9s linear infinite;
+.mascot-walk .m-upper {
+  animation: m-bob 0.34s ease-in-out infinite alternate;
 }
-@keyframes pup-bounce {
-  from {
-    translate: 0 0;
-  }
+@keyframes m-bob {
   to {
-    translate: 0 -1.75rem;
-  }
-}
-@keyframes pup-spin {
-  to {
-    rotate: 360deg;
+    translate: 0 -14px;
   }
 }
 
-/* Peek: rise over the edge, look around, duck back down */
-.pup-peek {
-  translate: -50% 0;
-  animation: pup-peek 5.5s ease-in-out forwards;
+/* sniffing: head dips to the ground and back */
+.m-head {
+  transform-origin: right bottom;
 }
-@keyframes pup-peek {
-  0%,
-  100% {
-    transform: translateY(110%);
-  }
-  14%,
-  86% {
-    transform: translateY(0.6rem);
+.mascot-sniff .m-head {
+  animation: m-sniff 0.8s ease-in-out 3 alternate;
+}
+@keyframes m-sniff {
+  to {
+    rotate: -14deg;
+    translate: 0 60px;
   }
 }
-.pup-peek .pup-head {
+
+/* barking: head jerks up */
+.mascot-bark .m-head {
+  animation: m-bark 0.3s ease-out 4 alternate;
+}
+@keyframes m-bark {
+  to {
+    rotate: 8deg;
+    translate: 0 -10px;
+  }
+}
+
+/* sleeping: legs tuck, body lowers and breathes, z's float up */
+.m-upper {
   transform-origin: center bottom;
-  animation: pup-look 5.5s ease-in-out forwards;
+  transition: translate 0.5s ease;
 }
-@keyframes pup-look {
-  0%,
-  25%,
-  75%,
-  100% {
-    transform: rotate(0);
-  }
-  35%,
-  45% {
-    transform: rotate(-12deg);
-  }
-  55%,
-  65% {
-    transform: rotate(12deg);
-  }
-}
-
-/* Nap: fade in, breathe, float some z's, fade out */
-.pup-nap {
-  translate: -50% 0;
-  animation: pup-nap 10s ease-in-out forwards;
-}
-@keyframes pup-nap {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  8%,
-  92% {
-    opacity: 1;
-  }
-}
-.pup-nap .pup-body svg {
+.mascot-sleep .m-leg {
   transform-origin: bottom center;
-  animation: pup-breathe 1.8s ease-in-out infinite alternate;
+  scale: 1 0.22;
+  transition: scale 0.5s ease;
 }
-@keyframes pup-breathe {
+.mascot-sleep .m-upper {
+  translate: 0 165px;
+  animation: m-breathe 1.8s ease-in-out infinite alternate;
+}
+@keyframes m-breathe {
   to {
-    transform: scaleY(1.06);
+    scale: 1 1.03;
   }
 }
-.pup-nap .pup-tail {
-  animation: none;
-}
-.pup-zzz {
+.mascot-zzz {
   position: absolute;
-  left: 3.25rem;
-  bottom: 2.25rem;
+  top: 0.75rem;
+  left: 1.5rem;
   font-family: var(--font-display);
   font-weight: 800;
   color: var(--color-navy);
 }
-.pup-zzz i {
+.mascot-right .mascot-zzz {
+  left: auto;
+  right: 1.5rem;
+}
+.mascot-zzz i {
   position: absolute;
   font-style: normal;
   opacity: 0;
-  animation: pup-z 2.4s ease-out infinite;
+  animation: m-z 2.4s ease-out infinite;
 }
-.pup-zzz i:nth-child(2) {
+.mascot-zzz i:nth-child(2) {
   animation-delay: 0.8s;
-  font-size: 1.1em;
+  font-size: 1.15em;
 }
-.pup-zzz i:nth-child(3) {
+.mascot-zzz i:nth-child(3) {
   animation-delay: 1.6s;
-  font-size: 1.35em;
+  font-size: 1.4em;
 }
-@keyframes pup-z {
+@keyframes m-z {
   0% {
     opacity: 0;
-    transform: translate(0, 0);
+    translate: 0 0;
   }
   20% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate(0.9rem, -2.4rem);
+    translate: -0.8rem -2.2rem;
   }
 }
 
-/* Tap: a quick bark bubble */
-.pup-woof {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  translate: -50% -0.25rem;
-  white-space: nowrap;
-  border-radius: 0.75rem;
-  background: var(--color-red);
-  padding: 0.2rem 0.6rem;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 800;
-  color: white;
-  animation: pup-pop 0.25s var(--ease-snap) both;
+/* tap tricks */
+.mascot-hop .mascot-dog {
+  animation: m-hop 0.4s cubic-bezier(0.3, 0, 0.5, 1) 2 alternate;
 }
-@keyframes pup-pop {
+@keyframes m-hop {
+  to {
+    translate: 0 -2.25rem;
+  }
+}
+.mascot-spin .mascot-dog {
+  animation: m-spin 0.9s ease-in-out;
+}
+@keyframes m-spin {
+  50% {
+    scale: -1 1;
+  }
+}
+
+/* speech bubble */
+.mascot-say {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  bottom: calc(100% - 0.5rem);
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  border-radius: 0.9rem;
+  background: var(--color-red);
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: white;
+  animation: m-pop 0.3s var(--ease-snap) both;
+}
+.mascot-say::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  translate: -50% -1px;
+  border: 0.4rem solid transparent;
+  border-top-color: var(--color-red);
+}
+@keyframes m-pop {
   from {
     scale: 0.4;
     opacity: 0;

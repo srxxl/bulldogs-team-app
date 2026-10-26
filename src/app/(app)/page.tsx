@@ -1,6 +1,7 @@
 import { ArrowUpRight, Vote } from "lucide-react";
 import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
+import { HomeMascot } from "@/components/mascot/home-mascot";
 import { MatchCard } from "@/components/match-card";
 import { RsvpButtons } from "@/components/rsvp-buttons";
 import { ButtonLink, EmptyState, Panel, SectionTitle } from "@/components/ui";
@@ -31,12 +32,14 @@ export default async function HomePage() {
   ]);
   const usIdx = ladder.findIndex((r) => isUs(r.team));
   const ladderSlice = usIdx === -1 ? ladder.slice(0, 4) : ladder.slice(Math.max(0, usIdx - 2), usIdx + 2);
+  const firstName = me.name.split(" ")[0];
   const rest = upcoming.filter((e) => e.id !== nextGame?.id).slice(0, 3);
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <header className="flex items-end justify-between">
-        <h1 className="text-4xl font-extrabold text-navy md:text-6xl">G'day, {me.name.split(" ")[0]}</h1>
+      <header className="-mb-2 md:-mb-4">
+        <h1 className="sr-only">G'day, {firstName}</h1>
+        <HomeMascot firstName={firstName} />
       </header>
 
       {voteOpen && !ballot && (
