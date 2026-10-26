@@ -1,6 +1,7 @@
 import { ArrowUpRight, Vote } from "lucide-react";
 import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
+import { LadderWidget } from "@/components/ladder-widget";
 import { HomeMascot } from "@/components/mascot/home-mascot";
 import { MatchCard } from "@/components/match-card";
 import { RsvpButtons } from "@/components/rsvp-buttons";
@@ -30,8 +31,6 @@ export default async function HomePage() {
     getYesCounts(ids),
     voteOpen ? getMyBallot(lastGame.id, me.id) : null,
   ]);
-  const usIdx = ladder.findIndex((r) => isUs(r.team));
-  const ladderSlice = usIdx === -1 ? ladder.slice(0, 4) : ladder.slice(Math.max(0, usIdx - 2), usIdx + 2);
   const firstName = me.name.split(" ")[0];
   const rest = upcoming.filter((e) => e.id !== nextGame?.id).slice(0, 3);
 
@@ -117,30 +116,10 @@ export default async function HomePage() {
 
         <div className="space-y-6 md:space-y-8">
           {ladder.length > 0 && (
-            <Panel>
-              <SectionTitle
-                action={
-                  <Link href="/ladder" className="text-sm font-semibold text-navy underline underline-offset-4">
-                    Full ladder
-                  </Link>
-                }
-              >
-                Ladder
-              </SectionTitle>
-              <ol className="space-y-1">
-                {ladderSlice.map((r) => (
-                  <li
-                    key={r.position}
-                    className={cn("flex items-center gap-3 rounded-xl px-3 py-2", isUs(r.team) && "bg-navy text-white")}
-                  >
-                    <span className="display-num w-7 text-2xl font-bold">{r.position}</span>
-                    <span className="flex-1 truncate font-medium">{r.team}</span>
-                    <span className="text-sm opacity-70">{r.percentage.toFixed(1)}%</span>
-                    <span className="display-num w-8 text-right text-2xl font-bold">{r.premiershipPoints}</span>
-                  </li>
-                ))}
-              </ol>
-            </Panel>
+            <LadderWidget
+              rows={ladder}
+              updated={`updated ${formatDay(ladder.reduce((d, r) => (r.updatedAt > d ? r.updatedAt : d), ladder[0].updatedAt))}`}
+            />
           )}
 
           {rest.length > 0 && (

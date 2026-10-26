@@ -9,7 +9,6 @@ import {
   NotebookPen,
   Settings,
   Shirt,
-  Trophy,
   Users,
 } from "lucide-react";
 import { hasRole } from "@/lib/roles";
@@ -37,7 +36,6 @@ export const PRIMARY: NavItem[] = [
 export const ALL: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/fixture", label: "Fixture", icon: CalendarDays },
-  { href: "/ladder", label: "Ladder", icon: Trophy },
   { href: "/training", label: "Training", icon: Dumbbell },
   { href: "/squad", label: "Squad", icon: Users },
   { href: "/notes", label: "Coach's notes", icon: NotebookPen },

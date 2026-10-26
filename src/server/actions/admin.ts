@@ -153,7 +153,7 @@ export async function importLadder(_prev: unknown, formData: FormData): Promise<
   const result = parseLadderPaste(String(formData.get("ladder") ?? ""));
   if ("error" in result) return fail(result.error, { ladder: [result.error] });
   await replaceLadder(result.rows);
-  revalidatePath("/ladder");
+  revalidatePath("/");
   revalidatePath("/", "layout");
   return ok(`Ladder updated with ${result.rows.length} teams`);
 }
