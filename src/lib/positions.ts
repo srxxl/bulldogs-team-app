@@ -71,3 +71,64 @@ export function validateLineup(lineup: Record<string, string>): string | null {
   }
   return null;
 }
+
+/** Which kind of player suits each slot, best first. */
+const SLOT_PREFERENCE: Record<string, Position[]> = {
+  FPL: ["forward", "utility"],
+  FF: ["forward", "utility"],
+  FPR: ["forward", "utility"],
+  HFFL: ["forward", "midfielder", "utility"],
+  CHF: ["forward", "utility", "ruck"],
+  HFFR: ["forward", "midfielder", "utility"],
+  WL: ["midfielder", "utility"],
+  C: ["midfielder", "utility"],
+  WR: ["midfielder", "utility"],
+  RR: ["midfielder", "ruck", "utility"],
+  R: ["ruck", "utility", "midfielder"],
+  RO: ["midfielder", "utility"],
+  HBFL: ["defender", "midfielder", "utility"],
+  CHB: ["defender", "utility", "ruck"],
+  HBFR: ["defender", "midfielder", "utility"],
+  BPL: ["defender", "utility"],
+  FB: ["defender", "utility"],
+  BPR: ["defender", "utility"],
+};
+
+/** The lines of the ground, top (forwards) to bottom (backs), for labels. */
+export const LINES = ["Forward line", "Half forward", "Centre", "Followers", "Half back", "Back line"] as const;
+
+export type AutoFillPlayer = { id: string; position: Position; secondaryPosition: Position | null; available: boolean };
+
+/**
+ * Fills empty spots with players who said they're in, matching their main position first, then their
+ * second position, then anyone left. Keeps everyone already placed. Leftovers go to the bench.
+ */
+export function autoFill(lineup: Record<string, string>, players: AutoFillPlayer[]): Record<string, string> {
+  const next = { ...lineup };
+  const placed = new Set(Object.values(next));
+  const free = players.filter((p) => p.available && !placed.has(p.id));
+  const take = (slot: string, match: (p: AutoFillPlayer) => boolean) => {
+    const i = free.findIndex(match);
+    if (i === -1) return false;
+    next[slot] = free[i].id;
+    free.splice(i, 1);
+    return true;
+  };
+
+  const empty = FIELD_SLOTS.map((s) => s.id).filter((id) => !next[id]);
+  // Hand out the best matches across the whole ground before any second choices:
+  // main position by preference rank, then second position by rank, then anyone left.
+  for (const key of ["position", "secondaryPosition"] as const) {
+    for (let rank = 0; rank < 3; rank++) {
+      for (const slot of empty) {
+        const pos = SLOT_PREFERENCE[slot][rank];
+        if (!next[slot] && pos) take(slot, (p) => p[key] === pos);
+      }
+    }
+  }
+  for (const slot of empty) if (!next[slot]) take(slot, () => true);
+  for (const slot of BENCH_SLOTS) {
+    if (!next[slot] && free.length) take(slot, () => true);
+  }
+  return next;
+}
