@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bulldogs
 
-## Getting Started
+Team app for the Brentwood Booragoon Bulldogs women's side (PFL Women's C3).
+Fixture, availability polls, training RSVPs, squad profiles, the drag-and-drop team board,
+player's player votes, fitness and nutrition boards, coach's notes, the ladder and anonymous notes.
 
-First, run the development server:
+## Run it locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env.local      # then set BETTER_AUTH_SECRET (openssl rand -base64 32)
+pnpm db:migrate                 # creates a local database in .data/ (no Postgres needed)
+pnpm db:seed                    # demo squad, fixture and content
+pnpm dev                        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+With `ENABLE_DEV_LOGIN=true` the sign-in page shows a **Local dev login** box. Pick Coach, Captain,
+Player or a pending sign-up. The local database allows one process at a time, so stop `pnpm dev`
+before running `db:migrate` or `db:seed`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`pnpm check` runs lint, types and tests.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploy to Vercel
 
-## Learn More
+1. **Push this repo to GitHub** and import it at vercel.com/new. The framework is detected automatically.
+2. **Database**: in the Vercel project go to Storage → Marketplace → **Neon** → Create. This sets `DATABASE_URL`.
+   Migrations run on each deploy (`vercel-build`).
+3. **Photo storage**: Storage → **Blob** → Create. This sets `BLOB_READ_WRITE_TOKEN`.
+4. **Google sign-in**: Google Cloud Console → APIs & Services → Credentials → Create OAuth client ID (Web).
+   - Authorised redirect URI: `https://<your-domain>/api/auth/callback/google`
+   - Copy the ID and secret into `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+5. **Microsoft sign-in**: entra.microsoft.com → App registrations → New registration.
+   - Supported account types: *Any organizational directory and personal Microsoft accounts*.
+   - Redirect URI (Web): `https://<your-domain>/api/auth/callback/microsoft`
+   - Certificates & secrets → New client secret. Set `MICROSOFT_CLIENT_ID` (Application ID) and `MICROSOFT_CLIENT_SECRET`.
+6. **Other env vars** (Settings → Environment Variables):
+   - `BETTER_AUTH_SECRET`: `openssl rand -base64 32`
+   - `BETTER_AUTH_URL`: `https://<your-domain>`
+   - `ADMIN_EMAILS`: your email (comma-separate several). These accounts are admins on first sign-in.
+   - `CRON_SECRET`: any long random string (secures the daily sync).
+7. Redeploy, sign in with your admin email, then in **Admin**:
+   - Switch on training polls when pre-season starts.
+   - Approve players as they sign up and promote captains and coaches.
 
-To learn more about Next.js, take a look at the following resources:
+## PlayHQ (fixture + ladder)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The PFL publishes fixtures and ladders on PlayHQ. The app reads them through PlayHQ's **official public API**.
+It never scrapes playhq.com.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Ask the club's PlayHQ administrator to request a public API key (Client ID) from PlayHQ support for
+   the Brentwood Booragoon organisation, tenant `afl`.
+2. Find the team and grade IDs in the playhq.com URLs for the C3 Women team and grade.
+3. Set `PLAYHQ_API_KEY`, `PLAYHQ_TEAM_ID` and `PLAYHQ_GRADE_ID` in Vercel. The daily cron (6am Perth) syncs
+   games and the ladder, and Admin → **Sync now** runs it on demand.
+4. After the first sync, check the games and ladder look right. The field mapping in
+   `src/server/playhq/map.ts` is written against PlayHQ's documented shape but hasn't been checked against a live response.
 
-## Deploy on Vercel
+Until then, coaches add games in **Admin → Add event** and update the ladder by copying the table from
+playhq.com and pasting it into **Admin → PFL data**.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## For contributors and agents
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Read `AGENTS.md` (conventions, architecture, design system) and `PLAN.md` (features and roadmap).

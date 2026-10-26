@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-navy: #28357c;
+  --color-navy-deep: #1e2860;
+  --color-ink: #151b45;
+  --color-red: #d32427;
+  --color-red-deep: #a8191c;
+  --color-chalk: #eef0f6;
+  --color-powder: #c9d4ef;
+  --color-mist: #dfe5f4;
+  --color-grass: #3f7d5a;
+
+  --font-display: var(--font-big-shoulders), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-stamp: 4px 4px 0 0 var(--color-ink);
+  --shadow-stamp-sm: 2px 2px 0 0 var(--color-ink);
+
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.3, 1.2);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-chalk font-sans text-ink antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-red;
+  }
+  ::selection {
+    @apply bg-red text-white;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-balance;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility display-num {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+}
+
+/* Outlined numerals for guernsey numbers */
+@utility num-outline {
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 2px currentColor;
+  paint-order: stroke fill;
+}
+
+@utility masonry {
+  columns: 1;
+  column-gap: 1rem;
+  @media (width >= 40rem) {
+    columns: 2;
+  }
+  @media (width >= 64rem) {
+    columns: 3;
+  }
+  & > * {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}
+
+/* biome-ignore-start lint/complexity/noImportantStyles: reduced-motion override must beat component styles */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: reduced-motion override must beat component styles */
+
+/* The single orchestrated moment: the match card's hoop band sweeps in. */
+@keyframes hoop-sweep {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.animate-hoop {
+  transform-origin: left;
+  animation: hoop-sweep 700ms var(--ease-snap) 150ms both;
+}
+
+dialog::backdrop {
+  background: rgb(21 27 69 / 0.55);
+  backdrop-filter: blur(2px);
 }
