@@ -12,7 +12,6 @@ const RESULT = {
 } as const;
 const MY = {
   yes: "You're in",
-  maybe: "You said maybe",
   no: "You can't make it",
 } as const;
 

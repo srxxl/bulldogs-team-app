@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, desc, eq, gte, inArray, lt, ne } from "drizzle-orm";
 import { cache } from "react";
 import { db } from "@/server/db";
-import { availability, type EventKind, event, playerProfile, user } from "@/server/db/schema";
+import { type AvailabilityStatus, availability, type EventKind, event, playerProfile, user } from "@/server/db/schema";
 
 export const getEvent = cache(async (id: string) => {
   const [row] = await db.select().from(event).where(eq(event.id, id));
@@ -59,7 +59,7 @@ export type RsvpPerson = {
   name: string;
   image: string | null;
   guernsey: number | null;
-  status: "yes" | "maybe" | "no";
+  status: AvailabilityStatus;
   note: string | null;
 };
 
@@ -94,7 +94,7 @@ export async function getRsvps(eventId: string): Promise<RsvpPerson[]> {
 
 /** My RSVP status for each of the given events. */
 export async function getMyRsvps(userId: string, eventIds: string[]) {
-  if (eventIds.length === 0) return new Map<string, "yes" | "maybe" | "no">();
+  if (eventIds.length === 0) return new Map<string, AvailabilityStatus>();
   const rows = await db
     .select({ eventId: availability.eventId, status: availability.status })
     .from(availability)

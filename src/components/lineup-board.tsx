@@ -36,13 +36,11 @@ const POOL = "pool";
 
 const STATUS_ORDER: Record<string, number> = {
   yes: 0,
-  maybe: 1,
-  null: 2,
-  no: 3,
+  null: 1,
+  no: 2,
 };
 const STATUS_DOT: Record<string, string> = {
   yes: "bg-grass",
-  maybe: "bg-powder",
   no: "bg-red",
   null: "bg-ink/20",
 };

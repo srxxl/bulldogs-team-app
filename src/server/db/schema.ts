@@ -155,7 +155,8 @@ export const event = pgTable(
   (t) => [index().on(t.startsAt), index().on(t.kind, t.startsAt), index().on(t.opponent)],
 );
 
-export const availabilityEnum = pgEnum("availability_status", ["yes", "maybe", "no"]);
+/** A straight in or out: no "maybe", so coaches can plan. */
+export const availabilityEnum = pgEnum("availability_status", ["yes", "no"]);
 
 export const availability = pgTable(
   "availability",

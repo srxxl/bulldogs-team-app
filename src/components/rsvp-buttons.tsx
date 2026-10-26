@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, HelpCircle, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useOptimistic, useState, useTransition } from "react";
 import { cn } from "@/lib/cn";
 import { setAvailability } from "@/server/actions/availability";
@@ -17,12 +17,6 @@ const OPTIONS: {
     label: "I'm in",
     icon: Check,
     on: "bg-navy text-white border-navy",
-  },
-  {
-    value: "maybe",
-    label: "Maybe",
-    icon: HelpCircle,
-    on: "bg-powder text-navy border-powder",
   },
   { value: "no", label: "Can't", icon: X, on: "bg-red text-white border-red" },
 ];

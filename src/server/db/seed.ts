@@ -156,7 +156,7 @@ async function main() {
   // RSVPs for the next game, votes for the last one.
   const next = inserted.filter((e) => e.kind === "game" && e.startsAt > now)[0];
   const last = inserted.filter((e) => e.kind === "game" && e.startsAt < now).at(-1);
-  const statuses = ["yes", "yes", "yes", "maybe", "no"] as const;
+  const statuses = ["yes", "yes", "yes", "no"] as const;
   if (next) {
     await db.insert(t.availability).values(
       users.slice(1, 15).map((u, i) => ({

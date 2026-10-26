@@ -22,7 +22,6 @@ export async function generateMetadata({ params }: PageProps<"/fixture/[id]">): 
 
 const GROUPS = [
   { status: "yes", label: "In" },
-  { status: "maybe", label: "Maybe" },
   { status: "no", label: "Out" },
 ] as const;
 
