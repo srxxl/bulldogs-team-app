@@ -435,3 +435,138 @@ dialog::backdrop {
 .mascot-right .m-patch {
   opacity: 1;
 }
+
+/* Team board: a top-down oval in mown club navy with players on their spots. */
+.board-ground {
+  position: relative;
+  margin-inline: auto;
+  width: min(100%, 30rem);
+  aspect-ratio: 4 / 5;
+}
+.board-surface {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(255 255 255 / 0.08), transparent 60%),
+    repeating-linear-gradient(180deg, #2c3b8b 0 6.25%, #253277 6.25% 12.5%);
+  box-shadow:
+    inset 0 0 0 0.35rem #1e2860,
+    0 10px 0 #151b45;
+}
+
+/* a position on the ground: a ring on the grass, with the player on it */
+.board-spot {
+  position: absolute;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+}
+.board-ring {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px dashed rgb(255 255 255 / 0.35);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgb(255 255 255 / 0.55);
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.board-ring-filled {
+  border-style: solid;
+  border-color: transparent;
+  background: radial-gradient(circle, rgb(21 27 69 / 0.55), transparent 70%);
+}
+.board-ring-over {
+  border: 2px solid var(--color-red);
+  background: rgb(211 36 39 / 0.3);
+}
+.board-ring-ready {
+  border-color: rgb(255 255 255 / 0.85);
+  animation: board-pulse 1.2s ease-in-out infinite;
+}
+@keyframes board-pulse {
+  50% {
+    background: rgb(255 255 255 / 0.15);
+  }
+}
+.board-stander {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  transition: translate 0.15s;
+  touch-action: none;
+  cursor: grab;
+}
+.board-stander:hover,
+.board-stander:focus-visible,
+.board-stander-selected {
+  translate: -50% -58%;
+}
+.board-stander-selected .board-name {
+  background: var(--color-red);
+}
+.board-name {
+  max-width: 5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: var(--color-ink);
+  padding: 0.05rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 2px 0 rgb(0 0 0 / 0.25);
+}
+.board-number {
+  position: absolute;
+  right: -0.4rem;
+  bottom: -0.2rem;
+  display: grid;
+  place-items: center;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding-inline: 0.15rem;
+  border-radius: 999px;
+  background: var(--color-red);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: white;
+}
+.board-number-lg {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.8rem;
+}
+
+/* interchange bench: a navy plank with seats */
+.board-bench {
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #28357c, #1e2860);
+  padding: 0.75rem;
+  box-shadow: 0 6px 0 #151b45;
+}
+.board-seat {
+  display: grid;
+  place-items: center;
+  min-height: 3.75rem;
+  border-radius: 0.9rem;
+  background: rgb(255 255 255 / 0.08);
+  transition: background-color 0.2s;
+}
+.board-seat-over {
+  background: rgb(211 36 39 / 0.45);
+}
+.board-seat-ready {
+  outline: 2px dashed rgb(255 255 255 / 0.7);
+}

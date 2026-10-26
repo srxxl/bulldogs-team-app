@@ -1,5 +1,14 @@
 import { TZDate } from "@date-fns/tz";
-import { addDays, differenceInCalendarDays, format } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 
 export const CLUB_TZ = "Australia/Perth";
 
@@ -57,3 +66,21 @@ export function relativeDay(d: Date, now = new Date()): string {
 export const perthWeekday = (d: Date) => inPerth(d).getDay();
 
 export { addDays };
+
+export type CalendarDay = { key: string; day: number; inMonth: boolean; isToday: boolean };
+
+/** Monday-first weeks covering the Perth calendar month that contains `date`. */
+export function monthGrid(date: Date, now = new Date()): CalendarDay[][] {
+  const month = inPerth(date);
+  const first = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
+  const last = endOfWeek(endOfMonth(month), { weekStartsOn: 1 });
+  const today = format(inPerth(now), "yyyy-MM-dd");
+  const days = eachDayOfInterval({ start: first, end: last }).map((d) => {
+    const key = format(d, "yyyy-MM-dd");
+    return { key, day: d.getDate(), inMonth: d.getMonth() === month.getMonth(), isToday: key === today };
+  });
+  return Array.from({ length: days.length / 7 }, (_, w) => days.slice(w * 7, w * 7 + 7));
+}
+
+/** "2027-04-12" for an instant, on the Perth calendar. */
+export const dayKey = (d: Date) => format(inPerth(d), "yyyy-MM-dd");

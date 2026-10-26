@@ -37,6 +37,7 @@ Run `pnpm check` before calling any task done. Do not leave the tree with type e
 - **Better Auth** (`src/server/auth/index.ts`) with Google + Microsoft Entra ID. A dev-only email/password login exists when `ENABLE_DEV_LOGIN=true` and `NODE_ENV !== "production"`.
 - **Drizzle ORM + Postgres** through the standard `pg` driver everywhere (`src/server/db/client.ts`). Production: Neon. Local: `pnpm dev` starts a PGlite socket server on port 54329 with data in `.data/pglite`, so every Next.js process shares one database. Never open PGlite in-process: Next 16 runs some routes in separate processes and two openers corrupt the data folder. `pnpm db:migrate` / `db:seed` work while `pnpm dev` is running; seed refuses any non-localhost URL.
 - **Tailwind v4** with tokens in `src/app/globals.css` (`@theme`). No component library.
+  - Never use `backdrop-filter`/`backdrop-blur` (or `transform`/`filter`) on an ancestor of a dnd-kit board: it becomes the containing block for the fixed drag overlay and dragging lands in the wrong place.
   - Never put `<` or `>` in a CSS comment (e.g. `<Component />`). The Turbopack/Tailwind pipeline silently drops every rule after it, with no error.
 - **dnd-kit** for the team board. **Vercel Blob** for uploads (falls back to `public/uploads` locally).
 - **zod** validates every server action input and every external payload (PlayHQ).

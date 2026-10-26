@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { RsvpButtons } from "@/components/rsvp-buttons";
 import { SessionPlan } from "@/components/session-plan";
+import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, Chip, Panel, SectionTitle } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { canLead, canPlanSessions } from "@/lib/roles";
@@ -92,8 +93,8 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
         </dl>
         <div className="mt-6 flex flex-wrap gap-2">
           {ev.kind === "game" && (
-            <ButtonLink href={`/fixture/${id}/board`} className="bg-white text-navy hover:bg-powder">
-              <Shirt size={18} /> Team board
+            <ButtonLink href="#team" className="bg-white text-navy hover:bg-powder">
+              <Shirt size={18} /> Team
             </ButtonLink>
           )}
           {votes === "open" && (
@@ -219,6 +220,14 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
           )}
         </div>
       </div>
+
+      {ev.kind === "game" && (
+        <TeamSection
+          eventId={id}
+          editable={canLead(me.role)}
+          heading={<h2 className="mb-2 text-3xl font-bold text-navy">Team</h2>}
+        />
+      )}
 
       {isTraining && (
         <SessionPlan eventId={id} drills={sessionDrills} catalog={catalog} editable={canPlanSessions(me)} />

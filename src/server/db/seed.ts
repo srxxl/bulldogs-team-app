@@ -4,7 +4,7 @@
  */
 import { hashPassword } from "better-auth/crypto";
 import { sql } from "drizzle-orm";
-import { perthAt } from "@/lib/time";
+import { perthAt, perthWeekday } from "@/lib/time";
 import { TRAINING, upcomingTrainingSlots } from "@/lib/training";
 import { createDb, isLocalDb } from "./client";
 import * as t from "./schema";
@@ -92,8 +92,9 @@ async function main() {
 
   // A season straddling "now": six games played, eight to come, Saturdays at 12:20.
   const now = new Date();
-  const firstSat = new Date(now);
-  firstSat.setUTCDate(now.getUTCDate() - ((now.getUTCDay() + 1) % 7) - 7 * 6);
+  // The Saturday six weeks back, on the Perth calendar (UTC can be a day out).
+  const firstSat = perthAt(now, 12);
+  firstSat.setTime(firstSat.getTime() - (((perthWeekday(now) + 1) % 7) + 7 * 6) * 86400_000);
   const games = OPPONENTS.concat(OPPONENTS.slice(0, 6)).map((opp, i) => {
     const startsAt = perthAt(new Date(firstSat.getTime() + i * 7 * 86400_000), 12, 20);
     const played = startsAt < now;
