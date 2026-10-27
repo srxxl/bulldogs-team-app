@@ -1,14 +1,39 @@
 import { describe, expect, it } from "vitest";
-import { type AutoFillPlayer, autoFill, FIELD_SLOTS, fieldPosition, GROUND, MARKER, validateLineup } from "./positions";
+import {
+  type AutoFillPlayer,
+  autoFill,
+  BENCH_SLOTS,
+  EMERGENCY_SLOTS,
+  FIELD_SLOTS,
+  GROUND,
+  MARKER,
+  validateLineup,
+} from "./positions";
 
 const { width: W, height: H } = GROUND;
 const r = (MARKER * W) / 2;
 const inGround = (x: number, y: number) => ((x - W / 2) / (W / 2)) ** 2 + ((y - H / 2) / (H / 2)) ** 2 <= 1;
 
-describe("fieldPosition", () => {
-  const centres = FIELD_SLOTS.map((s) => {
-    const p = fieldPosition(s);
-    return { id: s.id, x: p.x * W, y: p.y * H };
+describe("field positions", () => {
+  const centres = FIELD_SLOTS.map((s) => ({ id: s.id, x: s.x * W, y: s.y * H }));
+
+  it("has the 18 AFL positions, a 4-player interchange and 2 emergencies", () => {
+    expect(FIELD_SLOTS).toHaveLength(18);
+    expect(BENCH_SLOTS).toHaveLength(4);
+    expect(EMERGENCY_SLOTS).toHaveLength(2);
+  });
+
+  it("mirrors the forward and back halves", () => {
+    const at = (id: string) => FIELD_SLOTS.find((s) => s.id === id);
+    for (const [f, b] of [
+      ["FF", "FB"],
+      ["CHF", "CHB"],
+      ["FPL", "BPL"],
+      ["HFFR", "HBFR"],
+    ]) {
+      expect(at(f)?.x).toBeCloseTo(at(b)?.x ?? 0);
+      expect(at(f)?.y).toBeCloseTo(1 - (at(b)?.y ?? 0));
+    }
   });
 
   it("keeps every position marker inside the boundary", () => {
@@ -66,11 +91,16 @@ describe("autoFill", () => {
     expect(new Set(Object.values(filled)).size).toBe(Object.values(filled).length);
   });
 
-  it("sends extras to the bench once the field is full", () => {
-    const players = Array.from({ length: 21 }, (_, i) => p(`p${i}`, "utility"));
+  it("fills the field, then the 4 interchange, then the 2 emergencies", () => {
+    const players = Array.from({ length: 25 }, (_, i) => p(`p${i}`, "utility"));
     const filled = autoFill({}, players);
     expect(FIELD_SLOTS.every((s) => filled[s.id])).toBe(true);
-    expect(["I1", "I2", "I3"].every((s) => filled[s])).toBe(true);
+    expect([...BENCH_SLOTS, ...EMERGENCY_SLOTS].every((s) => filled[s])).toBe(true);
+    expect(Object.keys(filled)).toHaveLength(24);
     expect(validateLineup(filled)).toBeNull();
+  });
+
+  it("rejects the old 8-player bench slots", () => {
+    expect(validateLineup({ I5: "a" })).toMatch(/Unknown/);
   });
 });

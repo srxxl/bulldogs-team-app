@@ -1,5 +1,6 @@
 import "server-only";
 import type { BoardPlayer } from "@/components/team-board/types";
+import { ALL_SLOTS } from "@/lib/positions";
 import { getLineup } from "./content";
 import { getRsvps } from "./events";
 import { getSquad } from "./squad";
@@ -20,5 +21,7 @@ export async function getBoardData(eventId: string) {
       secondaryPosition: p.secondaryPosition,
       status: status.get(p.id) ?? null,
     }));
-  return { players, lineup };
+  // Drop spots that no longer exist (the bench used to have 8), so an old lineup still loads and saves.
+  const current = Object.fromEntries(Object.entries(lineup).filter(([slot]) => ALL_SLOTS.has(slot)));
+  return { players, lineup: current };
 }

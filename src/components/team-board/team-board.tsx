@@ -16,7 +16,7 @@ import {
 import { Eraser, RotateCcw, Save, Sparkles } from "lucide-react";
 import { useId, useMemo, useState, useTransition } from "react";
 import { cn } from "@/lib/cn";
-import { autoFill, BENCH_SLOTS, FIELD_SLOTS, fieldPosition, GROUND, MARKER, positionLabel } from "@/lib/positions";
+import { autoFill, BENCH_SLOTS, EMERGENCY_SLOTS, FIELD_SLOTS, GROUND, MARKER, positionLabel } from "@/lib/positions";
 import { saveLineup } from "@/server/actions/lineup";
 import { Avatar } from "../avatar";
 import { Button } from "../ui";
@@ -27,6 +27,7 @@ const POOL = "pool";
 const SLOT_LABEL = new Map<string, string>([
   ...FIELD_SLOTS.map((s) => [s.id, s.label] as [string, string]),
   ...BENCH_SLOTS.map((s) => [s, `Interchange ${s.slice(1)}`] as [string, string]),
+  ...EMERGENCY_SLOTS.map((s) => [s, `Emergency ${s.slice(1)}`] as [string, string]),
 ]);
 const STATUS_TEXT = { yes: "Said they're in", no: "Can't make it", null: "Hasn't said yet" } as const;
 const STATUS_ORDER = { yes: 0, null: 1, no: 2 } as const;
@@ -153,15 +154,14 @@ export function TeamBoard({
 
         <Ground>
           {FIELD_SLOTS.map((s) => {
-            const { x, y } = fieldPosition(s);
             return (
               <FieldSpot
                 key={s.id}
                 id={s.id}
                 short={s.short}
                 title={s.label}
-                x={x}
-                y={y}
+                x={s.x}
+                y={s.y}
                 player={byId.get(lineup[s.id])}
                 editable={editable}
                 selected={selected}
@@ -171,20 +171,31 @@ export function TeamBoard({
           })}
         </Ground>
 
-        <div className="board-bench mt-6">
-          <h3 className="mb-2 px-1 text-lg font-bold text-white">Interchange</h3>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
-            {BENCH_SLOTS.map((s) => (
-              <BenchSpot
-                key={s}
-                id={s}
-                player={byId.get(lineup[s])}
-                editable={editable}
-                selected={selected}
-                onTapSlot={tapSlot}
-              />
-            ))}
-          </div>
+        <div className="board-bench mt-6 grid gap-4 sm:grid-cols-[2fr_1fr]">
+          {(
+            [
+              ["Interchange", BENCH_SLOTS, "Up to 4 can rotate on and off."],
+              ["Emergencies", EMERGENCY_SLOTS, "Back-ups if someone pulls out."],
+            ] as const
+          ).map(([title, slots, hint]) => (
+            <div key={title}>
+              <h3 className="px-1 text-lg font-bold text-white">{title}</h3>
+              <p className="mb-2 px-1 text-xs text-powder">{hint}</p>
+              <div className={cn("grid gap-2", slots.length === 4 ? "grid-cols-4" : "grid-cols-2")}>
+                {slots.map((s) => (
+                  <BenchSpot
+                    key={s}
+                    id={s}
+                    label={SLOT_LABEL.get(s) ?? s}
+                    player={byId.get(lineup[s])}
+                    editable={editable}
+                    selected={selected}
+                    onTapSlot={tapSlot}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -383,12 +394,15 @@ function Stander({
 
 function BenchSpot({
   id,
+  label,
   player,
   editable,
   selected,
   onTapSlot,
 }: {
   id: string;
+  /** "Interchange 1", "Emergency 2"… */
+  label: string;
   player?: BoardPlayer;
   editable: boolean;
   selected: string | null;
@@ -409,7 +423,7 @@ function BenchSpot({
           {...(editable ? draggable.attributes : {})}
           onClick={() => onTapSlot(id)}
           aria-pressed={selected === player.id}
-          aria-label={`${player.name}, interchange`}
+          aria-label={`${player.name}, ${label}`}
           className={cn(
             "flex flex-col items-center gap-0.5 rounded-xl p-1",
             selected === player.id && "ring-2 ring-red",
@@ -426,7 +440,7 @@ function BenchSpot({
         <button
           type="button"
           onClick={() => onTapSlot(id)}
-          aria-label={`Interchange ${id.slice(1)}, empty`}
+          aria-label={`${label}, empty`}
           className="size-full min-h-14 rounded-xl text-xs font-bold text-white/40"
         >
           {id}
@@ -541,7 +555,7 @@ function PlayerCard({
       </dl>
       {editable && spot && <p className="mt-3 text-xs text-powder">Tap any spot on the ground to move them there.</p>}
       <div className="mt-3 flex flex-wrap gap-2">
-        {editable && spot && !spot.startsWith("I") && (
+        {editable && spot && !BENCH_SLOTS.includes(spot) && !EMERGENCY_SLOTS.includes(spot) && (
           <Button variant="ghost" className="min-h-9 bg-white/10 text-white hover:bg-white/20" onClick={onBench}>
             Move to bench
           </Button>
