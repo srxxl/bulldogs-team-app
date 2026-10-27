@@ -3,19 +3,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
 import { FixtureCalendar } from "@/components/fixture-calendar";
+import { MatchCard } from "@/components/match-card";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { CLUB } from "@/lib/club";
 import { cn } from "@/lib/cn";
 import { formatMonth, monthKey } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
-import { getMyRsvps, getSeason, getYesCounts } from "@/server/queries/events";
+import { getMyRsvps, getNextGame, getSeason, getYesCounts } from "@/server/queries/events";
 
 export const metadata: Metadata = { title: "Fixture" };
 
 export default async function FixturePage({ searchParams }: PageProps<"/fixture">) {
   const view = (await searchParams).view === "calendar" ? "calendar" : "list";
   const me = await requireMember();
-  const season = await getSeason();
+  const [season, nextGame] = await Promise.all([getSeason(), getNextGame()]);
   const ids = season.map((e) => e.id);
   const [mine, yes] = await Promise.all([getMyRsvps(me.id, ids), getYesCounts(ids)]);
 
@@ -30,6 +31,12 @@ export default async function FixturePage({ searchParams }: PageProps<"/fixture"
       <PageHeader title="Fixture" intro={`${CLUB.grade}, ${CLUB.league}. Games, socials and club events.`}>
         {me.isAdmin && <ButtonLink href="/admin/events/new">Add event</ButtonLink>}
       </PageHeader>
+
+      {nextGame && (
+        <section aria-label="Next game">
+          <MatchCard game={nextGame} myStatus={mine.get(nextGame.id) ?? null} yesCount={yes.get(nextGame.id) ?? 0} />
+        </section>
+      )}
 
       <section aria-labelledby="season-heading">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
