@@ -9,6 +9,8 @@ export const canLead = (role: Role) => hasRole(role, "captain");
 export const isCoach = (role: Role) => role === "coach";
 /** Plan training sessions (add, order and remove drills): captains, coaches and admins. */
 export const canPlanSessions = (me: { role: Role; isAdmin: boolean }) => me.isAdmin || canLead(me.role);
+/** Pick the team on the board: captains, coaches and admins. */
+export const canPickTeam = (me: { role: Role; isAdmin: boolean }) => me.isAdmin || canLead(me.role);
 /** Remove anyone's pins and notes: coaches and admins. */
 export const canModerate = (me: { role: Role; isAdmin: boolean }) => me.isAdmin || isCoach(me.role);
 

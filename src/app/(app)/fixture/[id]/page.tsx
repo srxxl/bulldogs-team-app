@@ -7,7 +7,7 @@ import { SessionPlan } from "@/components/session-plan";
 import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, Chip, Panel, SectionTitle } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { canLead, canPlanSessions } from "@/lib/roles";
+import { canLead, canPickTeam, canPlanSessions } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
@@ -224,7 +224,7 @@ export default async function EventPage({ params }: PageProps<"/fixture/[id]">) 
       {ev.kind === "game" && (
         <TeamSection
           eventId={id}
-          editable={canLead(me.role)}
+          editable={canPickTeam(me)}
           heading={<h2 className="mb-2 text-3xl font-bold text-navy">Team</h2>}
         />
       )}

@@ -2,10 +2,12 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { forbidden } from "next/navigation";
 import { z } from "zod";
 import { type ActionResult, fail, ok } from "@/lib/action-result";
 import { validateLineup } from "@/lib/positions";
-import { requireRole } from "@/server/auth/session";
+import { canPickTeam } from "@/lib/roles";
+import { requireMember } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { lineupSlot } from "@/server/db/schema";
 import { getEvent } from "@/server/queries/events";
@@ -17,7 +19,8 @@ const schema = z.object({
 });
 
 export async function saveLineup(input: z.input<typeof schema>): Promise<ActionResult> {
-  await requireRole("captain");
+  const me = await requireMember();
+  if (!canPickTeam(me)) forbidden();
   const parsed = schema.safeParse(input);
   if (!parsed.success) return fail("Couldn't read that lineup");
   const { eventId, lineup } = parsed.data;
