@@ -8,6 +8,7 @@ import { RsvpButtons } from "@/components/rsvp-buttons";
 import { ButtonLink, EmptyState, Panel, SectionTitle } from "@/components/ui";
 import { isUs } from "@/lib/club";
 import { cn } from "@/lib/cn";
+import { noteRole } from "@/lib/roles";
 import { formatDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
@@ -74,7 +75,7 @@ export default async function HomePage() {
           {note && (
             <Panel className="relative">
               <p className="text-sm font-semibold text-red">
-                {note.role === "captain" ? "Captain's note" : "Coach's note"} for {nextGame?.title}, from{" "}
+                {noteRole(note.role) ? `${noteRole(note.role)}'s note` : "Note"} for {nextGame?.title}, from{" "}
                 {note.preferredName || note.name.split(" ")[0]}
               </p>
               <h2 className="mt-1 text-4xl font-extrabold text-navy">{note.title}</h2>

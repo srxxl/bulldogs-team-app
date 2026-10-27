@@ -1,8 +1,9 @@
+import { noteRole } from "@/lib/roles";
 import { formatDay } from "@/lib/time";
 import type { GameNote } from "@/server/queries/content";
 import { DeleteNoteButton, NoteForm } from "./note-form";
 
-/** Coach's and captains' notes for one game, newest first, with "Write a note" for leaders. */
+/** Notes for one game, newest first, with "Write a note" for captains, coaches and admins. */
 export function GameNotes({
   eventId,
   notes,
@@ -28,7 +29,7 @@ export function GameNotes({
             <li key={n.id} className="rounded-2xl bg-chalk p-4">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm text-ink/60">
-                  {n.role === "captain" ? "Captain" : "Coach"} {n.preferredName || n.name}, {formatDay(n.createdAt)}
+                  {[noteRole(n.role), n.preferredName || n.name].filter(Boolean).join(" ")}, {formatDay(n.createdAt)}
                 </p>
                 {canDelete(n) && <DeleteNoteButton id={n.id} />}
               </div>

@@ -1,4 +1,4 @@
-import { CalendarPlus, ChevronLeft, MapPin, Pencil, Shirt, Vote } from "lucide-react";
+import { ChevronLeft, MapPin, Pencil, Vote } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
@@ -8,7 +8,7 @@ import { RsvpButtons } from "@/components/rsvp-buttons";
 import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, Chip } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { canLead, canModerate, canPickTeam } from "@/lib/roles";
+import { canLead, canModerate, canPickTeam, canWriteNotes } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
@@ -91,31 +91,20 @@ export async function EventDetail({ id }: { id: string }) {
             )}
           </div>
         </dl>
-        <div className="mt-6 flex flex-wrap gap-2">
-          {ev.kind === "game" && (
-            <ButtonLink href="#team" className="bg-white text-navy hover:bg-powder">
-              <Shirt size={18} /> Team
-            </ButtonLink>
-          )}
-          {votes === "open" && (
-            <ButtonLink href={`/fixture/${id}/vote`} variant="red">
-              <Vote size={18} /> Player's player votes
-            </ButtonLink>
-          )}
-          <ButtonLink
-            href={`/fixture/${id}/calendar.ics`}
-            prefetch={false}
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-          >
-            <CalendarPlus size={18} /> Add to calendar
-          </ButtonLink>
-          {me.isAdmin && (
-            <ButtonLink href={`/admin/events/${id}`} variant="ghost" className="text-white hover:bg-white/10">
-              <Pencil size={16} /> Edit
-            </ButtonLink>
-          )}
-        </div>
+        {(votes === "open" || me.isAdmin) && (
+          <div className="mt-6 flex flex-wrap gap-2">
+            {votes === "open" && (
+              <ButtonLink href={`/fixture/${id}/vote`} variant="red">
+                <Vote size={18} /> Player's player votes
+              </ButtonLink>
+            )}
+            {me.isAdmin && (
+              <ButtonLink href={`/admin/events/${id}`} variant="ghost" className="text-white hover:bg-white/10">
+                <Pencil size={16} /> Edit
+              </ButtonLink>
+            )}
+          </div>
+        )}
       </header>
 
       {ev.kind === "game" && (
@@ -123,7 +112,7 @@ export async function EventDetail({ id }: { id: string }) {
           <GameNotes
             eventId={id}
             notes={notes}
-            canWrite={canLead(me.role)}
+            canWrite={canWriteNotes(me)}
             canDelete={(n) => n.authorId === me.id || canModerate(me)}
           />
         </Collapsible>

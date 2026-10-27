@@ -6,7 +6,7 @@ import { createNote, deleteNote } from "@/server/actions/content";
 import { Field, FormMessage, Input, SubmitButton, Textarea } from "./forms";
 import { Sheet } from "./sheet";
 
-/** "Write a note" for one game. Captains and coaches. */
+/** "Write a note" for one game. Captains, coaches and admins. */
 export function NoteForm({ eventId }: { eventId: string }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(createNote, null);

@@ -2,10 +2,11 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { forbidden } from "next/navigation";
 import { z } from "zod";
 import { type ActionResult, fail, ok } from "@/lib/action-result";
 import { blank, parseForm } from "@/lib/form";
-import { canModerate } from "@/lib/roles";
+import { canModerate, canWriteNotes } from "@/lib/roles";
 import { perthToday } from "@/lib/time";
 import { requireMember, requireRole } from "@/server/auth/session";
 import { db } from "@/server/db";
@@ -15,15 +16,22 @@ import { storeImage } from "@/server/upload";
 
 /* Notes ------------------------------------------------------------------ */
 
+/** Captains, coaches and admins write notes; everyone else gets a 403. */
+async function requireNoteWriter() {
+  const me = await requireMember();
+  if (!canWriteNotes(me)) forbidden();
+  return me;
+}
+
 const noteSchema = z.object({
   eventId: z.string().min(1),
   title: z.string().trim().min(1, "Give it a title").max(100),
   body: z.string().trim().min(1, "Write something").max(4000),
 });
 
-/** A coach's or captain's note for a game. Shows on that game's page and on home before the game. */
+/** A note for a game from a coach, captain or admin. Shows on that game's page and on home before the game. */
 export async function createNote(_prev: unknown, formData: FormData): Promise<ActionResult> {
-  const me = await requireRole("captain");
+  const me = await requireNoteWriter();
   const parsed = parseForm(noteSchema, formData);
   if ("error" in parsed) return parsed.error;
   const game = await getEvent(parsed.data.eventId);
@@ -35,7 +43,7 @@ export async function createNote(_prev: unknown, formData: FormData): Promise<Ac
 }
 
 export async function deleteNote(id: string): Promise<ActionResult> {
-  const me = await requireRole("captain");
+  const me = await requireNoteWriter();
   const where = canModerate(me) ? eq(note.id, id) : and(eq(note.id, id), eq(note.authorId, me.id));
   const [gone] = await db.delete(note).where(where).returning({ eventId: note.eventId });
   if (!gone) return fail("You can only delete your own notes");
