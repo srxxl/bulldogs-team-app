@@ -25,7 +25,7 @@ Team hub for the Brentwood Booragoon Bulldogs Women's C3 side (Perth Football Le
 | Coach / captain note of the week                   | `/notes`                               | Latest pinned on home                                     |
 | Training drills | `/fixture/[id]` (training) | Per-session plan from a reusable drill catalog; captains, coaches, admins edit |
 | Fitness + nutrition boards                         | `/boards/fitness`, `/boards/nutrition` | Pinterest-style pins, anyone adds                         |
-| Team board (drag & drop lineup) | `/fixture` widget, `/fixture/[id]` | Captains/coaches edit; auto-fill from RSVPs; everyone views |
+| Team board (drag & drop lineup) | `/fixture/[id]` (games) | Captains/coaches edit; auto-fill from RSVPs; everyone views |
 | Player's player votes (3-2-1)                      | `/fixture/[id]/vote`, `/votes`         | Tally for coaches                                         |
 | Live ladder | `/` (widget) | From PlayHQ sync or paste |
 | Anonymous reflections / suggestions                | `/feedback`                            | No user id stored; coaches read                           |

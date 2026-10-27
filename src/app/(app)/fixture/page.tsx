@@ -3,21 +3,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
 import { FixtureCalendar } from "@/components/fixture-calendar";
-import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { CLUB } from "@/lib/club";
 import { cn } from "@/lib/cn";
-import { canLead } from "@/lib/roles";
-import { formatDay, formatMonth, formatTime, monthKey } from "@/lib/time";
+import { formatMonth, monthKey } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
-import { getMyRsvps, getNextGame, getSeason, getYesCounts } from "@/server/queries/events";
+import { getMyRsvps, getSeason, getYesCounts } from "@/server/queries/events";
 
 export const metadata: Metadata = { title: "Fixture" };
 
 export default async function FixturePage({ searchParams }: PageProps<"/fixture">) {
   const view = (await searchParams).view === "calendar" ? "calendar" : "list";
   const me = await requireMember();
-  const [season, nextGame] = await Promise.all([getSeason(), getNextGame()]);
+  const season = await getSeason();
   const ids = season.map((e) => e.id);
   const [mine, yes] = await Promise.all([getMyRsvps(me.id, ids), getYesCounts(ids)]);
 
@@ -32,30 +30,6 @@ export default async function FixturePage({ searchParams }: PageProps<"/fixture"
       <PageHeader title="Fixture" intro={`${CLUB.grade}, ${CLUB.league}. Games, socials and club events.`}>
         {me.isAdmin && <ButtonLink href="/admin/events/new">Add event</ButtonLink>}
       </PageHeader>
-
-      {nextGame && (
-        <TeamSection
-          eventId={nextGame.id}
-          editable={canLead(me.role)}
-          heading={
-            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="font-display text-2xl font-bold text-navy">
-                {nextGame.title}
-                <span className="ml-2 font-sans text-sm font-medium text-ink/60">
-                  {formatDay(nextGame.startsAt)}, {formatTime(nextGame.startsAt)}
-                  {yes.get(nextGame.id) ? `. ${yes.get(nextGame.id)} in` : ""}
-                </span>
-              </h2>
-              <Link
-                href={`/fixture/${nextGame.id}`}
-                className="text-sm font-semibold text-navy underline underline-offset-4"
-              >
-                Game details
-              </Link>
-            </div>
-          }
-        />
-      )}
 
       <section aria-labelledby="season-heading">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
