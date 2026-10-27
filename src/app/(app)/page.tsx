@@ -8,9 +8,8 @@ import { RsvpButtons } from "@/components/rsvp-buttons";
 import { ButtonLink, EmptyState, Panel, SectionTitle } from "@/components/ui";
 import { isUs } from "@/lib/club";
 import { cn } from "@/lib/cn";
-import { leaderBadge } from "@/lib/roles";
+import { isCoach, leaderBadge } from "@/lib/roles";
 import { formatDay, formatTime } from "@/lib/time";
-import { voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
 import { getGameNotes, getLadder, getMyBallot } from "@/server/queries/content";
 import { getLastGame, getMyRsvps, getNextGame, getUpcoming, getYesCounts } from "@/server/queries/events";
@@ -25,11 +24,10 @@ export default async function HomePage() {
     getLadder(),
   ]);
   const ids = [nextGame, ...training].filter((e) => e !== null).map((e) => e.id);
-  const voteOpen = lastGame && voteWindow(lastGame.startsAt) === "open";
   const [myRsvps, yesCounts, ballot, gameNotes] = await Promise.all([
     getMyRsvps(me.id, ids),
     getYesCounts(ids),
-    voteOpen ? getMyBallot(lastGame.id, me.id) : null,
+    lastGame ? getMyBallot(lastGame.id, me.id) : null,
     nextGame ? getGameNotes(nextGame.id) : [],
   ]);
   // The latest note for the next game, if the coaches have written one.
@@ -44,14 +42,14 @@ export default async function HomePage() {
         <HomeMascot firstName={firstName} />
       </header>
 
-      {voteOpen && !ballot && (
+      {lastGame && !ballot && !isCoach(me.role) && (
         <Link
           href={`/fixture/${lastGame.id}#votes`}
           className="flex items-center gap-4 rounded-2xl bg-red p-4 text-white transition-colors hover:bg-red-deep"
         >
           <Vote size={28} className="shrink-0" />
           <span className="flex-1">
-            <span className="block font-display text-2xl font-bold">Player's player votes are open</span>
+            <span className="block font-display text-2xl font-bold">Vote for player's player</span>
             <span className="text-sm text-white/85">Give your 3, 2 and 1 for {lastGame.title}.</span>
           </span>
           <ArrowUpRight />

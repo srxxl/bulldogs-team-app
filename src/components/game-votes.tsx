@@ -1,45 +1,33 @@
-import { formatLongDay, formatTime } from "@/lib/time";
-import type { Ballot } from "@/lib/votes";
-import { type TallyRow, type VoteWindow, voteClosesAt } from "@/lib/votes";
+import type { Ballot, TallyRow } from "@/lib/votes";
 import { Avatar } from "./avatar";
 import { VoteForm } from "./vote-form";
 
 type Candidate = { id: string; name: string; guernsey: number | null; image: string | null; played: boolean };
 
 /**
- * Player's player for one game: players get the 3-2-1 ballot while voting is open; coaches don't vote
- * but see that game's results. Players never see tallies.
+ * Player's player for one game, open any time: players get the 3-2-1 ballot; coaches don't vote but see
+ * that game's results. Players never see tallies.
  */
 export function GameVotes({
   eventId,
-  startsAt,
-  window,
   candidates,
   ballot,
   results,
 }: {
   eventId: string;
-  startsAt: Date;
-  window: VoteWindow;
   candidates: Candidate[];
   ballot: Ballot | null;
   /** Coaches only; null for everyone else. */
   results: (TallyRow & { name: string; image: string | null })[] | null;
 }) {
-  const closes = voteClosesAt(startsAt);
   return (
     <div className="space-y-5">
-      {window === "before" && <p className="text-ink/70">Votes open two hours after the bounce.</p>}
-      {window === "open" && results && (
-        <p className="text-ink/70">
-          The players are voting now. It closes {formatLongDay(closes)} at {formatTime(closes)}.
-        </p>
-      )}
-      {window === "open" && !results && (
+      {results ? (
+        <p className="text-ink/70">The players vote here. Their votes stay private; only coaches see the results.</p>
+      ) : (
         <>
           <p className="text-ink/70">
-            Who were the best on ground? Your votes are private and close {formatLongDay(closes)} at{" "}
-            {formatTime(closes)}.
+            Who were the best on ground? Your votes are private, and you can change them any time.
           </p>
           {candidates.length < 3 ? (
             <p className="rounded-2xl bg-chalk p-4 text-sm text-ink/70">
@@ -51,11 +39,8 @@ export function GameVotes({
           )}
         </>
       )}
-      {window === "closed" && (
-        <p className="text-ink/70">Voting has closed.{ballot ? " Your votes were counted." : ""}</p>
-      )}
 
-      {results && window !== "before" && (
+      {results && (
         <div className="rounded-2xl bg-chalk p-4">
           <h3 className="text-xl font-bold text-navy">
             Results <span className="font-sans text-sm font-medium text-ink/50">coaches only</span>

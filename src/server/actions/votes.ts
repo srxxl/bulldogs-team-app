@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { type ActionResult, fail, ok } from "@/lib/action-result";
 import { isCoach } from "@/lib/roles";
-import { validateBallot, voteWindow } from "@/lib/votes";
+import { validateBallot } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { vote } from "@/server/db/schema";
@@ -28,9 +28,6 @@ export async function submitBallot(_prev: unknown, formData: FormData): Promise<
 
   const [game, squad, rsvps] = await Promise.all([getEvent(eventId), getSquad(), getRsvps(eventId)]);
   if (game?.kind !== "game") return fail("That game doesn't exist");
-  const window = voteWindow(game.startsAt);
-  if (window === "before") return fail("Votes open two hours after the bounce");
-  if (window === "closed") return fail("Voting for this game has closed");
 
   // Votes can only go to players who said they were in for this game.
   const cameIn = new Set(rsvps.filter((r) => r.status === "yes").map((r) => r.userId));
@@ -48,5 +45,5 @@ export async function submitBallot(_prev: unknown, formData: FormData): Promise<
   });
   revalidatePath(`/fixture/${eventId}`);
   revalidatePath("/");
-  return ok("Votes in. You can change them until voting closes.");
+  return ok("Votes in. You can change them any time.");
 }

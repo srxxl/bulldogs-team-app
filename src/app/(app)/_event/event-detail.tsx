@@ -13,7 +13,7 @@ import { cn } from "@/lib/cn";
 import { canModerate, canPickTeam, isCoach } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
-import { tally, voteWindow } from "@/lib/votes";
+import { tally } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
 import { getGameNotes, getGameVotes, getLadder, getLineup, getMyBallot } from "@/server/queries/content";
 import { getEvent, getPastGamesAgainst, getRsvps } from "@/server/queries/events";
@@ -64,7 +64,6 @@ export async function EventDetail({ id }: { id: string }) {
   const scores = scoresOf(ev);
   const h2h = headToHead(history);
   const oppRow = ladder.find((r) => isGame && r.team.toLowerCase() === ev.opponent?.toLowerCase());
-  const votes = ev.kind === "game" ? voteWindow(ev.startsAt) : null;
 
   return (
     <div className="space-y-6">
@@ -136,14 +135,7 @@ export async function EventDetail({ id }: { id: string }) {
 
       {isGameEvent && (
         <SectionPanel id="votes" title="Player's player">
-          <GameVotes
-            eventId={id}
-            startsAt={ev.startsAt}
-            window={votes ?? "before"}
-            candidates={candidates}
-            ballot={ballot}
-            results={results}
-          />
+          <GameVotes eventId={id} candidates={candidates} ballot={ballot} results={results} />
         </SectionPanel>
       )}
 

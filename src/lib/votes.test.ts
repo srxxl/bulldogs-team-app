@@ -1,17 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tally, validateBallot, voteWindow } from "./votes";
-
-const start = new Date("2027-05-01T06:00:00Z");
-const h = (n: number) => new Date(start.getTime() + n * 3600_000);
-
-describe("voteWindow", () => {
-  it("opens two hours after the bounce and closes four days later", () => {
-    expect(voteWindow(start, h(1))).toBe("before");
-    expect(voteWindow(start, h(2))).toBe("open");
-    expect(voteWindow(start, h(2 + 95))).toBe("open");
-    expect(voteWindow(start, h(2 + 96))).toBe("closed");
-  });
-});
+import { tally, validateBallot } from "./votes";
 
 describe("validateBallot", () => {
   const squad = new Set(["a", "b", "c", "me"]);

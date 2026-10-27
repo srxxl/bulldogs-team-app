@@ -1,18 +1,4 @@
-const HOUR = 60 * 60 * 1000;
-
-/** Votes open two hours after the bounce and stay open for four days. */
-export const VOTE_OPENS_AFTER = 2 * HOUR;
-export const VOTE_WINDOW = 4 * 24 * HOUR;
-
-export type VoteWindow = "before" | "open" | "closed";
-
-export function voteWindow(startsAt: Date, now = new Date()): VoteWindow {
-  const opens = startsAt.getTime() + VOTE_OPENS_AFTER;
-  if (now.getTime() < opens) return "before";
-  return now.getTime() < opens + VOTE_WINDOW ? "open" : "closed";
-}
-
-export const voteClosesAt = (startsAt: Date) => new Date(startsAt.getTime() + VOTE_OPENS_AFTER + VOTE_WINDOW);
+/** Player's player is open any time: before, during or after the game. */
 
 export type Ballot = { three: string; two: string; one: string };
 
