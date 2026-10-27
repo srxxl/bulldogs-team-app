@@ -22,7 +22,7 @@ export function validateBallot(ballot: Ballot, voterId: string, eligible: Set<st
   if (picks.some((p) => !p)) return "Pick a player for 3, 2 and 1 votes";
   if (new Set(picks).size !== 3) return "Each vote has to go to a different player";
   if (picks.includes(voterId)) return "You can't vote for yourself";
-  if (picks.some((p) => !eligible.has(p))) return "Votes can only go to players in the squad";
+  if (picks.some((p) => !eligible.has(p))) return "Votes can only go to players who played this game";
   return null;
 }
 

@@ -9,7 +9,7 @@ import { validateBallot, voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { vote } from "@/server/db/schema";
-import { getEvent } from "@/server/queries/events";
+import { getEvent, getRsvps } from "@/server/queries/events";
 import { getSquad } from "@/server/queries/squad";
 
 const schema = z.object({
@@ -26,13 +26,16 @@ export async function submitBallot(_prev: unknown, formData: FormData): Promise<
   if (!parsed.success) return fail("Pick a player for 3, 2 and 1 votes");
   const { eventId, ...ballot } = parsed.data;
 
-  const [game, squad] = await Promise.all([getEvent(eventId), getSquad()]);
+  const [game, squad, rsvps] = await Promise.all([getEvent(eventId), getSquad(), getRsvps(eventId)]);
   if (game?.kind !== "game") return fail("That game doesn't exist");
   const window = voteWindow(game.startsAt);
   if (window === "before") return fail("Votes open two hours after the bounce");
   if (window === "closed") return fail("Voting for this game has closed");
 
-  const error = validateBallot(ballot, me.id, new Set(squad.map((p) => p.id)));
+  // Votes can only go to players who said they were in for this game.
+  const cameIn = new Set(rsvps.filter((r) => r.status === "yes").map((r) => r.userId));
+  const eligible = new Set(squad.filter((p) => cameIn.has(p.id) && p.role !== "coach").map((p) => p.id));
+  const error = validateBallot(ballot, me.id, eligible);
   if (error) return fail(error);
 
   await db.transaction(async (tx) => {

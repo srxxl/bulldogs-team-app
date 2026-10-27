@@ -44,10 +44,11 @@ export async function EventDetail({ id }: { id: string }) {
     isGameEvent ? getMyBallot(id, me.id) : null,
     isGameEvent && coach ? getGameVotes(id) : [],
   ]);
-  // Player's player: people named on the team board come first; everyone else is still votable.
+  // Player's player: only people who said they were in for this game. Those on the team board come first.
   const played = new Set(Object.values(lineup));
+  const cameIn = new Set(rsvps.filter((r) => r.status === "yes").map((r) => r.userId));
   const candidates = squad
-    .filter((p) => p.id !== me.id && p.role !== "coach")
+    .filter((p) => cameIn.has(p.id) && p.id !== me.id && p.role !== "coach")
     .sort((a, b) => Number(played.has(b.id)) - Number(played.has(a.id)) || (a.guernsey ?? 99) - (b.guernsey ?? 99))
     .map((p) => ({ id: p.id, name: p.displayName, guernsey: p.guernsey, image: p.image, played: played.has(p.id) }));
   const byId = new Map(squad.map((p) => [p.id, p]));

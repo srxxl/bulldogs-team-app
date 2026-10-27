@@ -168,6 +168,14 @@ async function main() {
     );
   }
   if (last) {
+    // Who said they'd play last week (votes can only go to these players). Two couldn't make it.
+    await db.insert(t.availability).values(
+      users.slice(1, 17).map((u, i) => ({
+        eventId: last.id,
+        userId: u.id,
+        status: i === 7 || i === 15 ? ("no" as const) : ("yes" as const),
+      })),
+    );
     await db.insert(t.vote).values(
       users.slice(3, 9).flatMap((u, i) => [
         {

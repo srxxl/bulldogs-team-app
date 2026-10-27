@@ -21,7 +21,7 @@ describe("validateBallot", () => {
   it("rejects duplicates, self votes and outsiders", () => {
     expect(validateBallot({ three: "a", two: "a", one: "c" }, "me", squad)).toMatch(/different/);
     expect(validateBallot({ three: "me", two: "a", one: "b" }, "me", squad)).toMatch(/yourself/);
-    expect(validateBallot({ three: "x", two: "a", one: "b" }, "me", squad)).toMatch(/squad/);
+    expect(validateBallot({ three: "x", two: "a", one: "b" }, "me", squad)).toMatch(/played this game/);
     expect(validateBallot({ three: "", two: "a", one: "b" }, "me", squad)).toMatch(/Pick/);
   });
 });

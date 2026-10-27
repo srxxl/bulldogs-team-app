@@ -41,7 +41,14 @@ export function GameVotes({
             Who were the best on ground? Your votes are private and close {formatLongDay(closes)} at{" "}
             {formatTime(closes)}.
           </p>
-          <VoteForm eventId={eventId} candidates={candidates} ballot={ballot} />
+          {candidates.length < 3 ? (
+            <p className="rounded-2xl bg-chalk p-4 text-sm text-ink/70">
+              Votes go to players who said they were in for this game, and there aren't enough of them to pick a 3, 2
+              and 1.
+            </p>
+          ) : (
+            <VoteForm eventId={eventId} candidates={candidates} ballot={ballot} />
+          )}
         </>
       )}
       {window === "closed" && (
