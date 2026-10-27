@@ -1,22 +1,19 @@
 import { leaderBadge } from "@/lib/roles";
 import { formatDay } from "@/lib/time";
 import type { GameNote } from "@/server/queries/content";
-import { DeleteNoteButton, NoteForm } from "./note-form";
+import { DeleteNoteButton } from "./note-form";
 
-/** Notes for one game, newest first. Anyone can write one; skips and coaches get a red badge. */
+/** Notes for one game, newest first. Skips and coaches get a red badge. */
 export function GameNotes({
-  eventId,
   notes,
   canDelete,
 }: {
-  eventId: string;
   notes: GameNote[];
   /** Whether this viewer may delete a given note (author, coach or admin). */
   canDelete: (n: GameNote) => boolean;
 }) {
   return (
     <div className="space-y-4">
-      <NoteForm eventId={eventId} />
       {notes.length === 0 ? (
         <p className="text-sm text-ink/60">No notes for this game yet. Share a reminder, a plan or a shout-out.</p>
       ) : (

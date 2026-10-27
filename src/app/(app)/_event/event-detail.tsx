@@ -2,9 +2,10 @@ import { ChevronLeft, MapPin, Pencil, Vote } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
-import { Collapsible } from "@/components/collapsible";
 import { GameNotes } from "@/components/game-notes";
+import { NoteForm } from "@/components/note-form";
 import { RsvpButtons } from "@/components/rsvp-buttons";
+import { SectionPanel } from "@/components/section-panel";
 import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, Chip } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -51,11 +52,22 @@ export async function EventDetail({ id }: { id: string }) {
         <ChevronLeft size={18} aria-hidden /> Fixture
       </Link>
       <header className="rounded-[28px] bg-navy p-5 text-white md:p-8">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-powder">
-          {ev.round && <span className="font-semibold">{ev.round}</span>}
-          {ev.isHome != null && <Chip className="bg-white/10 text-white">{ev.isHome ? "Home" : "Away"}</Chip>}
-          {ev.isFinal && <Chip className="bg-red text-white">Final</Chip>}
-          {ev.cancelled && <Chip className="bg-red text-white">Cancelled</Chip>}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 pt-2 text-sm text-powder">
+            {ev.round && <span className="font-semibold">{ev.round}</span>}
+            {ev.isHome != null && <Chip className="bg-white/10 text-white">{ev.isHome ? "Home" : "Away"}</Chip>}
+            {ev.isFinal && <Chip className="bg-red text-white">Final</Chip>}
+            {ev.cancelled && <Chip className="bg-red text-white">Cancelled</Chip>}
+          </div>
+          {me.isAdmin && (
+            <ButtonLink
+              href={`/admin/events/${id}`}
+              variant="ghost"
+              className="min-h-10 shrink-0 px-3 text-white hover:bg-white/10"
+            >
+              <Pencil size={16} /> Edit
+            </ButtonLink>
+          )}
         </div>
         <h1 className="mt-3 font-display text-[clamp(3rem,10vw,6rem)] font-black leading-[0.85]">{ev.title}</h1>
         {scores && (
@@ -91,30 +103,23 @@ export async function EventDetail({ id }: { id: string }) {
             )}
           </div>
         </dl>
-        {(votes === "open" || me.isAdmin) && (
-          <div className="mt-6 flex flex-wrap gap-2">
-            {votes === "open" && (
-              <ButtonLink href={`/fixture/${id}/vote`} variant="red">
-                <Vote size={18} /> Player's player votes
-              </ButtonLink>
-            )}
-            {me.isAdmin && (
-              <ButtonLink href={`/admin/events/${id}`} variant="ghost" className="text-white hover:bg-white/10">
-                <Pencil size={16} /> Edit
-              </ButtonLink>
-            )}
+        {votes === "open" && (
+          <div className="mt-6">
+            <ButtonLink href={`/fixture/${id}/vote`} variant="red">
+              <Vote size={18} /> Player's player votes
+            </ButtonLink>
           </div>
         )}
       </header>
 
       {ev.kind === "game" && (
-        <Collapsible id="notes" title="Notes" meta={notes.length || undefined}>
-          <GameNotes eventId={id} notes={notes} canDelete={(n) => n.authorId === me.id || canModerate(me)} />
-        </Collapsible>
+        <SectionPanel id="notes" title="Notes" meta={notes.length || undefined} action={<NoteForm eventId={id} />}>
+          <GameNotes notes={notes} canDelete={(n) => n.authorId === me.id || canModerate(me)} />
+        </SectionPanel>
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-        <Collapsible
+        <SectionPanel
           id="coming"
           title={upcoming ? "Who's coming" : "Who said they'd come"}
           meta={`${rsvps.filter((r) => r.status === "yes").length} in`}
@@ -155,16 +160,16 @@ export async function EventDetail({ id }: { id: string }) {
               );
             })}
           </div>
-        </Collapsible>
+        </SectionPanel>
 
         <div className="space-y-6">
           {ev.details && (
-            <Collapsible id="details" title="Details">
+            <SectionPanel id="details" title="Details">
               <p className="whitespace-pre-line text-ink/80">{ev.details}</p>
-            </Collapsible>
+            </SectionPanel>
           )}
           {isGame && (
-            <Collapsible id="opponent" title={`About ${ev.opponent}`}>
+            <SectionPanel id="opponent" title={`About ${ev.opponent}`}>
               {oppRow ? (
                 <dl className="grid grid-cols-4 gap-2 text-center">
                   {[
@@ -207,7 +212,7 @@ export async function EventDetail({ id }: { id: string }) {
                   </ul>
                 </>
               )}
-            </Collapsible>
+            </SectionPanel>
           )}
           {ev.kind === "game" && canLead(me.role) && votes === "open" && (
             <p className="text-sm text-ink/60">
@@ -218,9 +223,9 @@ export async function EventDetail({ id }: { id: string }) {
       </div>
 
       {ev.kind === "game" && (
-        <Collapsible id="team" title="Team">
+        <SectionPanel id="team" title="Team">
           <TeamSection eventId={id} editable={canPickTeam(me)} />
-        </Collapsible>
+        </SectionPanel>
       )}
     </div>
   );

@@ -5,8 +5,9 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { createNote, deleteNote } from "@/server/actions/content";
 import { Field, FormMessage, Input, SubmitButton, Textarea } from "./forms";
 import { Sheet } from "./sheet";
+import { buttonClass } from "./ui";
 
-/** "Write a note" for one game. Anyone in the squad. */
+/** "Add note" for one game. Anyone in the squad. */
 export function NoteForm({ eventId }: { eventId: string }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(createNote, null);
@@ -17,10 +18,11 @@ export function NoteForm({ eventId }: { eventId: string }) {
     <Sheet
       open={open}
       onOpenChange={setOpen}
-      title="Write a note"
+      title="Add a note"
+      triggerClassName={buttonClass("ghost", "min-h-10 shrink-0 px-3")}
       trigger={
         <>
-          <Plus size={18} /> Write a note
+          <Plus size={16} /> Add note
         </>
       }
     >

@@ -10,12 +10,15 @@ import { buttonClass } from "./ui";
  */
 export function Sheet({
   trigger,
+  triggerClassName,
   title,
   open,
   onOpenChange,
   children,
 }: {
   trigger: ReactNode;
+  /** Trigger button style; a primary button by default. */
+  triggerClassName?: string;
   title: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,7 +34,7 @@ export function Sheet({
 
   return (
     <>
-      <button type="button" className={buttonClass("primary")} onClick={() => onOpenChange(true)}>
+      <button type="button" className={triggerClassName ?? buttonClass("primary")} onClick={() => onOpenChange(true)}>
         {trigger}
       </button>
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click only; <dialog> handles Esc natively */}
