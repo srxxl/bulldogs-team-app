@@ -102,7 +102,12 @@ export default async function HomePage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 {training.map((t) => (
                   <div key={t.id} className="rounded-2xl bg-white p-4">
-                    <p className="font-display text-2xl font-bold text-navy">{formatDay(t.startsAt)}</p>
+                    <Link
+                      href={`/training/${t.id}`}
+                      className="font-display text-2xl font-bold text-navy hover:underline"
+                    >
+                      {formatDay(t.startsAt)}
+                    </Link>
                     <p className="mb-3 text-sm text-ink/60">
                       {formatTime(t.startsAt)}, {yesCounts.get(t.id) ?? 0} coming
                     </p>

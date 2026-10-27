@@ -36,7 +36,7 @@ export default async function TrainingPage() {
             const yes = people.filter((p) => p.status === "yes");
             return (
               <li key={s.id} className="rounded-[28px] bg-white p-5">
-                <Link href={`/fixture/${s.id}`} className="group flex items-baseline justify-between gap-3">
+                <Link href={`/training/${s.id}`} className="group flex items-baseline justify-between gap-3">
                   <h2 className="text-3xl font-bold text-navy group-hover:underline">{formatLongDay(s.startsAt)}</h2>
                   <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-red">
                     {relativeDay(s.startsAt)}
@@ -50,7 +50,7 @@ export default async function TrainingPage() {
                 </p>
                 <RsvpButtons eventId={s.id} status={mine.get(s.id) ?? null} />
                 <Link
-                  href={`/fixture/${s.id}#drills`}
+                  href={`/training/${s.id}#drills`}
                   className="mt-4 flex items-center gap-2 rounded-xl bg-chalk px-3 py-2 text-sm font-semibold text-navy hover:bg-mist"
                 >
                   <ClipboardList size={16} aria-hidden />

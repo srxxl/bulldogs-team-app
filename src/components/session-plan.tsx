@@ -19,7 +19,7 @@ export type PlanDrill = {
 
 const FOCUS = ["Warm-up", "Skills", "Contested", "Fitness", "Match sim", "Cool-down"];
 
-/** A training session's drills in running order, with a catalog picker for captains and coaches. */
+/** A training session's drills in running order, with a catalog picker for captains, coaches and admins. */
 export function SessionPlan({
   eventId,
   drills,
@@ -53,17 +53,13 @@ export function SessionPlan({
     });
 
   return (
-    <section id="drills" className="scroll-mt-6 rounded-[28px] bg-white p-5 md:p-7">
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-        <div>
-          <h2 className="text-3xl font-bold text-navy">Session plan</h2>
-          {order.length > 0 && (
-            <p className="text-sm text-ink/60">
-              {order.length} {order.length === 1 ? "drill" : "drills"}
-              {total > 0 && `, about ${total} minutes`}
-            </p>
-          )}
-        </div>
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-ink/60">
+          {order.length === 0
+            ? "Nothing planned yet"
+            : `${order.length} ${order.length === 1 ? "drill" : "drills"}${total > 0 ? `, about ${total} minutes` : ""}`}
+        </p>
         {editable && <AddDrillSheet eventId={eventId} catalog={catalog} planned={new Set(order.map((d) => d.id))} />}
       </div>
 
@@ -117,7 +113,7 @@ export function SessionPlan({
           ))}
         </ol>
       )}
-    </section>
+    </div>
   );
 }
 
