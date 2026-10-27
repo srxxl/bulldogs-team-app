@@ -42,13 +42,25 @@ export function getSessionDrills(eventId: string) {
     .orderBy(asc(sessionDrill.position));
 }
 
-/** Drill counts per session, for the training list. */
-export async function getDrillCounts(eventIds: string[]) {
-  if (eventIds.length === 0) return new Map<string, number>();
+/** Planned drills for several sessions in one query, keyed by session id, in running order. */
+export async function getSessionDrillsFor(eventIds: string[]) {
+  const plans = new Map<string, Awaited<ReturnType<typeof getSessionDrills>>>();
+  if (eventIds.length === 0) return plans;
   const rows = await db
-    .select({ eventId: sessionDrill.eventId, n: sql<number>`count(*)::int` })
+    .select({
+      eventId: sessionDrill.eventId,
+      id: drill.id,
+      title: drill.title,
+      howTo: drill.howTo,
+      minutes: drill.minutes,
+      focus: drill.focus,
+      link: drill.link,
+      position: sessionDrill.position,
+    })
     .from(sessionDrill)
+    .innerJoin(drill, eq(drill.id, sessionDrill.drillId))
     .where(inArray(sessionDrill.eventId, eventIds))
-    .groupBy(sessionDrill.eventId);
-  return new Map(rows.map((r) => [r.eventId, r.n]));
+    .orderBy(asc(sessionDrill.position));
+  for (const { eventId, ...d } of rows) plans.set(eventId, [...(plans.get(eventId) ?? []), d]);
+  return plans;
 }

@@ -103,7 +103,7 @@ export default async function HomePage() {
                 {training.map((t) => (
                   <div key={t.id} className="rounded-2xl bg-white p-4">
                     <Link
-                      href={`/training/${t.id}`}
+                      href={`/training#s-${t.id}`}
                       className="font-display text-2xl font-bold text-navy hover:underline"
                     >
                       {formatDay(t.startsAt)}

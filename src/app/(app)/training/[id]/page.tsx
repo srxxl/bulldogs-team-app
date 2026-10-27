@@ -1,13 +1,6 @@
-import type { Metadata } from "next";
-import { formatLongDay } from "@/lib/time";
-import { getEvent } from "@/server/queries/events";
-import { EventDetail } from "../../_event/event-detail";
+import { redirect } from "next/navigation";
 
-export async function generateMetadata({ params }: PageProps<"/training/[id]">): Promise<Metadata> {
-  const ev = await getEvent((await params).id);
-  return { title: ev ? `Training, ${formatLongDay(ev.startsAt)}` : "Training" };
-}
-
+/** Sessions don't have their own page any more: everything is on the Training card. */
 export default async function TrainingSessionPage({ params }: PageProps<"/training/[id]">) {
-  return <EventDetail id={(await params).id} section="training" />;
+  redirect(`/training#s-${(await params).id}`);
 }

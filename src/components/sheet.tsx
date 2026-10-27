@@ -54,7 +54,8 @@ export function Sheet({
               <X size={20} />
             </button>
           </div>
-          {children}
+          {/* Only build the contents while open, so several sheets on one page never share form field ids. */}
+          {open && children}
         </div>
       </dialog>
     </>

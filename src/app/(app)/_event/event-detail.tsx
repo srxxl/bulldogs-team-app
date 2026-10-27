@@ -4,17 +4,15 @@ import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { Collapsible } from "@/components/collapsible";
 import { RsvpButtons } from "@/components/rsvp-buttons";
-import { SessionPlan } from "@/components/session-plan";
 import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, Chip } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { canLead, canPickTeam, canPlanSessions } from "@/lib/roles";
+import { canLead, canPickTeam } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
 import { getLadder } from "@/server/queries/content";
-import { getDrillCatalog, getSessionDrills } from "@/server/queries/drills";
 import { getEvent, getPastGamesAgainst, getRsvps } from "@/server/queries/events";
 
 const GROUPS = [
@@ -22,25 +20,18 @@ const GROUPS = [
   { status: "no", label: "Out" },
 ] as const;
 
-/**
- * One event's page, shared by Fixture (games, socials) and Training (sessions).
- * Each event lives under its own section so the right nav tab stays highlighted.
- */
-export async function EventDetail({ id, section }: { id: string; section: "fixture" | "training" }) {
+/** A game or club event's page. Training sessions live on their card on the Training page instead. */
+export async function EventDetail({ id }: { id: string }) {
   const me = await requireMember();
   const ev = await getEvent(id);
   if (!ev) notFound();
-  const home = ev.kind === "training" ? "training" : "fixture";
-  if (home !== section) redirect(`/${home}/${id}`);
+  if (ev.kind === "training") redirect(`/training#s-${id}`);
 
   const isGame = ev.kind === "game" && ev.opponent;
-  const isTraining = ev.kind === "training";
-  const [rsvps, history, ladder, sessionDrills, catalog] = await Promise.all([
+  const [rsvps, history, ladder] = await Promise.all([
     getRsvps(id),
     isGame ? getPastGamesAgainst(ev.opponent as string, ev.startsAt) : [],
     isGame ? getLadder() : [],
-    isTraining ? getSessionDrills(id) : [],
-    isTraining && canPlanSessions(me) ? getDrillCatalog() : [],
   ]);
   const mine = rsvps.find((r) => r.userId === me.id)?.status ?? null;
   const upcoming = (ev.endsAt ?? ev.startsAt) > new Date();
@@ -52,10 +43,10 @@ export async function EventDetail({ id, section }: { id: string; section: "fixtu
   return (
     <div className="space-y-6">
       <Link
-        href={`/${section}`}
+        href="/fixture"
         className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-navy hover:bg-white/60"
       >
-        <ChevronLeft size={18} aria-hidden /> {section === "training" ? "Training" : "Fixture"}
+        <ChevronLeft size={18} aria-hidden /> Fixture
       </Link>
       <header className="rounded-[28px] bg-navy p-5 text-white md:p-8">
         <div className="flex flex-wrap items-center gap-2 text-sm text-powder">
@@ -232,12 +223,6 @@ export async function EventDetail({ id, section }: { id: string; section: "fixtu
       {ev.kind === "game" && (
         <Collapsible id="team" title="Team">
           <TeamSection eventId={id} editable={canPickTeam(me)} />
-        </Collapsible>
-      )}
-
-      {isTraining && (
-        <Collapsible id="drills" title="Session plan">
-          <SessionPlan eventId={id} drills={sessionDrills} catalog={catalog} editable={canPlanSessions(me)} />
         </Collapsible>
       )}
     </div>

@@ -8,5 +8,5 @@ export async function generateMetadata({ params }: PageProps<"/fixture/[id]">): 
 }
 
 export default async function FixtureEventPage({ params }: PageProps<"/fixture/[id]">) {
-  return <EventDetail id={(await params).id} section="fixture" />;
+  return <EventDetail id={(await params).id} />;
 }

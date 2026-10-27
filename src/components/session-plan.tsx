@@ -1,12 +1,11 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ExternalLink, Plus, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ExternalLink, Plus, Search, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useOptimistic, useState, useTransition } from "react";
 import { cn } from "@/lib/cn";
 import { addDrillToSession, createDrill, removeDrillFromSession, reorderSessionDrills } from "@/server/actions/drills";
 import { Field, FormMessage, Input, SubmitButton, Textarea } from "./forms";
 import { Sheet } from "./sheet";
-import { Chip, EmptyState } from "./ui";
 
 export type PlanDrill = {
   id: string;
@@ -54,46 +53,58 @@ export function SessionPlan({
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-ink/60">
           {order.length === 0
-            ? "Nothing planned yet"
+            ? editable
+              ? "No drills yet. Add from the catalog or write a new one."
+              : "The coaches haven't planned this session yet."
             : `${order.length} ${order.length === 1 ? "drill" : "drills"}${total > 0 ? `, about ${total} minutes` : ""}`}
         </p>
         {editable && <AddDrillSheet eventId={eventId} catalog={catalog} planned={new Set(order.map((d) => d.id))} />}
       </div>
 
-      {order.length === 0 ? (
-        <EmptyState title="No drills yet">
-          {editable
-            ? "Add drills from the catalog or write a new one."
-            : "The coaches haven't planned this session yet."}
-        </EmptyState>
-      ) : (
-        <ol className="space-y-3">
+      {order.length > 0 && (
+        <ol className="space-y-1.5">
           {order.map((d, i) => (
-            <li key={d.id} className="flex gap-4 rounded-2xl bg-chalk p-4">
-              <span className="display-num w-8 shrink-0 text-4xl font-black text-red">{i + 1}</span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-display text-2xl font-bold leading-tight text-navy">{d.title}</h3>
-                  {d.minutes != null && <Chip>{d.minutes} min</Chip>}
-                  {d.focus && <Chip className="bg-white">{d.focus}</Chip>}
-                </div>
-                {d.howTo && <p className="mt-1 whitespace-pre-line text-sm text-ink/80">{d.howTo}</p>}
-                {d.link && (
-                  <a
-                    href={d.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-red underline underline-offset-4"
-                  >
-                    <ExternalLink size={14} aria-hidden /> Watch or read more
-                  </a>
+            <li key={d.id} className="flex items-start gap-1 rounded-xl bg-chalk">
+              <details className="group min-w-0 flex-1">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-2 [&::-webkit-details-marker]:hidden">
+                  <span className="display-num w-5 shrink-0 text-2xl font-black text-red">{i + 1}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-navy">{d.title}</span>
+                    {(d.minutes != null || d.focus) && (
+                      <span className="block text-xs text-ink/60">
+                        {[d.minutes != null && `${d.minutes} min`, d.focus].filter(Boolean).join(", ")}
+                      </span>
+                    )}
+                  </span>
+                  {(d.howTo || d.link) && (
+                    <ChevronDown
+                      size={16}
+                      className="shrink-0 text-navy/60 transition-transform group-open:rotate-180"
+                      aria-hidden
+                    />
+                  )}
+                </summary>
+                {(d.howTo || d.link) && (
+                  <div className="px-3 pb-3 pl-11">
+                    {d.howTo && <p className="whitespace-pre-line text-sm text-ink/80">{d.howTo}</p>}
+                    {d.link && (
+                      <a
+                        href={d.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-red underline underline-offset-4"
+                      >
+                        <ExternalLink size={14} aria-hidden /> Watch or read more
+                      </a>
+                    )}
+                  </div>
                 )}
-              </div>
+              </details>
               {editable && (
-                <div className="flex shrink-0 flex-col gap-1">
+                <div className="flex shrink-0 items-center py-1 pr-1">
                   <IconButton label={`Move ${d.title} up`} disabled={i === 0} onClick={() => move(i, -1)}>
                     <ArrowUp size={16} />
                   </IconButton>
