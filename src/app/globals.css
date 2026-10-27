@@ -191,12 +191,13 @@ dialog::backdrop {
   }
 }
 
-/* Home-screen bulldog (HomeMascot). SVG parts carry .m-* classes; each pose is a .mascot-{pose} class. */
+/* Home-screen bulldog (HomeMascot). Each pose is a drawing in public/mascot; the wrapper carries .mascot-{pose}. */
+/* tall enough for the dog plus the footy button above it, so the dog never runs into the button */
 .mascot-stage {
   position: relative;
-  height: 8.5rem;
+  height: 10.5rem;
   @media (width >= 48rem) {
-    height: 10rem;
+    height: 12.25rem;
   }
 }
 .mascot {
@@ -217,166 +218,41 @@ dialog::backdrop {
   z-index: -1;
 }
 .mascot-dog {
+  position: relative;
   display: block;
   cursor: pointer;
   border-radius: 1rem;
   -webkit-tap-highlight-color: transparent;
 }
-.mascot-side-svg {
+/* The pose drawings share one canvas and ground line, so the dog keeps its size and footing between them. */
+.mascot-art {
   display: block;
-  width: 9rem;
-  overflow: visible;
+  width: 8.5rem;
+  aspect-ratio: 1254 / 1120;
   @media (width >= 48rem) {
-    width: 11rem;
+    width: 10.5rem;
   }
 }
-.mascot-sit-svg {
-  display: block;
-  width: 5.5rem;
-  margin-inline: 1.75rem;
-  @media (width >= 48rem) {
-    width: 6.5rem;
-    margin-inline: 2.25rem;
-  }
+.mascot-art img {
+  display: none;
+  width: 100%;
+  height: 100%;
+  user-select: none;
 }
-.mascot-right .mascot-side-svg {
+.mascot-art img[data-on] {
+  display: block;
+  animation: m-settle 0.16s ease-out;
+}
+.mascot-mirror {
   scale: -1 1;
 }
-.mascot .m-leg,
-.mascot .m-head,
-.mascot .m-tail,
-.mascot .m-upper {
-  transform-box: fill-box;
-}
-
-/* standing: tail wags */
-.m-tail {
-  transform-origin: left bottom;
-}
-.mascot-stand .m-tail,
-.mascot-bark .m-tail,
-.mascot-walk .m-tail {
-  animation: m-wag 0.28s ease-in-out infinite alternate;
-}
-@keyframes m-wag {
-  to {
-    rotate: 22deg;
-  }
-}
-
-/* walking: legs swing in pairs, body bobs */
-.m-leg {
-  transform-origin: top center;
-}
-.mascot-walk .m-leg-a,
-.mascot-walk .m-leg-b {
-  animation: m-step 0.34s ease-in-out infinite alternate;
-}
-.mascot-walk .m-leg-b {
-  animation-direction: alternate-reverse;
-}
-@keyframes m-step {
+@keyframes m-settle {
   from {
-    rotate: -14deg;
-  }
-  to {
-    rotate: 14deg;
-  }
-}
-.mascot-walk .m-upper {
-  animation: m-bob 0.34s ease-in-out infinite alternate;
-}
-@keyframes m-bob {
-  to {
-    translate: 0 -14px;
+    opacity: 0.6;
   }
 }
 
-/* sniffing: head dips to the ground and back */
-.m-head {
-  transform-origin: right bottom;
-}
-.mascot-sniff .m-head {
-  animation: m-sniff 0.8s ease-in-out 3 alternate;
-}
-@keyframes m-sniff {
-  to {
-    rotate: -14deg;
-    translate: 0 60px;
-  }
-}
-
-/* barking: head jerks up */
-.mascot-bark .m-head {
-  animation: m-bark 0.3s ease-out 4 alternate;
-}
-@keyframes m-bark {
-  to {
-    rotate: 8deg;
-    translate: 0 -10px;
-  }
-}
-
-/* sleeping: legs tuck, body lowers and breathes, z's float up */
-.m-upper {
-  transform-origin: center bottom;
-  transition: translate 0.5s ease;
-}
-.mascot-sleep .m-leg {
-  transform-origin: bottom center;
-  scale: 1 0.22;
-  transition: scale 0.5s ease;
-}
-.mascot-sleep .m-upper {
-  translate: 0 165px;
-  animation: m-breathe 1.8s ease-in-out infinite alternate;
-}
-@keyframes m-breathe {
-  to {
-    scale: 1 1.03;
-  }
-}
-.mascot-zzz {
-  position: absolute;
-  top: 0.75rem;
-  left: 1.5rem;
-  font-family: var(--font-display);
-  font-weight: 800;
-  color: var(--color-navy);
-}
-.mascot-right .mascot-zzz {
-  left: auto;
-  right: 1.5rem;
-}
-.mascot-zzz i {
-  position: absolute;
-  font-style: normal;
-  opacity: 0;
-  animation: m-z 2.4s ease-out infinite;
-}
-.mascot-zzz i:nth-child(2) {
-  animation-delay: 0.8s;
-  font-size: 1.15em;
-}
-.mascot-zzz i:nth-child(3) {
-  animation-delay: 1.6s;
-  font-size: 1.4em;
-}
-@keyframes m-z {
-  0% {
-    opacity: 0;
-    translate: 0 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    translate: -0.8rem -2.2rem;
-  }
-}
-
-/* tap tricks */
+/* tap trick */
 .mascot-hop .mascot-dog {
   animation: m-hop 0.4s cubic-bezier(0.3, 0, 0.5, 1) 2 alternate;
 }
@@ -384,56 +260,6 @@ dialog::backdrop {
   to {
     translate: 0 -2.25rem;
   }
-}
-.mascot-spin .mascot-dog {
-  animation: m-spin 0.9s ease-in-out;
-}
-@keyframes m-spin {
-  50% {
-    scale: -1 1;
-  }
-}
-
-/* speech bubble */
-.mascot-say {
-  position: absolute;
-  z-index: 1;
-  pointer-events: none;
-  bottom: calc(100% - 0.5rem);
-  left: 50%;
-  translate: -50% 0;
-  white-space: nowrap;
-  border-radius: 0.9rem;
-  background: var(--color-red);
-  padding: 0.25rem 0.75rem;
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 800;
-  line-height: 1.2;
-  color: white;
-  animation: m-pop 0.3s var(--ease-snap) both;
-}
-.mascot-say::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  translate: -50% -1px;
-  border: 0.4rem solid transparent;
-  border-top-color: var(--color-red);
-}
-@keyframes m-pop {
-  from {
-    scale: 0.4;
-    opacity: 0;
-  }
-}
-/* The eye patch belongs to the dog's left eye: hidden when we see its right side (facing left). */
-.mascot .m-patch {
-  opacity: 0;
-}
-.mascot-right .m-patch {
-  opacity: 1;
 }
 
 /* Team board: a top-down oval in mown club navy with players on their spots. */
@@ -569,4 +395,67 @@ dialog::backdrop {
 }
 .board-seat-ready {
   outline: 2px dashed rgb(255 255 255 / 0.7);
+}
+
+/* the footy: thrown in an arc, bounces twice, then waits */
+/* the same size as the footy in the dog's mouth: 245 of the drawing's 1254 units */
+.mascot-footy {
+  display: block;
+  width: calc(8.5rem * 245 / 1254);
+  @media (width >= 48rem) {
+    width: calc(10.5rem * 245 / 1254);
+  }
+}
+.mascot-ball {
+  position: absolute;
+  bottom: 0.3rem;
+  translate: -50% 0;
+  pointer-events: none;
+  animation: m-throw 0.9s cubic-bezier(0.3, 0, 0.6, 1) both;
+}
+@keyframes m-throw {
+  0% {
+    transform: translateY(-5.5rem) rotate(-200deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  55% {
+    transform: translateY(0) rotate(0);
+  }
+  72% {
+    transform: translateY(-1.4rem) rotate(40deg);
+  }
+  86% {
+    transform: translateY(0) rotate(60deg);
+  }
+  93% {
+    transform: translateY(-0.4rem) rotate(70deg);
+  }
+  100% {
+    transform: translateY(0) rotate(75deg);
+  }
+}
+.mascot-throw {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  right: 0;
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.7);
+  padding: 0 0.75rem 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-navy);
+}
+.mascot-throw:hover {
+  background: white;
+}
+.mascot-throw .mascot-footy {
+  width: 1.25rem;
 }

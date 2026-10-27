@@ -39,7 +39,7 @@ export default async function HomePage() {
     <div className="space-y-6 md:space-y-8">
       <header className="-mb-2 md:-mb-4">
         <h1 className="sr-only">G'day, {firstName}</h1>
-        <HomeMascot firstName={firstName} />
+        <HomeMascot />
       </header>
 
       {lastGame && !ballot && !isCoach(me.role) && (
