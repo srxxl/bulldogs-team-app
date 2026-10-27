@@ -46,7 +46,7 @@ export default async function HomePage() {
 
       {voteOpen && !ballot && (
         <Link
-          href={`/fixture/${lastGame.id}/vote`}
+          href={`/fixture/${lastGame.id}#votes`}
           className="flex items-center gap-4 rounded-2xl bg-red p-4 text-white transition-colors hover:bg-red-deep"
         >
           <Vote size={28} className="shrink-0" />

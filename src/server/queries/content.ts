@@ -118,3 +118,11 @@ export async function getBallotCounts(eventIds: string[]) {
   for (const r of rows) m.set(r.eventId, (m.get(r.eventId) ?? 0) + 1);
   return m;
 }
+
+/** One game's votes (coach-only results). */
+export function getGameVotes(eventId: string) {
+  return db
+    .select({ eventId: vote.eventId, nomineeId: vote.nomineeId, points: vote.points })
+    .from(vote)
+    .where(eq(vote.eventId, eventId));
+}

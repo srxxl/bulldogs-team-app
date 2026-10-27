@@ -1,21 +1,23 @@
-import { ChevronLeft, MapPin, Pencil, Vote } from "lucide-react";
+import { ChevronLeft, MapPin, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { GameNotes } from "@/components/game-notes";
+import { GameVotes } from "@/components/game-votes";
 import { NoteForm } from "@/components/note-form";
 import { RsvpButtons } from "@/components/rsvp-buttons";
 import { SectionPanel } from "@/components/section-panel";
 import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, Chip } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { canLead, canModerate, canPickTeam } from "@/lib/roles";
+import { canModerate, canPickTeam, isCoach } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
-import { voteWindow } from "@/lib/votes";
+import { tally, voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
-import { getGameNotes, getLadder } from "@/server/queries/content";
+import { getGameNotes, getGameVotes, getLadder, getLineup, getMyBallot } from "@/server/queries/content";
 import { getEvent, getPastGamesAgainst, getRsvps } from "@/server/queries/events";
+import { getSquad } from "@/server/queries/squad";
 
 const GROUPS = [
   { status: "yes", label: "In" },
@@ -30,12 +32,32 @@ export async function EventDetail({ id }: { id: string }) {
   if (ev.kind === "training") redirect(`/training#s-${id}`);
 
   const isGame = ev.kind === "game" && ev.opponent;
-  const [rsvps, history, ladder, notes] = await Promise.all([
+  const isGameEvent = ev.kind === "game";
+  const coach = isCoach(me.role);
+  const [rsvps, history, ladder, notes, squad, lineup, ballot, gameVotes] = await Promise.all([
     getRsvps(id),
     isGame ? getPastGamesAgainst(ev.opponent as string, ev.startsAt) : [],
     isGame ? getLadder() : [],
-    ev.kind === "game" ? getGameNotes(id) : [],
+    isGameEvent ? getGameNotes(id) : [],
+    isGameEvent ? getSquad() : [],
+    isGameEvent ? getLineup(id) : {},
+    isGameEvent ? getMyBallot(id, me.id) : null,
+    isGameEvent && coach ? getGameVotes(id) : [],
   ]);
+  // Player's player: people named on the team board come first; everyone else is still votable.
+  const played = new Set(Object.values(lineup));
+  const candidates = squad
+    .filter((p) => p.id !== me.id && p.role !== "coach")
+    .sort((a, b) => Number(played.has(b.id)) - Number(played.has(a.id)) || (a.guernsey ?? 99) - (b.guernsey ?? 99))
+    .map((p) => ({ id: p.id, name: p.displayName, guernsey: p.guernsey, image: p.image, played: played.has(p.id) }));
+  const byId = new Map(squad.map((p) => [p.id, p]));
+  const results = coach
+    ? tally(gameVotes).map((r) => ({
+        ...r,
+        name: byId.get(r.userId)?.displayName ?? "Former player",
+        image: byId.get(r.userId)?.image ?? null,
+      }))
+    : null;
   const mine = rsvps.find((r) => r.userId === me.id)?.status ?? null;
   const upcoming = (ev.endsAt ?? ev.startsAt) > new Date();
   const scores = scoresOf(ev);
@@ -103,18 +125,24 @@ export async function EventDetail({ id }: { id: string }) {
             )}
           </div>
         </dl>
-        {votes === "open" && (
-          <div className="mt-6">
-            <ButtonLink href={`/fixture/${id}/vote`} variant="red">
-              <Vote size={18} /> Player's player votes
-            </ButtonLink>
-          </div>
-        )}
       </header>
 
       {ev.kind === "game" && (
         <SectionPanel id="notes" title="Notes" meta={notes.length || undefined} action={<NoteForm eventId={id} />}>
           <GameNotes notes={notes} canDelete={(n) => n.authorId === me.id || canModerate(me)} />
+        </SectionPanel>
+      )}
+
+      {isGameEvent && (
+        <SectionPanel id="votes" title="Player's player">
+          <GameVotes
+            eventId={id}
+            startsAt={ev.startsAt}
+            window={votes ?? "before"}
+            candidates={candidates}
+            ballot={ballot}
+            results={results}
+          />
         </SectionPanel>
       )}
 
@@ -213,11 +241,6 @@ export async function EventDetail({ id }: { id: string }) {
                 </>
               )}
             </SectionPanel>
-          )}
-          {ev.kind === "game" && canLead(me.role) && votes === "open" && (
-            <p className="text-sm text-ink/60">
-              Votes close four days after the game. Tallies are on the Player's player page.
-            </p>
           )}
         </div>
       </div>

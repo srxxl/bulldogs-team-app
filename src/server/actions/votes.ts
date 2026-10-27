@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { type ActionResult, fail, ok } from "@/lib/action-result";
+import { isCoach } from "@/lib/roles";
 import { validateBallot, voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
 import { db } from "@/server/db";
@@ -20,6 +21,7 @@ const schema = z.object({
 
 export async function submitBallot(_prev: unknown, formData: FormData): Promise<ActionResult> {
   const me = await requireMember();
+  if (isCoach(me.role)) return fail("Player's player is the players' vote");
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fail("Pick a player for 3, 2 and 1 votes");
   const { eventId, ...ballot } = parsed.data;
@@ -41,7 +43,7 @@ export async function submitBallot(_prev: unknown, formData: FormData): Promise<
       { eventId, voterId: me.id, nomineeId: ballot.one, points: 1 },
     ]);
   });
-  revalidatePath(`/fixture/${eventId}`, "layout");
+  revalidatePath(`/fixture/${eventId}`);
   revalidatePath("/");
   return ok("Votes in. You can change them until voting closes.");
 }
