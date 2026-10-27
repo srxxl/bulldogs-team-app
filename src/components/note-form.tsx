@@ -6,7 +6,7 @@ import { createNote, deleteNote } from "@/server/actions/content";
 import { Field, FormMessage, Input, SubmitButton, Textarea } from "./forms";
 import { Sheet } from "./sheet";
 
-/** "Write a note" for one game. Captains, coaches and admins. */
+/** "Write a note" for one game. Anyone in the squad. */
 export function NoteForm({ eventId }: { eventId: string }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(createNote, null);
@@ -49,7 +49,7 @@ export function DeleteNoteButton({ id }: { id: string }) {
       aria-label="Delete note"
       disabled={pending}
       onClick={() => confirm("Delete this note?") && start(async () => void (await deleteNote(id)))}
-      className="grid size-11 place-items-center rounded-xl text-ink/50 hover:bg-mist hover:text-red"
+      className="-my-2.5 -mr-2 grid size-11 shrink-0 place-items-center rounded-xl text-ink/50 hover:bg-mist hover:text-red"
     >
       <Trash2 size={16} />
     </button>

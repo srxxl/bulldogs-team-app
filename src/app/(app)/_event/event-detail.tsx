@@ -8,7 +8,7 @@ import { RsvpButtons } from "@/components/rsvp-buttons";
 import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, Chip } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { canLead, canModerate, canPickTeam, canWriteNotes } from "@/lib/roles";
+import { canLead, canModerate, canPickTeam } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
@@ -108,13 +108,8 @@ export async function EventDetail({ id }: { id: string }) {
       </header>
 
       {ev.kind === "game" && (
-        <Collapsible id="notes" title="Coach's notes" meta={notes.length || undefined}>
-          <GameNotes
-            eventId={id}
-            notes={notes}
-            canWrite={canWriteNotes(me)}
-            canDelete={(n) => n.authorId === me.id || canModerate(me)}
-          />
+        <Collapsible id="notes" title="Notes" meta={notes.length || undefined}>
+          <GameNotes eventId={id} notes={notes} canDelete={(n) => n.authorId === me.id || canModerate(me)} />
         </Collapsible>
       )}
 

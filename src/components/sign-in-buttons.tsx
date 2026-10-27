@@ -96,7 +96,7 @@ export function DevSignIn({ next }: { next: string }) {
         <select name="email" className="min-h-11 flex-1 rounded-xl border-2 border-navy/15 bg-white px-3 text-sm">
           <option value="admin@bulldogs.test">Player who runs the app (admin)</option>
           <option value="coach@bulldogs.test">Coach</option>
-          <option value="captain@bulldogs.test">Captain</option>
+          <option value="captain@bulldogs.test">Skip</option>
           <option value="player@bulldogs.test">Player</option>
           <option value="newbie@bulldogs.test">New sign-up (pending)</option>
         </select>

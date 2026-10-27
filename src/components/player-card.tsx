@@ -2,11 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { positionLabel } from "@/lib/positions";
+import { leaderBadge } from "@/lib/roles";
 import type { SquadMember } from "@/server/queries/squad";
 
 /** Trading-card style: photo, oversized outlined guernsey number. */
 export function PlayerCard({ player, className }: { player: SquadMember; className?: string }) {
-  const leader = player.role === "captain" ? "Captain" : player.role === "coach" ? "Coach" : null;
+  const leader = leaderBadge(player.role);
   return (
     <Link
       href={`/squad/${player.id}`}

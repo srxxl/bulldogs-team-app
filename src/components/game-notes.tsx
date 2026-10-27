@@ -1,35 +1,37 @@
-import { noteRole } from "@/lib/roles";
+import { leaderBadge } from "@/lib/roles";
 import { formatDay } from "@/lib/time";
 import type { GameNote } from "@/server/queries/content";
 import { DeleteNoteButton, NoteForm } from "./note-form";
 
-/** Notes for one game, newest first, with "Write a note" for captains, coaches and admins. */
+/** Notes for one game, newest first. Anyone can write one; skips and coaches get a red badge. */
 export function GameNotes({
   eventId,
   notes,
-  canWrite,
   canDelete,
 }: {
   eventId: string;
   notes: GameNote[];
-  canWrite: boolean;
   /** Whether this viewer may delete a given note (author, coach or admin). */
   canDelete: (n: GameNote) => boolean;
 }) {
   return (
     <div className="space-y-4">
-      {canWrite && <NoteForm eventId={eventId} />}
+      <NoteForm eventId={eventId} />
       {notes.length === 0 ? (
-        <p className="text-sm text-ink/60">
-          {canWrite ? "No notes for this game yet." : "The coaches haven't written a note for this game yet."}
-        </p>
+        <p className="text-sm text-ink/60">No notes for this game yet. Share a reminder, a plan or a shout-out.</p>
       ) : (
         <ol className="space-y-3">
           {notes.map((n) => (
             <li key={n.id} className="rounded-2xl bg-chalk p-4">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-sm text-ink/60">
-                  {[noteRole(n.role), n.preferredName || n.name].filter(Boolean).join(" ")}, {formatDay(n.createdAt)}
+                <p className="flex flex-wrap items-center gap-2 text-sm text-ink/60">
+                  <span className="font-semibold text-ink">{n.preferredName || n.name}</span>
+                  {leaderBadge(n.role) && (
+                    <span className="rounded-full bg-red px-2 py-0.5 text-xs font-bold text-white">
+                      {leaderBadge(n.role)}
+                    </span>
+                  )}
+                  <span>{formatDay(n.createdAt)}</span>
                 </p>
                 {canDelete(n) && <DeleteNoteButton id={n.id} />}
               </div>

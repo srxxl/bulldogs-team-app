@@ -15,7 +15,7 @@ if (!isLocalDb()) {
 }
 
 const PLAYERS: [string, number, t.Position, string?][] = [
-  ["Coach Jess Marlow", 0, "utility", "coach@bulldogs.test"],
+  ["Jess Marlow", 0, "utility", "coach@bulldogs.test"],
   ["Ash Tran", 7, "midfielder", "captain@bulldogs.test"],
   ["Mia Kowalski", 12, "forward", "admin@bulldogs.test"],
   ["Priya Nair", 3, "midfielder", "player@bulldogs.test"],
