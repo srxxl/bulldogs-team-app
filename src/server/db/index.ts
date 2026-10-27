@@ -1,10 +1,13 @@
 import "server-only";
-import { createDb, type Db } from "./client";
+import type { Pool } from "pg";
+import { createDb, createPool, type Db } from "./client";
 
-// One pool per server process; survives dev hot reloads.
-const globalForDb = globalThis as unknown as { bulldogsDb?: Db };
-globalForDb.bulldogsDb ??= createDb();
+// Cache only the connection pool across dev hot reloads. The Drizzle instance is rebuilt each time this
+// module loads, so it always carries the current schema (a cached instance keeps the old one after a
+// schema change and fails to name new columns).
+const globalForDb = globalThis as unknown as { bulldogsPool?: Pool };
+globalForDb.bulldogsPool ??= createPool();
 
-export const db: Db = globalForDb.bulldogsDb;
+export const db: Db = createDb(globalForDb.bulldogsPool);
 export * as t from "./schema";
 export type { Db };

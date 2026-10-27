@@ -20,13 +20,13 @@ const authorName = {
   role: user.role,
 };
 
-export function getNotes(limit = 30) {
+/** Notes for one game, newest first. */
+export function getGameNotes(eventId: string) {
   return db
     .select({
       id: note.id,
       title: note.title,
       body: note.body,
-      pinned: note.pinned,
       createdAt: note.createdAt,
       authorId: note.authorId,
       ...authorName,
@@ -34,14 +34,11 @@ export function getNotes(limit = 30) {
     .from(note)
     .innerJoin(user, eq(user.id, note.authorId))
     .leftJoin(playerProfile, eq(playerProfile.userId, note.authorId))
-    .orderBy(desc(note.pinned), desc(note.createdAt))
-    .limit(limit);
+    .where(eq(note.eventId, eventId))
+    .orderBy(desc(note.createdAt));
 }
 
-export async function getFeaturedNote() {
-  const [n] = await getNotes(1);
-  return n ?? null;
-}
+export type GameNote = Awaited<ReturnType<typeof getGameNotes>>[number];
 
 export function getPins(board: Board) {
   return db

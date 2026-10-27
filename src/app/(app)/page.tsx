@@ -11,26 +11,28 @@ import { cn } from "@/lib/cn";
 import { formatDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
-import { getFeaturedNote, getLadder, getMyBallot } from "@/server/queries/content";
+import { getGameNotes, getLadder, getMyBallot } from "@/server/queries/content";
 import { getLastGame, getMyRsvps, getNextGame, getUpcoming, getYesCounts } from "@/server/queries/events";
 
 export default async function HomePage() {
   const me = await requireMember();
-  const [nextGame, lastGame, training, upcoming, note, ladder] = await Promise.all([
+  const [nextGame, lastGame, training, upcoming, ladder] = await Promise.all([
     getNextGame(),
     getLastGame(),
     getUpcoming({ kind: "training", limit: 2 }),
     getUpcoming({ limit: 4 }),
-    getFeaturedNote(),
     getLadder(),
   ]);
   const ids = [nextGame, ...training].filter((e) => e !== null).map((e) => e.id);
   const voteOpen = lastGame && voteWindow(lastGame.startsAt) === "open";
-  const [myRsvps, yesCounts, ballot] = await Promise.all([
+  const [myRsvps, yesCounts, ballot, gameNotes] = await Promise.all([
     getMyRsvps(me.id, ids),
     getYesCounts(ids),
     voteOpen ? getMyBallot(lastGame.id, me.id) : null,
+    nextGame ? getGameNotes(nextGame.id) : [],
   ]);
+  // The latest note for the next game, if the coaches have written one.
+  const note = gameNotes[0];
   const firstName = me.name.split(" ")[0];
   const rest = upcoming.filter((e) => e.id !== nextGame?.id).slice(0, 3);
 
@@ -72,17 +74,21 @@ export default async function HomePage() {
           {note && (
             <Panel className="relative">
               <p className="text-sm font-semibold text-red">
-                {note.role === "captain" ? "Captain's note" : "Coach's note"} from{" "}
+                {note.role === "captain" ? "Captain's note" : "Coach's note"} for {nextGame?.title}, from{" "}
                 {note.preferredName || note.name.split(" ")[0]}
               </p>
               <h2 className="mt-1 text-4xl font-extrabold text-navy">{note.title}</h2>
               <p className="mt-3 line-clamp-6 whitespace-pre-line text-ink/80">{note.body}</p>
-              <Link
-                href="/notes"
-                className="mt-4 inline-block text-sm font-semibold text-navy underline underline-offset-4"
-              >
-                All notes
-              </Link>
+              {nextGame && (
+                <Link
+                  href={`/fixture/${nextGame.id}#notes`}
+                  className="mt-4 inline-block text-sm font-semibold text-navy underline underline-offset-4"
+                >
+                  {gameNotes.length > 1
+                    ? `All ${gameNotes.length} notes for ${nextGame.title}`
+                    : `Go to ${nextGame.title}`}
+                </Link>
+              )}
             </Panel>
           )}
 

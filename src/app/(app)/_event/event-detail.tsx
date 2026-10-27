@@ -3,16 +3,17 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { Collapsible } from "@/components/collapsible";
+import { GameNotes } from "@/components/game-notes";
 import { RsvpButtons } from "@/components/rsvp-buttons";
 import { TeamSection } from "@/components/team-board/team-section";
 import { ButtonLink, Chip } from "@/components/ui";
 import { cn } from "@/lib/cn";
-import { canLead, canPickTeam } from "@/lib/roles";
+import { canLead, canModerate, canPickTeam } from "@/lib/roles";
 import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { voteWindow } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
-import { getLadder } from "@/server/queries/content";
+import { getGameNotes, getLadder } from "@/server/queries/content";
 import { getEvent, getPastGamesAgainst, getRsvps } from "@/server/queries/events";
 
 const GROUPS = [
@@ -28,10 +29,11 @@ export async function EventDetail({ id }: { id: string }) {
   if (ev.kind === "training") redirect(`/training#s-${id}`);
 
   const isGame = ev.kind === "game" && ev.opponent;
-  const [rsvps, history, ladder] = await Promise.all([
+  const [rsvps, history, ladder, notes] = await Promise.all([
     getRsvps(id),
     isGame ? getPastGamesAgainst(ev.opponent as string, ev.startsAt) : [],
     isGame ? getLadder() : [],
+    ev.kind === "game" ? getGameNotes(id) : [],
   ]);
   const mine = rsvps.find((r) => r.userId === me.id)?.status ?? null;
   const upcoming = (ev.endsAt ?? ev.startsAt) > new Date();
@@ -115,6 +117,17 @@ export async function EventDetail({ id }: { id: string }) {
           )}
         </div>
       </header>
+
+      {ev.kind === "game" && (
+        <Collapsible id="notes" title="Coach's notes" meta={notes.length || undefined}>
+          <GameNotes
+            eventId={id}
+            notes={notes}
+            canWrite={canLead(me.role)}
+            canDelete={(n) => n.authorId === me.id || canModerate(me)}
+          />
+        </Collapsible>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <Collapsible

@@ -22,7 +22,7 @@ Team hub for the Brentwood Booragoon Bulldogs Women's C3 side (Perth Football Le
 | Season fixture (list or calendar) | `/fixture`, `/fixture?view=calendar`, `/fixture/[id]` | Venue, time, opponent, head-to-head + opponent ladder row |
 | Game availability poll | `/fixture/[id]` | In / can't (no maybe) |
 | Training polls (Tue/Thu 6pm) | `/training` | Each session is one card: RSVP, who's coming, drills |
-| Coach / captain note of the week                   | `/notes`                               | Latest pinned on home                                     |
+| Coach / captain notes | `/fixture/[id]` (per game) | Latest note for the next game shows on home |
 | Training drills | `/training` (on each session card) | Per-session plan from a reusable drill catalog; captains, coaches, admins edit |
 | Fitness + nutrition boards                         | `/boards/fitness`, `/boards/nutrition` | Pinterest-style pins, anyone adds                         |
 | Team board (drag & drop lineup) | `/fixture/[id]` (games) | Captains/coaches edit; auto-fill from RSVPs; everyone views |
@@ -33,7 +33,7 @@ Team hub for the Brentwood Booragoon Bulldogs Women's C3 side (Perth Football Le
 
 ## Data model (Drizzle, `src/server/db/schema.ts`)
 
-`user/session/account/verification` (Better Auth, `user.role`, `user.isAdmin`) · `player_profile` · `event` · `availability` (yes/no) · `vote` · `lineup_slot` · `note` · `pin` (board = fitness | nutrition) · `drill` + `session_drill` · `feedback` · `ladder_row` · `app_setting`.
+`user/session/account/verification` (Better Auth, `user.role`, `user.isAdmin`) · `player_profile` · `event` · `availability` (yes/no) · `vote` · `lineup_slot` · `note` (per game) · `pin` (board = fitness | nutrition) · `drill` + `session_drill` · `feedback` · `ladder_row` · `app_setting`.
 
 ## Phases
 

@@ -6,7 +6,8 @@ import { createNote, deleteNote } from "@/server/actions/content";
 import { Field, FormMessage, Input, SubmitButton, Textarea } from "./forms";
 import { Sheet } from "./sheet";
 
-export function NoteForm() {
+/** "Write a note" for one game. Captains and coaches. */
+export function NoteForm({ eventId }: { eventId: string }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(createNote, null);
   useEffect(() => {
@@ -24,16 +25,13 @@ export function NoteForm() {
       }
     >
       <form action={action} className="space-y-4">
+        <input type="hidden" name="eventId" value={eventId} />
         <Field label="Title" name="title" state={state}>
-          <Input name="title" required maxLength={100} placeholder="This week: win the contested ball" state={state} />
+          <Input name="title" required maxLength={100} placeholder="Win the contested ball" state={state} />
         </Field>
         <Field label="Note" name="body" state={state}>
           <Textarea name="body" required rows={8} maxLength={4000} state={state} />
         </Field>
-        <label className="flex min-h-11 items-center gap-3 text-sm font-medium">
-          <input type="checkbox" name="pinned" defaultChecked className="size-5 accent-navy" />
-          Show it on everyone's home screen
-        </label>
         <FormMessage state={state && !state.ok ? state : null} />
         <SubmitButton pending="Posting…" className="w-full">
           Post note

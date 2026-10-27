@@ -213,6 +213,7 @@ export const lineupSlot = pgTable(
   (t) => [primaryKey({ columns: [t.eventId, t.slot] }), uniqueIndex().on(t.eventId, t.userId)],
 );
 
+/** A coach's or captain's note for one game. */
 export const note = pgTable(
   "note",
   {
@@ -220,13 +221,13 @@ export const note = pgTable(
     authorId: text()
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    eventId: text().references(() => event.id, { onDelete: "cascade" }),
     title: text().notNull(),
     body: text().notNull(),
-    pinned: boolean().notNull().default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [index().on(t.createdAt)],
+  (t) => [index().on(t.eventId, t.createdAt)],
 );
 
 export const boardEnum = pgEnum("board", ["fitness", "nutrition"]);

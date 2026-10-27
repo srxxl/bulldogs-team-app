@@ -192,12 +192,23 @@ async function main() {
     );
   }
 
-  await db.insert(t.note).values({
-    authorId: users[0].id,
-    title: "Win the contested ball",
-    body: "Great effort on Saturday. This week at training we're working on clean hands at the stoppage and talking more in the back half.\n\nBring a water bottle and your mouthguard Tuesday. Thursday is match sim.",
-    pinned: true,
-  });
+  if (next) {
+    await db.insert(t.note).values([
+      {
+        authorId: users[1].id,
+        eventId: next.id,
+        title: "Bring the noise",
+        body: "Away game, so let's be loud from the first bounce. Warm-up starts 45 minutes before.",
+        createdAt: new Date(now.getTime() - 3600_000),
+      },
+      {
+        authorId: users[0].id,
+        eventId: next.id,
+        title: "Win the contested ball",
+        body: "Great effort on Saturday. This week we're working on clean hands at the stoppage and talking more in the back half.\n\nMouthguards in, and be there by 11:30.",
+      },
+    ]);
+  }
   await db.insert(t.pin).values([
     {
       board: "nutrition",
@@ -297,6 +308,19 @@ async function main() {
       .insert(t.sessionDrill)
       .values([0, 1, 2, 5].map((n, position) => ({ eventId: trainingIds[0].id, drillId: catalog[n].id, position })));
   }
+  // Training RSVPs: the next sessions fill up like real weeks (busy, busy, quieter), a few can't make it,
+  // and some players haven't answered yet. Skips the coach (users[0]) and the pending sign-up.
+  const squad = users.slice(1, -1);
+  const turnout = [0.75, 0.6, 0.4];
+  const trainingRsvps: (typeof t.availability.$inferInsert)[] = [];
+  trainingIds.slice(0, turnout.length).forEach((session, n) => {
+    squad.forEach((u, i) => {
+      const roll = ((i * 37 + n * 11) % 100) / 100;
+      if (roll < turnout[n]) trainingRsvps.push({ eventId: session.id, userId: u.id, status: "yes" });
+      else if (roll < turnout[n] + 0.12) trainingRsvps.push({ eventId: session.id, userId: u.id, status: "no" });
+    });
+  });
+  if (trainingRsvps.length) await db.insert(t.availability).values(trainingRsvps);
   await db.insert(t.feedback).values([
     {
       kind: "suggestion",
