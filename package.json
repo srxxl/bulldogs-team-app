@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "mkdir -p .data && pglite-server --db=.data/pglite --port=54329 --max-connections=20 --run \"next dev\"",
+    "dev": "mkdir -p \"${XDG_CACHE_HOME:-$HOME/.cache}/bbfc\" && pglite-server --db=\"${XDG_CACHE_HOME:-$HOME/.cache}/bbfc/pglite\" --port=54329 --max-connections=20 --run \"next dev\"",
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
@@ -15,7 +15,7 @@
     "db:migrate": "tsx --env-file-if-exists=.env.local src/server/db/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env.local src/server/db/seed.ts",
     "vercel-build": "pnpm db:migrate && next build",
-    "db:server": "mkdir -p .data && pglite-server --db=.data/pglite --port=54329 --max-connections=20"
+    "db:server": "mkdir -p \"${XDG_CACHE_HOME:-$HOME/.cache}/bbfc\" && pglite-server --db=\"${XDG_CACHE_HOME:-$HOME/.cache}/bbfc/pglite\" --port=54329 --max-connections=20"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",

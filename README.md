@@ -9,7 +9,7 @@ player's player votes, fitness and nutrition boards, coach's notes, the ladder a
 ```bash
 pnpm install
 cp .env.example .env.local      # then set BETTER_AUTH_SECRET (openssl rand -base64 32)
-pnpm dev                        # starts a local database (.data/, no Postgres install needed) + http://localhost:3000
+pnpm dev                        # starts a local database (~/.cache/bbfc, no Postgres install needed) + http://localhost:3000
 pnpm db:migrate                 # in a second terminal, while dev is running
 pnpm db:seed                    # demo squad, fixture and content
 ```

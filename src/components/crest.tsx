@@ -9,7 +9,8 @@ export function Crest({ size = 40, className }: { size?: number; className?: str
       width={size}
       height={Math.round(size * 0.975)}
       className={className}
-      style={{ height: "auto" }}
+      // Pin both sizes: Tailwind's base styles set img height to auto, which Next warns about.
+      style={{ width: size, height: Math.round(size * 0.975) }}
       priority
     />
   );
