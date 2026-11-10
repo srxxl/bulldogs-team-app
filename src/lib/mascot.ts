@@ -261,6 +261,19 @@ const POSTURE: Partial<Record<Pose, Posture>> = {
 const posture = (pose: Pose): Posture => POSTURE[pose] ?? "stand";
 
 /**
+ * The resting pose for where the dog is right now: what it carries over to the next page. Anything on its way
+ * somewhere (walking, a trick, an in-between) settles into the posture it was in, keeping its spot, the way
+ * it faces and the footy (standing with the footy is holding it).
+ */
+export function settled(state: MascotState): MascotState {
+  const ball = !!state.ball || state.pose === "hold";
+  const pose = ({ stand: ball ? "hold" : "stand", sit: "sit", side: "sitside", lie: "sleep" } as const)[
+    posture(state.pose)
+  ];
+  return { pose, x: state.x, facing: state.facing, ...(ball && pose !== "hold" ? { ball } : {}) };
+}
+
+/**
  * The step, led by whatever in-betweens get the dog there from where it is. Standing to sitting front-on
  * turns to face you then sits; to sitting side-on it sits down side-on. It stands up the way it sat, so
  * always facing the way it's sitting. Lying down is from front-on (turning to face you first if it's
@@ -293,3 +306,34 @@ export function withTransitions(current: MascotState, next: Step): Step[] {
 
 /** The dog's opening move on the home screen: a hello bark. */
 export const GREETING: Step = { pose: "bark", x: 12, facing: "right", ms: 2600 };
+
+/** Poses the dog can do over the page title: getting somewhere, standing, and fetching the footy. */
+const OVER_TITLE: ReadonlySet<Pose> = new Set(["walk", "run", "turn", "stand", "hold", "pickup"]);
+
+/**
+ * The dog walks and fetches across the whole title row, in front of the title, but moves into the clear space
+ * beside it (from `clearFrom`, 0 to 100) before it sits, lies down, begs or does a trick there. Any steps of
+ * that trick that were at the old spot move with it, up to the next walk. `clearFrom` of 0 means no title to
+ * keep clear of.
+ */
+export function makeRoom(current: MascotState, steps: Step[], clearFrom: number, rand: Rand = Math.random): Step[] {
+  if (clearFrom <= 0 || clearFrom >= 100) return steps;
+  const out: Step[] = [];
+  let at: MascotState = current;
+  let shift: { from: number; to: number } | null = null;
+  for (const original of steps) {
+    let step = original;
+    if (step.pose === "walk" || step.pose === "run") shift = null;
+    else if (shift && step.x === shift.from) step = { ...step, x: shift.to };
+    if (!OVER_TITLE.has(step.pose) && step.x < clearFrom) {
+      const to = clearFrom + rand() * (100 - clearFrom);
+      const moves = moveTo({ ...at, x: step.x }, to);
+      out.push(...moves);
+      shift = { from: step.x, to: moves[moves.length - 1].x };
+      step = { ...step, x: shift.to, facing: FRONT_ON.has(step.pose) ? step.facing : moves[moves.length - 1].facing };
+    }
+    out.push(step);
+    at = step;
+  }
+  return out;
+}

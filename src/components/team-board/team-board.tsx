@@ -174,13 +174,12 @@ export function TeamBoard({
         <div className="board-bench mt-6 grid gap-4 sm:grid-cols-[2fr_1fr]">
           {(
             [
-              ["Interchange", BENCH_SLOTS, "Up to 4 can rotate on and off."],
-              ["Emergencies", EMERGENCY_SLOTS, "Back-ups if someone pulls out."],
+              ["Interchange", BENCH_SLOTS],
+              ["Emergencies", EMERGENCY_SLOTS],
             ] as const
-          ).map(([title, slots, hint]) => (
+          ).map(([title, slots]) => (
             <div key={title}>
-              <h3 className="px-1 text-lg font-bold text-white">{title}</h3>
-              <p className="mb-2 px-1 text-xs text-powder">{hint}</p>
+              <h3 className="mb-2 px-1 text-lg font-bold text-white">{title}</h3>
               <div className={cn("grid gap-2", slots.length === 4 ? "grid-cols-4" : "grid-cols-2")}>
                 {slots.map((s) => (
                   <BenchSpot
@@ -249,7 +248,6 @@ export function TeamBoard({
       {editable && (
         <PoolDrop className="order-first lg:order-none lg:col-start-2 lg:row-start-2 lg:self-start">
           <h3 className="mb-1 text-xl font-bold text-navy">Not picked</h3>
-          <p className="mb-3 text-xs text-ink/60">Green dot: said they're in. Red: can't make it.</p>
           <ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:flex-wrap lg:overflow-visible">
             {pool.map((p) => (
               <li key={p.id} className="shrink-0">

@@ -1,12 +1,17 @@
+import { ArrowUpRight, Vote } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
 import { MatchCard } from "@/components/match-card";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 import { findByes } from "@/lib/byes";
 import { CLUB } from "@/lib/club";
-import { formatDay, formatMonth, monthKey } from "@/lib/time";
+import { cn } from "@/lib/cn";
+import { isCoach } from "@/lib/roles";
+import { formatDay, formatMonth, monthKey, perthToday } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
-import { getMyRsvps, getNextGame, getSeason, getYesCounts } from "@/server/queries/events";
+import { getMyBallot } from "@/server/queries/content";
+import { getLastGame, getMyRsvps, getNextGame, getSeason, getYesCounts } from "@/server/queries/events";
 
 export const metadata: Metadata = { title: "Fixture" };
 
@@ -28,9 +33,17 @@ function ByeCard({ bye }: { bye: Bye }) {
 
 export default async function FixturePage() {
   const me = await requireMember();
-  const [season, nextGame] = await Promise.all([getSeason(), getNextGame()]);
+  const now = new Date();
+  const [season, nextGame, lastGame] = await Promise.all([getSeason(), getNextGame(now), getLastGame(now)]);
   const ids = season.map((e) => e.id);
-  const [mine, yes] = await Promise.all([getMyRsvps(me.id, ids), getYesCounts(ids)]);
+  // player's player: from the start of a game until the end of that day (Perth), for players who haven't voted
+  const voteDay = lastGame && !isCoach(me.role) && perthToday(lastGame.startsAt) === perthToday(now) ? lastGame : null;
+  const [mine, yes, ballot] = await Promise.all([
+    getMyRsvps(me.id, ids),
+    getYesCounts(ids),
+    voteDay ? getMyBallot(voteDay.id, me.id) : null,
+  ]);
+  const voteFor = voteDay && !ballot ? voteDay : null;
 
   // games and other events, with our byes slotted in by date
   type Item = { bye: Bye } | { ev: (typeof season)[number] };
@@ -48,20 +61,45 @@ export default async function FixturePage() {
 
   return (
     <div className="space-y-10">
-      <PageHeader title="Fixture" intro={`${CLUB.grade}, ${CLUB.league}. Games, socials and club events.`}>
-        {me.isAdmin && <ButtonLink href="/admin/events/new">Add event</ButtonLink>}
-      </PageHeader>
+      <PageHeader title="Fixture" intro={`${CLUB.grade}, ${CLUB.league}. Games, socials and club events.`} />
 
-      {nextGame && (
+      {(nextGame || voteFor) && (
         <section aria-label="Next game">
-          <MatchCard game={nextGame} myStatus={mine.get(nextGame.id) ?? null} yesCount={yes.get(nextGame.id) ?? 0} />
+          {voteFor && (
+            // a red strip along the top of the card
+            <Link
+              href={`/fixture/${voteFor.id}#votes`}
+              className={cn(
+                "flex min-h-14 items-center gap-3 bg-red px-5 py-3 text-white transition-colors hover:bg-red-deep md:px-8",
+                nextGame ? "rounded-t-[28px]" : "rounded-[28px]",
+              )}
+            >
+              <Vote size={22} aria-hidden className="shrink-0" />
+              <span className="flex-1">
+                <span className="block font-display text-2xl leading-none font-bold">Vote for player's player</span>
+                <span className="text-sm text-white/85">{voteFor.title}</span>
+              </span>
+              <ArrowUpRight aria-hidden className="shrink-0" />
+            </Link>
+          )}
+          {nextGame && (
+            <MatchCard
+              game={nextGame}
+              myStatus={mine.get(nextGame.id) ?? null}
+              yesCount={yes.get(nextGame.id) ?? 0}
+              className={voteFor ? "rounded-t-none" : undefined}
+            />
+          )}
         </section>
       )}
 
       <section aria-labelledby="season-heading">
-        <h2 id="season-heading" className="mb-4 text-3xl font-bold text-navy md:text-4xl">
-          Season
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 id="season-heading" className="text-3xl font-bold text-navy md:text-4xl">
+            Season
+          </h2>
+          {me.isAdmin && <ButtonLink href="/admin/events/new">Add event</ButtonLink>}
+        </div>
 
         {season.length === 0 ? (
           <EmptyState title="The fixture's empty">Games appear here once the PFL releases the draw.</EmptyState>

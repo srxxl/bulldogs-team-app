@@ -15,7 +15,7 @@ export function ProfileForm({ profile }: { profile: SquadMember }) {
       <Panel className="space-y-5">
         <div className="flex items-center gap-4">
           <Avatar name={profile.displayName} src={profile.image} size={72} />
-          <Field label="Photo" name="photo" state={state} hint="A clear face shot works best. Up to 5 MB.">
+          <Field label="Photo" name="photo" state={state} hint="Up to 5 MB.">
             <Input
               name="photo"
               type="file"
@@ -84,7 +84,7 @@ export function ProfileForm({ profile }: { profile: SquadMember }) {
         </div>
       </Panel>
       <Panel className="space-y-5">
-        <Field label="About me" name="bio" state={state} hint="How you got into footy, what you bring, anything fun.">
+        <Field label="About me" name="bio" state={state}>
           <Textarea name="bio" defaultValue={profile.bio ?? ""} maxLength={600} rows={5} state={state} />
         </Field>
         <Field label="Footy hero" name="footyHero" state={state}>

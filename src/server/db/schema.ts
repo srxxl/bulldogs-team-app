@@ -148,6 +148,8 @@ export const event = pgTable(
     oppGoals: smallint(),
     oppBehinds: smallint(),
     playhqGameId: text().unique(),
+    /** Game day timeline (steps as minutes before bounce); null means the default (src/lib/timeline.ts). */
+    timeline: jsonb().$type<{ label: string; minutesBefore: number }[]>(),
     cancelled: boolean().notNull().default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -250,6 +252,63 @@ export const pin = pgTable(
   (t) => [index().on(t.board, t.createdAt)],
 );
 
+/**
+ * A pin picked for a week (by a skip, coach or admin): the week's things to do, which players log and close
+ * their hoop with. One row per pin per week, so every past week keeps its picks.
+ */
+export const pinPick = pgTable(
+  "pin_pick",
+  {
+    pinId: text()
+      .notNull()
+      .references(() => pin.id, { onDelete: "cascade" }),
+    /** The Perth Monday of the week. */
+    weekOf: date().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.pinId, t.weekOf] }), index().on(t.weekOf)],
+);
+
+/**
+ * Someone did one of the week's picked pins (a run, a workout, a recipe), with optional numbers and a photo.
+ * Everyone in the squad can see these. One per person, per pin, per week; logging again updates it.
+ */
+export const pinDone = pgTable(
+  "pin_done",
+  {
+    id: id(),
+    pinId: text()
+      .notNull()
+      .references(() => pin.id, { onDelete: "cascade" }),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** The Perth Monday of the week it counts for (the pin's pick week). */
+    weekOf: date().notNull(),
+    distanceM: integer(),
+    durationS: integer(),
+    note: text(),
+    imageUrl: text(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex().on(t.pinId, t.userId, t.weekOf), index().on(t.weekOf)],
+);
+
+/** A "Nice one" on someone's log. One per person per log. */
+export const pinCheer = pgTable(
+  "pin_cheer",
+  {
+    doneId: text()
+      .notNull()
+      .references(() => pinDone.id, { onDelete: "cascade" }),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.doneId, t.userId] })],
+);
+
 /** Drill catalog: every drill a coach or captain writes, reusable across sessions. */
 export const drill = pgTable(
   "drill",
@@ -282,21 +341,6 @@ export const sessionDrill = pgTable(
   },
   (t) => [primaryKey({ columns: [t.eventId, t.drillId] }), index().on(t.eventId, t.position)],
 );
-
-export const feedbackKindEnum = pgEnum("feedback_kind", ["reflection", "suggestion", "shoutout"]);
-
-/**
- * Anonymous by design: no user reference and only a calendar date,
- * so rows can't be correlated with sessions or logs.
- */
-export const feedback = pgTable("feedback", {
-  id: id(),
-  kind: feedbackKindEnum().notNull(),
-  eventId: text().references(() => event.id, { onDelete: "set null" }),
-  body: text().notNull(),
-  submittedOn: date().notNull().defaultNow(),
-  readByCoach: boolean().notNull().default(false),
-});
 
 export const ladderRow = pgTable("ladder_row", {
   position: smallint().primaryKey(),
@@ -362,7 +406,6 @@ export type Position = (typeof positionEnum.enumValues)[number];
 export type EventKind = (typeof eventKindEnum.enumValues)[number];
 export type AvailabilityStatus = (typeof availabilityEnum.enumValues)[number];
 export type Board = (typeof boardEnum.enumValues)[number];
-export type FeedbackKind = (typeof feedbackKindEnum.enumValues)[number];
 export type EventRow = typeof event.$inferSelect;
 export type LadderRow = typeof ladderRow.$inferSelect;
 export type GradeGame = typeof gradeGame.$inferSelect;

@@ -1,5 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import { addDays, differenceInCalendarDays, format } from "date-fns";
+import { addDays, differenceInCalendarDays, format, startOfWeek } from "date-fns";
 
 export const CLUB_TZ = "Australia/Perth";
 
@@ -18,6 +18,9 @@ export const dayStub = (d: Date) => ({
 });
 /** Today's Perth calendar date, "2027-04-12" (for date-only columns). */
 export const perthToday = (now = new Date()) => format(inPerth(now), "yyyy-MM-dd");
+/** Monday of this week on the Perth calendar, "2027-04-12". A pin picked for the week is stored against it. */
+export const perthWeekStart = (now = new Date()) =>
+  format(startOfWeek(inPerth(now), { weekStartsOn: 1 }), "yyyy-MM-dd");
 /** "2027-04-12" (date-only column) → "12 Apr" */
 export const formatDateOnly = (iso: string) => {
   const [y, m, d] = iso.split("-").map(Number);

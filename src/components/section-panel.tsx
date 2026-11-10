@@ -19,7 +19,7 @@ export function SectionPanel({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-6 rounded-[28px] bg-white p-5 md:p-7">
+    <section id={id} className="relative scroll-mt-6 rounded-[28px] bg-white p-5 md:p-7">
       <div className="mb-4 flex items-start justify-between gap-3">
         <h2 className={cn("min-w-0 text-3xl font-bold text-navy", titleClassName)}>
           {title}

@@ -1,0 +1,1 @@
+ALTER TABLE "pin" ADD COLUMN "week_of" date;

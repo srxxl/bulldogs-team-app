@@ -21,7 +21,7 @@ export default async function LadderPage() {
     <>
       <PageHeader
         title="Ladder"
-        intro={`${CLUB.league} ${CLUB.grade}${updated ? `, updated ${formatDay(updated)}` : ""}. Tap a team to see how they're going.`}
+        intro={`${CLUB.league} ${CLUB.grade}${updated ? `, updated ${formatDay(updated)}` : ""}.`}
       />
       {rows.length === 0 ? (
         <EmptyState title="No ladder yet">

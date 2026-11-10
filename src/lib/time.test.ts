@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { formatTime, fromLocalInput, perthAt, relativeDay, seasonStart, toLocalInput } from "./time";
+import { formatTime, fromLocalInput, perthAt, perthWeekStart, relativeDay, seasonStart, toLocalInput } from "./time";
 
 describe("time", () => {
+  it("starts the week on Monday in Perth", () => {
+    // Tuesday 10 November 2026
+    expect(perthWeekStart(new Date("2026-11-10T04:00:00Z"))).toBe("2026-11-09");
+    // Sunday 11:30pm in Perth is still the same week
+    expect(perthWeekStart(new Date("2026-11-15T15:30:00Z"))).toBe("2026-11-09");
+    // 4:10pm Sunday UTC is already 12:10am Monday in Perth: a new week
+    expect(perthWeekStart(new Date("2026-11-15T16:10:00Z"))).toBe("2026-11-16");
+  });
+
   it("starts the season at midnight on 1 January in Perth", () => {
     // 4pm on 31 December UTC is already New Year's Day in Perth
     expect(seasonStart(new Date("2026-12-31T16:30:00Z")).toISOString()).toBe("2026-12-31T16:00:00.000Z");

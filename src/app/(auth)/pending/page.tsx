@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Waiting for approval" };
 export default async function PendingPage() {
   const me = await getMe();
   if (!me) redirect("/login");
-  if (me.role !== "pending") redirect("/");
+  if (me.role !== "pending") redirect("/fixture");
 
   return (
     <main className="grid min-h-dvh place-items-center px-6">

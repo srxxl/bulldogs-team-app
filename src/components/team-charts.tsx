@@ -29,7 +29,7 @@ function Chart({ title, value, children }: { title: string; value: string; child
   );
 }
 
-/** Won, drawn and lost as one bar split by games, with the counts written underneath. */
+/** Won, drawn and lost as one bar split by games. */
 export function WinLoss({ row }: { row: LadderRow }) {
   const parts = [
     { label: "won", n: row.won, className: "bg-[var(--team-bar)]" },
@@ -42,19 +42,16 @@ export function WinLoss({ row }: { row: LadderRow }) {
       {row.played === 0 ? (
         <p className="text-sm text-ink/60">No games yet.</p>
       ) : (
-        <>
-          <div className="flex h-5 gap-0.5" role="img" aria-label={`${row.played} games: ${summary}`}>
-            {parts.map((p) => (
-              <div
-                key={p.label}
-                title={`${p.n} ${p.label}`}
-                className={cn("rounded", p.className)}
-                style={{ flexGrow: p.n }}
-              />
-            ))}
-          </div>
-          <p className="mt-1.5 text-sm text-ink/70">{summary}</p>
-        </>
+        <div className="flex h-5 gap-0.5" role="img" aria-label={`${row.played} games: ${summary}`}>
+          {parts.map((p) => (
+            <div
+              key={p.label}
+              title={`${p.n} ${p.label}`}
+              className={cn("rounded", p.className)}
+              style={{ flexGrow: p.n }}
+            />
+          ))}
+        </div>
       )}
     </Chart>
   );
@@ -171,9 +168,6 @@ export function Percentage({ row, rows }: { row: LadderRow; rows: LadderRow[] })
         />
         <div className="absolute -inset-y-1 w-0.5 rounded bg-ink" style={{ left: `${(100 / scale) * 100}%` }} />
       </div>
-      <p className="mt-1.5 text-sm text-ink/60">
-        {row.percentage >= 100 ? "Scoring more than they concede" : "Conceding more than they score"} (line is 100%)
-      </p>
     </Chart>
   );
 }

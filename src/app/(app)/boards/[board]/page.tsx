@@ -1,72 +1,67 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackButton } from "@/components/back-button";
+import { Morph, morphName } from "@/components/morph";
 import { AddPinSheet } from "@/components/pin-actions";
 import { PinBoard } from "@/components/pin-board";
+import { BOARDS, COVER, isBoard } from "@/lib/boards";
 import { cn } from "@/lib/cn";
+import { perthWeekStart } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
-import { getPins } from "@/server/queries/content";
-
-const TITLE = "Fitness and nutrition";
-
-const BOARDS = {
-  fitness: {
-    tab: "Fitness",
-    intro: "Running programs, gym sessions, mobility and injury prevention. Pin what's working for you.",
-    add: "Pin a workout",
-    tags: ["Running", "Strength", "Mobility", "Injury prevention", "Recovery"],
-    empty: "Share a running program, a gym session or your favourite stretch.",
-  },
-  nutrition: {
-    tab: "Nutrition",
-    intro: "How to fuel for game day and recover after. Recipes, snacks and hydration tips from the team.",
-    add: "Pin a tip",
-    tags: ["Pre-game", "Game day", "Recovery", "Hydration", "Recipe"],
-    empty: "Share your go-to pre-game meal or recovery snack.",
-  },
-} as const;
-
-type BoardKey = keyof typeof BOARDS;
-const isBoard = (b: string): b is BoardKey => b in BOARDS;
+import { getPins, getWeekDone, getWeekPicks } from "@/server/queries/content";
 
 export async function generateMetadata({ params }: PageProps<"/boards/[board]">): Promise<Metadata> {
   const { board } = await params;
-  return { title: isBoard(board) ? `${BOARDS[board].tab} board` : TITLE };
+  return { title: isBoard(board) ? `${BOARDS[board].title} board` : "Board" };
 }
 
+/** Everything pinned to one board, with this week's picks first. Its header grows out of the hub's cover. */
 export default async function BoardPage({ params }: PageProps<"/boards/[board]">) {
   const { board } = await params;
   if (!isBoard(board)) notFound();
   const me = await requireMember();
-  const pins = await getPins(board);
+  const week = perthWeekStart();
+  const [pins, done, picks] = await Promise.all([getPins(board), getWeekDone(week), getWeekPicks(week)]);
+  const picked = new Set(picks.map((p) => p.id));
   const b = BOARDS[board];
+  const c = COVER[board];
+  // this week's picks lead, the rest stay newest first
+  const ordered = [...pins.filter((p) => picked.has(p.id)), ...pins.filter((p) => !picked.has(p.id))];
+
   return (
-    <>
-      <header className="mb-6 md:mb-10">
-        <h1 className="text-5xl font-extrabold leading-[0.9] text-navy md:text-7xl">{TITLE}</h1>
-        {/* each board is its own page, so the tabs are links */}
-        {/* set like a footy record's section heads: display type on a rule, a red bar under the one you're on */}
-        <nav aria-label="Boards" className="mt-5 flex gap-7 border-b-[1.5px] border-ink/12">
-          {(Object.keys(BOARDS) as BoardKey[]).map((key) => (
-            <Link
-              key={key}
-              href={`/boards/${key}`}
-              aria-current={key === board ? "page" : undefined}
-              className={cn(
-                "-mb-[1.5px] flex min-h-12 items-center border-b-[5px] pt-1 font-display text-2xl font-extrabold focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy md:text-3xl",
-                key === board ? "border-red text-navy" : "border-transparent text-navy/45 hover:text-navy",
-              )}
-            >
-              {BOARDS[key].tab}
-            </Link>
-          ))}
-        </nav>
-        <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-          <p className="max-w-2xl text-pretty text-ink/70">{b.intro}</p>
-          <AddPinSheet board={board} label={b.add} tags={[...b.tags]} />
-        </div>
-      </header>
-      <PinBoard pins={pins} me={me} empty={{ title: "Nothing pinned yet", body: b.empty }} />
-    </>
+    <div className="space-y-6">
+      <Morph name={morphName.board(board)}>
+        <header className={cn("rounded-[28px] p-5 md:p-8", c.card)}>
+          <div className="flex items-center gap-3">
+            <BackButton href="/boards" to="fitness and nutrition" />
+            <p className={cn("text-sm font-semibold", c.soft)}>
+              {pins.length} {pins.length === 1 ? "pin" : "pins"}
+            </p>
+          </div>
+          <h1 className={cn("mt-4 text-6xl font-black leading-[0.9] md:text-7xl", c.title)}>{b.title}</h1>
+          <p className={cn("mt-3 max-w-2xl text-pretty", c.soft)}>{b.intro}</p>
+          <div className="mt-5">
+            <AddPinSheet
+              board={board}
+              label={b.add}
+              tags={b.tags}
+              triggerClassName={
+                board === "fitness"
+                  ? "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 font-semibold text-navy transition-colors hover:bg-mist"
+                  : undefined
+              }
+            />
+          </div>
+        </header>
+      </Morph>
+      <PinBoard
+        pins={ordered}
+        me={me}
+        picked={picked}
+        done={done}
+        fitness={board === "fitness"}
+        empty={{ title: "Nothing pinned yet", body: b.empty }}
+      />
+    </div>
   );
 }

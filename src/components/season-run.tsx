@@ -23,7 +23,7 @@ export function SeasonRun({
   winColour?: string;
   /** The colour of a loss bar (red, or the opponent's colour when it's their win against us). */
   lossColour?: string;
-  caption: string;
+  caption?: string;
 }) {
   const biggest = Math.max(1, ...slots.map((s) => (s.kind === "played" ? Math.abs(s.margin) : 0)));
   const RESULT_CLASS = { W: "text-navy", L: "text-red", D: "text-navy" } as const;
@@ -114,7 +114,7 @@ export function SeasonRun({
           );
         })}
       </ol>
-      <figcaption className="mt-3 text-sm text-ink/60">{caption}</figcaption>
+      {caption && <figcaption className="mt-3 text-sm text-ink/60">{caption}</figcaption>}
     </figure>
   );
 }

@@ -51,7 +51,7 @@ const OPPONENTS = [
 
 async function main() {
   const db = createDb();
-  await db.execute(sql`truncate "user", event, ladder_row, grade_game, app_setting, feedback cascade`);
+  await db.execute(sql`truncate "user", event, ladder_row, grade_game, app_setting cascade`);
 
   const password = await hashPassword("bulldogs-dev");
   const users = PLAYERS.map(([name, , , email], i) => ({
@@ -363,16 +363,6 @@ async function main() {
     });
   });
   if (trainingRsvps.length) await db.insert(t.availability).values(trainingRsvps);
-  await db.insert(t.feedback).values([
-    {
-      kind: "suggestion",
-      body: "Could we do a bit more goal kicking at the end of Thursday sessions?",
-    },
-    {
-      kind: "shoutout",
-      body: "Huge shoutout to Tayla for the ruck work on the weekend. Every centre bounce!",
-    },
-  ]);
   // Every PFL club (far more than a real grade) so each club's colours and guernsey can be checked, plus
   // the made-up opponents above. We sit second.
   const others = [...new Set([...OPPONENTS, ...Object.keys(CLUB_COLOURS)])].filter(

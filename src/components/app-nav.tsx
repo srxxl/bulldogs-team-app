@@ -39,7 +39,7 @@ export function SideNav({
       aria-label="Main"
       className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-navy px-4 py-6 text-white md:flex"
     >
-      <Link href="/" className="mb-8 flex items-center gap-3 px-2">
+      <Link href="/fixture" className="mb-8 flex items-center gap-3 px-2">
         {crest}
         <span className="font-display text-2xl font-extrabold leading-none">
           Bulldogs

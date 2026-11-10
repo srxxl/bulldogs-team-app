@@ -194,10 +194,20 @@ dialog::backdrop {
 /* Home-screen bulldog (HomeMascot). Each pose is a drawing in public/mascot; the wrapper carries .mascot-{pose}. */
 /* room above the dog to sit up and beg */
 .mascot-stage {
+  /* the dog's width; everything else (stage, footy, the drop) scales from it */
+  --dog: 8.5rem;
   position: relative;
-  height: 10.5rem;
+  height: calc(var(--dog) * 1.24);
   @media (width >= 48rem) {
-    height: 12.25rem;
+    --dog: 10.5rem;
+    height: calc(var(--dog) * 1.17);
+  }
+}
+/* the small dog beside a page title */
+.mascot-stage-small {
+  --dog: 3.25rem;
+  @media (width >= 48rem) {
+    --dog: 4.5rem;
   }
 }
 .mascot {
@@ -227,11 +237,8 @@ dialog::backdrop {
 /* The pose drawings share one canvas and ground line, so the dog keeps its size and footing between them. */
 .mascot-art {
   display: block;
-  width: 8.5rem;
+  width: var(--dog);
   aspect-ratio: 1254 / 1120;
-  @media (width >= 48rem) {
-    width: 10.5rem;
-  }
 }
 .mascot-art img {
   display: none;
@@ -499,10 +506,7 @@ dialog::backdrop {
    and the ball fills 226 of footy.svg's 245, so the image is 237 * 245 / 226 = 257 units. */
 .mascot-footy {
   display: block;
-  width: calc(8.5rem * 257 / 1254);
-  @media (width >= 48rem) {
-    width: calc(10.5rem * 257 / 1254);
-  }
+  width: calc(var(--dog) * 257 / 1254);
 }
 /* the footy: thrown in an arc with a spin, bounces twice, then settles lying flat like the one in the dog's mouth.
    It sits in front of the dog so paws never hide it. */
@@ -517,11 +521,8 @@ dialog::backdrop {
 /* dropped by the sitting dog: falls from its mouth in front of its chest, bounces and lies still. The
    footy in show.svg is centred 0.443 dog-widths up; on the grass this one's centre is 0.071 up. */
 .mascot-ball-drop {
-  --mouth: calc(8.5rem * 0.372);
+  --mouth: calc(var(--dog) * 0.372);
   animation: m-drop 0.9s cubic-bezier(0.5, 0, 0.75, 0.4) both;
-  @media (width >= 48rem) {
-    --mouth: calc(10.5rem * 0.372);
-  }
 }
 @keyframes m-drop {
   0% {
@@ -596,5 +597,29 @@ dialog::backdrop {
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
+  }
+}
+
+/* Confetti (components/confetti.tsx): pieces fall from above the top edge, swaying and spinning. The ambient
+   kind (behind a game we won) is soft: blurred, faint and slow. */
+.confetti-piece {
+  translate: 0 -10vh;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+@keyframes confetti-fall {
+  to {
+    translate: var(--sway) 110vh;
+    rotate: 540deg;
+  }
+}
+.confetti-ambient .confetti-piece {
+  filter: blur(2px);
+  opacity: 0.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece {
+    display: none;
   }
 }

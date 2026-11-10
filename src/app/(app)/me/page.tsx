@@ -13,7 +13,7 @@ export default async function MePage() {
   if (!profile) return null;
   return (
     <>
-      <PageHeader title="My profile" intro="This is what your teammates see on the squad page.">
+      <PageHeader title="My profile">
         <SignOutButton className={buttonClass("ghost")} />
       </PageHeader>
       <ProfileForm profile={profile} />

@@ -28,12 +28,11 @@ Team hub for the Brentwood Booragoon Bulldogs Women's C3 side (Perth Football Le
 | Team board (drag & drop lineup: 18 on the ground, 4 interchange, 2 emergencies) | `/fixture/[id]` (games) | Captains/coaches edit; auto-fill from RSVPs; everyone views |
 | Player's player votes (3-2-1) | `/fixture/[id]` (per game), `/votes` (season) | Players vote on the game page; coaches see that game's results and the season tally |
 | Live ladder | `/` (widget) | From PlayHQ sync or paste |
-| Anonymous reflections / suggestions                | `/feedback`                            | No user id stored; coaches read                           |
 | Admin                                              | `/admin`                               | Members, events, PFL data, settings                       |
 
 ## Data model (Drizzle, `src/server/db/schema.ts`)
 
-`user/session/account/verification` (Better Auth, `user.role`, `user.isAdmin`) · `player_profile` · `event` · `availability` (yes/no) · `vote` · `lineup_slot` · `note` (per game) · `pin` (board = fitness | nutrition) · `drill` + `session_drill` · `feedback` · `ladder_row` · `app_setting`.
+`user/session/account/verification` (Better Auth, `user.role`, `user.isAdmin`) · `player_profile` · `event` · `availability` (yes/no) · `vote` · `lineup_slot` · `note` (per game) · `pin` (board = fitness | nutrition) · `drill` + `session_drill` · `ladder_row` · `app_setting`.
 
 ## Phases
 

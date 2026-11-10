@@ -45,6 +45,13 @@ export function Field({
 const invalid = (name?: string, state?: ActionResult<unknown> | null) =>
   !!(name && state && !state.ok && state.fieldErrors?.[name]);
 
+/**
+ * After a failed submit React clears the form back to each field's default, so a field's default becomes what
+ * was typed (sent back with the error). Never for passwords or files.
+ */
+const typed = (name?: string, state?: ActionResult<unknown> | null) =>
+  name && state && !state.ok ? state.values?.[name] : undefined;
+
 /** Controls take their id from `name` so <Field>'s label and message point at them. */
 const a11y = (name?: string) => ({ id: name, "aria-describedby": name && `${name}-msg` });
 
@@ -59,6 +66,9 @@ export function Input({
       className={cn(control, className)}
       aria-invalid={invalid(props.name, state)}
       {...props}
+      {...(props.type === "password" || props.type === "file" || typed(props.name, state) === undefined
+        ? {}
+        : { defaultValue: typed(props.name, state) })}
     />
   );
 }
@@ -74,6 +84,7 @@ export function Textarea({
       className={cn(control, "min-h-28 resize-y", className)}
       aria-invalid={invalid(props.name, state)}
       {...props}
+      {...(typed(props.name, state) === undefined ? {} : { defaultValue: typed(props.name, state) })}
     />
   );
 }

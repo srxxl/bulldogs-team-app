@@ -6,7 +6,7 @@ import { RsvpButtons } from "@/components/rsvp-buttons";
 import { SessionPlan } from "@/components/session-plan";
 import { EmptyState, PageHeader } from "@/components/ui";
 import { canPlanSessions } from "@/lib/roles";
-import { formatLongDay, formatTime, relativeDay } from "@/lib/time";
+import { formatLongDay, formatTime, perthAt, relativeDay } from "@/lib/time";
 import { TRAINING } from "@/lib/training";
 import { requireMember } from "@/server/auth/session";
 import { getDrillCatalog, getSessionDrillsFor } from "@/server/queries/drills";
@@ -17,6 +17,13 @@ export const metadata: Metadata = { title: "Training" };
 const SHOWN_FACES = 8;
 
 /** Every upcoming session as one self-contained card: RSVP, who's coming and the drills. */
+/** A session at the usual time and place, which the page intro already says. */
+const usual = (s: { startsAt: Date; endsAt: Date | null; venueName: string | null }) =>
+  formatTime(s.startsAt) === formatTime(perthAt(s.startsAt, TRAINING.startHour)) &&
+  s.endsAt != null &&
+  formatTime(s.endsAt) === formatTime(perthAt(s.endsAt, TRAINING.endHour, TRAINING.endMinute)) &&
+  (s.venueName ?? TRAINING.venueName) === TRAINING.venueName;
+
 export default async function TrainingPage() {
   const me = await requireMember();
   const planner = canPlanSessions(me);
@@ -31,10 +38,7 @@ export default async function TrainingPage() {
 
   return (
     <>
-      <PageHeader
-        title="Training"
-        intro={`Tuesdays and Thursdays, 6pm to 7:30pm at ${TRAINING.venueName}. Let the coaches know if you're coming.`}
-      />
+      <PageHeader title="Training" intro={`Tuesdays and Thursdays, 6pm to 7:30pm at ${TRAINING.venueName}`} />
       {sessions.length === 0 ? (
         <EmptyState title="It's the off-season">Training polls start again when pre-season kicks off.</EmptyState>
       ) : (
@@ -51,10 +55,13 @@ export default async function TrainingPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-3xl font-bold text-navy">{formatLongDay(s.startsAt)}</h2>
-                    <p className="text-sm text-ink/60">
-                      {formatTime(s.startsAt)}
-                      {s.endsAt && ` to ${formatTime(s.endsAt)}`}, {s.venueName ?? TRAINING.venueName}
-                    </p>
+                    {/* only when it's not the usual time and place (that's in the page intro) */}
+                    {!usual(s) && (
+                      <p className="text-sm text-ink/60">
+                        {formatTime(s.startsAt)}
+                        {s.endsAt && ` to ${formatTime(s.endsAt)}`}, {s.venueName ?? TRAINING.venueName}
+                      </p>
+                    )}
                   </div>
                   <span className="shrink-0 pt-1.5 text-sm font-semibold text-red">{relativeDay(s.startsAt)}</span>
                 </div>

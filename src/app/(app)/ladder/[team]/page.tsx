@@ -175,15 +175,7 @@ export default async function TeamPage({ params }: PageProps<"/ladder/[team]">) 
 
       {season.length > 0 && (
         <SectionPanel title={us ? "Our season" : "Their season"} titleClassName="text-[var(--team-title)]">
-          <SeasonRun
-            slots={season}
-            winColour={us ? undefined : "var(--team-bar)"}
-            caption={
-              us
-                ? "Bars show the margin. Up is a win, down is a loss. Tap a round to open it."
-                : `Bars show the margin. Up is a win for ${row.team}, down is a loss. Tap a round to see who they played.`
-            }
-          />
+          <SeasonRun slots={season} winColour={us ? undefined : "var(--team-bar)"} />
         </SectionPanel>
       )}
 
@@ -238,11 +230,7 @@ export default async function TeamPage({ params }: PageProps<"/ladder/[team]">) 
                   {Math.round(h2h.against / h2h.played)}.
                 </p>
                 <div className="mt-5">
-                  <SeasonRun
-                    slots={againstRun}
-                    lossColour="var(--team-bar)"
-                    caption={`Every game we've played them. Up is a win for us, down a win for ${row.team}. Tap one to open it.`}
-                  />
+                  <SeasonRun slots={againstRun} lossColour="var(--team-bar)" />
                 </div>
               </>
             )}

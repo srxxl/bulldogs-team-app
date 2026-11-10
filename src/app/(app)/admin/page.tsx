@@ -8,7 +8,7 @@ import {
   TrainingToggle,
 } from "@/components/admin-controls";
 import { Avatar } from "@/components/avatar";
-import { ButtonLink, PageHeader, Panel, SectionTitle } from "@/components/ui";
+import { PageHeader, Panel, SectionTitle } from "@/components/ui";
 import { formatDay, formatTime } from "@/lib/time";
 import { requireAdmin } from "@/server/auth/session";
 import { playHqConfig } from "@/server/playhq/client";
@@ -31,9 +31,7 @@ export default async function AdminPage() {
 
   return (
     <>
-      <PageHeader title="Admin" intro="Approve players, manage the fixture and keep the PFL data up to date.">
-        <ButtonLink href="/admin/events/new">Add event</ButtonLink>
-      </PageHeader>
+      <PageHeader title="Admin" intro="Approve players, manage the fixture and keep the PFL data up to date." />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel className="lg:col-span-2">

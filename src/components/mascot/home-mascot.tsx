@@ -8,14 +8,33 @@ import {
   fetchSpot,
   GREETING,
   type MascotState,
+  makeRoom,
   nextSteps,
   reactToTap,
   type Step,
+  settled,
   TAP_ACTIONS,
   withTransitions,
 } from "@/lib/mascot";
 
 const START: Step = { pose: "stand", x: 12, facing: "right", ms: 900 };
+
+/**
+ * Where the dog was on the last page, so flicking to another page carries it on from the same spot rather than
+ * starting over. Kept for this visit only (a reload starts fresh). `from` and `at` say where a walk started and
+ * when, so a dog that was mid-walk picks up from wherever it had got to.
+ */
+let memory: { step: Step; from: number; at: number } | null = null;
+
+/** Where the remembered dog is now, settled into a resting pose. */
+function remembered(): Step | null {
+  if (!memory) return null;
+  const { step, from, at } = memory;
+  const moving = step.pose === "walk" || step.pose === "run";
+  const done = Math.min(1, (performance.now() - at) / Math.max(1, step.ms));
+  const x = moving ? from + (step.x - from) * done : step.x;
+  return { ...settled({ ...step, x }), ms: 1600 };
+}
 
 /** The drawings in public/mascot. Every one faces left; the stage mirrors them to face right. */
 const ART = [
@@ -65,24 +84,39 @@ function artFor({ pose, facing, ball }: Step): { art: Art | Once; mirror: boolea
 type Ball = { id: number; x: number; dropped?: boolean };
 
 /**
- * The home-screen bulldog, after VS Code Pets: it wanders on its own (walks, sits, naps, barks, play-bows),
+ * The club bulldog, after VS Code Pets (`small` beside every page title): it wanders on its own (walks, sits, naps, barks, play-bows),
  * turns through the slight-turn stance instead of snapping round, does a trick when tapped (begs, spins,
  * barks), and chases the footy when you throw one (tap anywhere on the grass), picking it up in its mouth.
  * Holds still under reduced motion.
  */
-export function HomeMascot() {
-  const [step, setStep] = useState<Step>(START);
+export function HomeMascot({ small = false }: { small?: boolean }) {
+  // a fresh visit starts at START (as the server drew it); flicking between pages starts where the dog was
+  const [step, setStep] = useState<Step>(() => (typeof window === "undefined" ? START : (remembered() ?? START)));
   const [ball, setBall] = useState<Ball | null>(null);
   const [hearts, setHearts] = useState<Burst[]>([]); // a burst of hearts per tap while it begs
   const [still, setStill] = useState(false);
   const [once, setOnce] = useState<Partial<Record<Once, string>>>({});
   const plays = useRef(0); // bumps on every step, so a one-off animation restarts each time
   const art = useRef<HTMLSpanElement>(null);
-  const stateRef = useRef<MascotState>(START);
+  const stateRef = useRef<MascotState>(step);
   const queue = useRef<Step[]>([]);
   const timer = useRef<number | undefined>(undefined);
   const stage = useRef<HTMLDivElement>(null);
   const dog = useRef<HTMLDivElement>(null);
+
+  /**
+   * Beside a page title, where the clear space starts (0 to 100 along the stage): the dog walks over the title
+   * but moves past this before sitting, napping or doing a trick. 0 when there's no title, or no room beside it.
+   */
+  const clearFrom = (): number => {
+    const title = stage.current?.closest("[data-title-row]")?.querySelector("h1");
+    if (!title || !stage.current || !art.current) return 0;
+    const room = stage.current.clientWidth - art.current.offsetWidth;
+    if (room <= 0) return 0;
+    const titleEnd = title.getBoundingClientRect().right - stage.current.getBoundingClientRect().left;
+    const from = ((titleEnd + 8) / room) * 100;
+    return from >= 95 ? 0 : Math.max(0, from);
+  };
 
   /**
    * Where the dog really is right now. Mid-walk the state already holds where it's heading, so anything
@@ -101,14 +135,15 @@ export function HomeMascot() {
   // Play steps one after another; when the queue runs dry, the dog decides what to do next.
   const play = (steps: Step[]) => {
     window.clearTimeout(timer.current);
-    queue.current = [...steps];
+    queue.current = makeRoom(stateRef.current, steps, clearFrom());
     advance();
   };
   const advance = () => {
-    if (!queue.current.length) queue.current = nextSteps(stateRef.current);
+    if (!queue.current.length) queue.current = makeRoom(stateRef.current, nextSteps(stateRef.current), clearFrom());
     // sit down, lie down or get up first if this step needs a different posture
     const [next, ...after] = withTransitions(stateRef.current, queue.current.shift() as Step);
     queue.current = [...after, ...queue.current];
+    memory = { step: next, from: stateRef.current.x, at: performance.now() };
     stateRef.current = next;
     plays.current += 1;
     setStep(next);
@@ -124,7 +159,8 @@ export function HomeMascot() {
       setStep({ ...START, pose: "sit" });
       return;
     }
-    timer.current = window.setTimeout(() => play([GREETING]), START.ms);
+    // the greeting is for the first page only; after that it just carries on
+    timer.current = memory ? window.setTimeout(advance, step.ms) : window.setTimeout(() => play([GREETING]), START.ms);
     for (const name of ONCE) {
       fetch(`/mascot/${name}.svg`)
         .then((r) => (r.ok ? r.text() : Promise.reject()))
@@ -179,7 +215,7 @@ export function HomeMascot() {
   const moving = step.pose === "walk" || step.pose === "run";
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: throwing the footy is a bonus; the dog itself is a button for keyboards.
-    <div ref={stage} className="mascot-stage" onClick={onTapGrass}>
+    <div ref={stage} className={cn("mascot-stage", small && "mascot-stage-small")} onClick={onTapGrass}>
       {ball && (
         <span
           key={ball.id}

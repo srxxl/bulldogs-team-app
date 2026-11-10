@@ -1,0 +1,1 @@
+ALTER TABLE "pin" DROP COLUMN "week_of";

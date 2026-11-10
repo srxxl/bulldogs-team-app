@@ -15,7 +15,17 @@ export function parseForm<T extends z.ZodType>(
     const key = String(issue.path[0] ?? "form");
     fieldErrors[key] = [...(fieldErrors[key] ?? []), issue.message];
   }
-  return { error: fail("Check the highlighted fields", fieldErrors) };
+  return { error: fail("Check the highlighted fields", fieldErrors, formValues(formData)) };
+}
+
+/** The text a form sent (not files), to hand back with an error so the fields keep what was typed. */
+export function formValues(formData: FormData): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const [k, v] of formData) {
+    // never echo a password back, even by accident
+    if (typeof v === "string" && !k.startsWith("$ACTION") && !/password/i.test(k)) values[k] = v;
+  }
+  return values;
 }
 
 /** "" → undefined, so optional text inputs work with zod. */

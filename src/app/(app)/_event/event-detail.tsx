@@ -2,7 +2,9 @@ import { MapPin, Pencil } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { BackButton } from "@/components/back-button";
+import { Confetti } from "@/components/confetti";
 import { GameNotes } from "@/components/game-notes";
+import { GameTimeline } from "@/components/game-timeline";
 import { GameVotes } from "@/components/game-votes";
 import { MarginBar } from "@/components/margin-bar";
 import { Morph, morphName } from "@/components/morph";
@@ -16,6 +18,7 @@ import { cn } from "@/lib/cn";
 import { canModerate, canPickTeam, isCoach } from "@/lib/roles";
 import { formatScore, headToHead, points, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
+import { timelineFor } from "@/lib/timeline";
 import { tally } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
 import { getGameNotes, getGameVotes, getLadder, getLineup, getMyBallot } from "@/server/queries/content";
@@ -68,8 +71,12 @@ export async function EventDetail({ id }: { id: string }) {
   const h2h = headToHead(history);
   const oppRow = ladder.find((r) => isGame && r.team.toLowerCase() === ev.opponent?.toLowerCase());
 
+  const won = scores != null && resultOf(scores.team, scores.opp) === "win";
+
   return (
     <div className="space-y-6">
+      {/* a game we won: soft, blurred confetti drifting behind the page */}
+      {won && <Confetti variant="ambient" />}
       {/* grows out of the game's fixture row when you open it, and back into it when you go back */}
       <Morph name={morphName.event(id)}>
         <header className="rounded-[28px] bg-navy p-5 text-white md:p-8">
@@ -135,6 +142,18 @@ export async function EventDetail({ id }: { id: string }) {
           </dl>
         </header>
       </Morph>
+
+      {isGameEvent && !ev.cancelled && (
+        <SectionPanel id="timeline" title="Game day">
+          <GameTimeline
+            eventId={id}
+            bounce={ev.startsAt}
+            steps={timelineFor(ev.timeline)}
+            custom={ev.timeline != null}
+            canEdit={canPickTeam(me)}
+          />
+        </SectionPanel>
+      )}
 
       {ev.kind === "game" && (
         <SectionPanel id="notes" title="Notes" meta={notes.length || undefined} action={<NoteForm eventId={id} />}>

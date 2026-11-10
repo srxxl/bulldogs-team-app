@@ -8,8 +8,8 @@ export default function Forbidden() {
         <p className="mt-3 text-ink/70">
           This part of the app is only open to certain roles. Ask your team admin if you think you need it.
         </p>
-        <ButtonLink href="/" className="mt-6">
-          Back to home
+        <ButtonLink href="/fixture" className="mt-6">
+          Back to the fixture
         </ButtonLink>
       </div>
     </main>

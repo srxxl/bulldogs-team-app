@@ -70,7 +70,6 @@ export default async function PlayerPage({ params }: PageProps<"/squad/[id]">) {
         <div className="flex flex-col p-6 md:p-10">
           <p className="text-sm font-semibold text-red">{subtitle}</p>
           <h1 className="mt-1 text-6xl font-black leading-[0.85] text-navy md:text-8xl">{p.displayName}</h1>
-          {p.guernsey != null && <p className="mt-2 text-ink/60">Wears number {p.guernsey}</p>}
           <Hoop tone="onChalk" className="my-8 -mx-6 md:-mx-10" />
           {p.bio ? (
             <p className="max-w-prose text-lg text-pretty text-ink/85">{p.bio}</p>

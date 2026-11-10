@@ -4,10 +4,13 @@ import {
   fetchBall,
   fetchSpot,
   type MascotState,
+  makeRoom,
   moveTo,
   nextSteps,
   PICKUP_MOUTH,
   reactToTap,
+  type Step,
+  settled,
   spin,
   TAP_ACTIONS,
   TURN_MS,
@@ -192,5 +195,32 @@ describe("mascot behaviour", () => {
       { pose: "show", x: 30, facing: "left", ms: 2600 },
     );
     expect(down).toMatchObject({ pose: "sitdown", x: 30, facing: "left", ball: true });
+  });
+
+  it("settles into a resting pose to carry over to the next page", () => {
+    expect(settled({ pose: "walk", x: 40, facing: "right" })).toEqual({ pose: "stand", x: 40, facing: "right" });
+    expect(settled({ pose: "beg", x: 10, facing: "left" })).toEqual({ pose: "sitside", x: 10, facing: "left" });
+    expect(settled({ pose: "liedown", x: 5, facing: "left" }).pose).toBe("sleep");
+    expect(settled({ pose: "run", x: 70, facing: "left", ball: true }).pose).toBe("hold");
+    expect(settled({ pose: "show", x: 30, facing: "left" }).pose).toBe("sit");
+  });
+
+  it("moves off the title before sitting or napping, but walks and fetches over it", () => {
+    const here: MascotState = { pose: "stand", x: 10, facing: "right" };
+    const sit: Step = { pose: "sitside", x: 10, facing: "right", ms: 3000 };
+    const nap: Step = { pose: "sleep", x: 10, facing: "right", ms: 5000 };
+    const steps = makeRoom(here, [sit, nap], 60, () => 0.5);
+    // walks to 80 (half way between 60 and 100), then sits and naps there
+    expect(steps.map((s) => [s.pose, Math.round(s.x)])).toEqual([
+      ["walk", 80],
+      ["sitside", 80],
+      ["sleep", 80],
+    ]);
+    // walking over the title is fine, and so is anything already clear of it
+    const walk: Step = { pose: "walk", x: 30, facing: "right", ms: 900 };
+    expect(makeRoom(here, [walk], 60)).toEqual([walk]);
+    expect(makeRoom({ ...here, x: 70 }, [{ ...sit, x: 70 }], 60)).toEqual([{ ...sit, x: 70 }]);
+    // no title to keep clear of
+    expect(makeRoom(here, [sit], 0)).toEqual([sit]);
   });
 });

@@ -6,13 +6,22 @@ import { leaderBadge } from "@/lib/roles";
 import type { SquadMember } from "@/server/queries/squad";
 import { Morph, morphName } from "./morph";
 
-/** Trading-card style: photo, oversized outlined guernsey number. */
-export function PlayerCard({ player, className }: { player: SquadMember; className?: string }) {
+/** Trading-card style: photo, oversized outlined guernsey number. Your own card (`isMe`) opens your profile to edit. */
+export function PlayerCard({
+  player,
+  isMe = false,
+  className,
+}: {
+  player: SquadMember;
+  isMe?: boolean;
+  className?: string;
+}) {
   const leader = leaderBadge(player.role);
   return (
     <Morph name={morphName.player(player.id)}>
       <Link
-        href={`/squad/${player.id}`}
+        href={isMe ? "/me" : `/squad/${player.id}`}
+        aria-label={isMe ? `${player.displayName}, you: edit your profile` : undefined}
         className={cn(
           "group relative block overflow-hidden rounded-2xl bg-white transition-transform hover:-translate-y-1",
           className,

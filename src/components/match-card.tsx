@@ -1,5 +1,6 @@
 import { MapPin } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/cn";
 import { formatLongDay, formatTime, relativeDay } from "@/lib/time";
 import type { AvailabilityStatus, EventRow } from "@/server/db/schema";
 import { Hoop } from "./hoop";
@@ -10,13 +11,15 @@ export function MatchCard({
   game,
   myStatus,
   yesCount,
+  className,
 }: {
   game: EventRow;
   myStatus: AvailabilityStatus | null;
   yesCount: number;
+  className?: string;
 }) {
   return (
-    <article className="relative overflow-hidden rounded-[28px] bg-navy text-white">
+    <article className={cn("relative overflow-hidden rounded-[28px] bg-navy text-white", className)}>
       <div className="px-5 pt-5 md:px-8 md:pt-8">
         <div className="flex items-center justify-between gap-3 text-sm font-semibold text-powder">
           <span>

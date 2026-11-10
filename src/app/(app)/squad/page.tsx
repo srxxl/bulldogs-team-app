@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PlayerCard } from "@/components/player-card";
-import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
+import { EmptyState, PageHeader } from "@/components/ui";
 import { POSITIONS } from "@/lib/positions";
 import { requireMember } from "@/server/auth/session";
 import { getSquad } from "@/server/queries/squad";
@@ -8,18 +8,14 @@ import { getSquad } from "@/server/queries/squad";
 export const metadata: Metadata = { title: "Squad" };
 
 export default async function SquadPage() {
-  await requireMember();
+  const me = await requireMember();
   const squad = await getSquad();
   const coaches = squad.filter((p) => p.role === "coach");
   const players = squad.filter((p) => !coaches.includes(p));
 
   return (
     <>
-      <PageHeader title="Squad" intro={`${players.length} players. Tap anyone to get to know them.`}>
-        <ButtonLink href="/me" variant="outline">
-          Edit my profile
-        </ButtonLink>
-      </PageHeader>
+      <PageHeader title="Squad"></PageHeader>
       {players.length === 0 && (
         <EmptyState title="No players yet">Approve sign-ups in Admin and they'll show up here.</EmptyState>
       )}
@@ -35,7 +31,7 @@ export default async function SquadPage() {
               </h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-5">
                 {group.map((p) => (
-                  <PlayerCard key={p.id} player={p} />
+                  <PlayerCard key={p.id} player={p} isMe={p.id === me.id} />
                 ))}
               </div>
             </section>
@@ -46,7 +42,7 @@ export default async function SquadPage() {
             <h2 className="mb-4 text-4xl font-extrabold text-navy">Coaches</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-5">
               {coaches.map((p) => (
-                <PlayerCard key={p.id} player={p} />
+                <PlayerCard key={p.id} player={p} isMe={p.id === me.id} />
               ))}
             </div>
           </section>

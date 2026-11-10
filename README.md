@@ -2,7 +2,7 @@
 
 Team app for the Brentwood Booragoon Bulldogs women's side (PFL Women's C3).
 Fixture, availability polls, training RSVPs, squad profiles, the drag-and-drop team board,
-player's player votes, fitness and nutrition boards, coach's notes, the ladder and anonymous notes.
+player's player votes, fitness and nutrition boards, coach's notes and the ladder.
 
 ## Run it locally
 
@@ -42,7 +42,7 @@ the demo data.
 7. Redeploy, sign in with your admin email, then in **Admin**:
    - Switch on training polls when pre-season starts.
    - Approve players as they sign up, set captains and coaches, and tick Admin for anyone else who helps run the app.
-     Admins don't see the player's player tally or the anonymous notes; those are for coaches only.
+     Admins don't see the player's player tally; that's for coaches only.
 
 ## PlayHQ (fixture + ladder)
 

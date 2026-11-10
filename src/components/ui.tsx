@@ -1,15 +1,34 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { HomeMascot } from "./mascot/home-mascot";
 
+/**
+ * A page title with the club bulldog on the same row. The dog wanders the whole row, walking and chasing the
+ * footy in front of the title, but moves into the clear space beside it to sit, nap or do a trick.
+ */
+export function TitleRow({ children }: { children: ReactNode }) {
+  return (
+    <div data-title-row className="relative flex min-w-0 flex-1 items-end">
+      <h1 className="min-w-0 text-5xl font-extrabold leading-[0.9] text-navy md:text-7xl">{children}</h1>
+      {/* room beside the title for the dog to settle in */}
+      <span aria-hidden className="w-28 shrink-0 md:w-36" />
+      <div className="absolute inset-x-0 bottom-0 z-10">
+        <HomeMascot small />
+      </div>
+    </div>
+  );
+}
+
+/** A page's title row (title and the bulldog), an optional intro, and actions (buttons) on the right. */
 export function PageHeader({ title, intro, children }: { title: string; intro?: ReactNode; children?: ReactNode }) {
   return (
-    <header className="mb-6 flex flex-wrap items-end justify-between gap-4 md:mb-10">
-      <div className="max-w-2xl">
-        <h1 className="text-5xl font-extrabold leading-[0.9] text-navy md:text-7xl">{title}</h1>
-        {intro && <p className="mt-3 text-pretty text-ink/70">{intro}</p>}
+    <header className="mb-6 md:mb-10">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+        <TitleRow>{title}</TitleRow>
+        {children && <div className="flex flex-wrap gap-2">{children}</div>}
       </div>
-      {children && <div className="flex flex-wrap gap-2">{children}</div>}
+      {intro && <p className="mt-3 max-w-2xl text-pretty text-ink/70">{intro}</p>}
     </header>
   );
 }
