@@ -29,8 +29,11 @@ export async function generateMetadata({ params }: PageProps<"/ladder/[team]">):
 }
 
 /** A team on the ladder, in its club colours: its numbers, and how we've gone against it. */
-export default async function TeamPage({ params }: PageProps<"/ladder/[team]">) {
+export default async function TeamPage({ params, searchParams }: PageProps<"/ladder/[team]">) {
   await requireMember();
+  // opened from a game's opponent tile (?from=<game id>): the way back is to that game
+  const from = (await searchParams).from;
+  const fromGame = typeof from === "string" && /^[\w-]+$/.test(from) ? from : null;
   const [{ row, rows }, games, grade] = await Promise.all([findTeam((await params).team), getGames(), getGradeGames()]);
   if (!row) notFound();
 
@@ -131,8 +134,8 @@ export default async function TeamPage({ params }: PageProps<"/ladder/[team]">) 
           )}
           {/* the way back: always the card's top-left corner, like on a game or a player, level with the grade line */}
           <BackButton
-            href="/ladder"
-            to="the ladder"
+            href={fromGame ? `/fixture/${fromGame}` : "/ladder"}
+            to={fromGame ? "the game" : "the ladder"}
             className={cn(
               "absolute top-5 left-5 z-10 md:top-12 md:left-8",
               // over the club's design (emblem on the left) it needs a solid fill to stand out
@@ -174,13 +177,13 @@ export default async function TeamPage({ params }: PageProps<"/ladder/[team]">) 
       </Morph>
 
       {season.length > 0 && (
-        <SectionPanel title={us ? "Our season" : "Their season"} titleClassName="text-[var(--team-title)]">
+        <SectionPanel title="Matches" titleClassName="text-[var(--team-title)]">
           <SeasonRun slots={season} winColour={us ? undefined : "var(--team-bar)"} />
         </SectionPanel>
       )}
 
       <div className={cn("grid gap-6", !us && "lg:grid-cols-[3fr_2fr]")}>
-        <SectionPanel title="Season so far" titleClassName="text-[var(--team-title)]">
+        <SectionPanel title="Performance" titleClassName="text-[var(--team-title)]">
           <div className="grid gap-7 sm:grid-cols-2">
             <WinLoss row={row} />
             <Percentage row={row} rows={rows} />
@@ -199,13 +202,13 @@ export default async function TeamPage({ params }: PageProps<"/ladder/[team]">) 
         </SectionPanel>
 
         {!us && (
-          <SectionPanel title="Against us" titleClassName="text-[var(--team-title)]">
+          <SectionPanel title="vs Bulldogs" titleClassName="text-[var(--team-title)]">
             {next && (
               <Link
                 href={`/fixture/${next.id}`}
                 className="mb-5 block overflow-hidden rounded-2xl bg-[var(--team)] p-4 text-[var(--on-team)] hover:opacity-90"
               >
-                <span className="block text-sm font-semibold opacity-80">Next time we play them</span>
+                <span className="block text-sm font-semibold opacity-80">Coming up</span>
                 <span className="mt-1 block font-display text-2xl font-bold">
                   {[next.round, formatDay(next.startsAt), formatTime(next.startsAt)].filter(Boolean).join(", ")}
                 </span>
@@ -224,12 +227,8 @@ export default async function TeamPage({ params }: PageProps<"/ladder/[team]">) 
               <p className="text-ink/70">We haven't played them yet this season.</p>
             ) : (
               <>
-                <p className="text-ink/80">
-                  Played {h2h.played}, won {h2h.won}, lost {h2h.lost}
-                  {h2h.drawn > 0 && `, drew ${h2h.drawn}`}. Average score {Math.round(h2h.for / h2h.played)} to{" "}
-                  {Math.round(h2h.against / h2h.played)}.
-                </p>
-                <div className="mt-5">
+                <p className="text-sm font-semibold text-ink/80">Match history</p>
+                <div className="mt-3">
                   <SeasonRun slots={againstRun} lossColour="var(--team-bar)" />
                 </div>
               </>

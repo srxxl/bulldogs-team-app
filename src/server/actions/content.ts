@@ -32,7 +32,7 @@ export async function createNote(_prev: unknown, formData: FormData): Promise<Ac
   const game = await getEvent(parsed.data.eventId);
   if (!game || game.kind !== "game") return fail("That game doesn't exist");
   await db.insert(note).values({ ...parsed.data, authorId: me.id });
-  revalidatePath(`/fixture/${game.id}`);
+  revalidatePath(`/fixture/${game.id}`, "layout");
   revalidatePath("/");
   return ok("Note posted");
 }
@@ -42,7 +42,7 @@ export async function deleteNote(id: string): Promise<ActionResult> {
   const where = canModerate(me) ? eq(note.id, id) : and(eq(note.id, id), eq(note.authorId, me.id));
   const [gone] = await db.delete(note).where(where).returning({ eventId: note.eventId });
   if (!gone) return fail("You can only delete your own notes");
-  if (gone.eventId) revalidatePath(`/fixture/${gone.eventId}`);
+  if (gone.eventId) revalidatePath(`/fixture/${gone.eventId}`, "layout");
   revalidatePath("/");
   return ok("Note deleted");
 }

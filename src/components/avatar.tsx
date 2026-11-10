@@ -16,7 +16,8 @@ export function Avatar({
 }: {
   name: string;
   src?: string | null;
-  size?: number;
+  /** Pixels, or "css" to size it with classes (width, height and font size) instead, e.g. to shrink on a phone. */
+  size?: number | "css";
   className?: string;
 }) {
   return (
@@ -25,9 +26,13 @@ export function Avatar({
         "relative inline-grid shrink-0 place-items-center overflow-hidden rounded-full bg-powder font-display font-bold text-navy",
         className,
       )}
-      style={{ width: size, height: size, fontSize: size * 0.42 }}
+      style={size === "css" ? undefined : { width: size, height: size, fontSize: size * 0.42 }}
     >
-      {src ? <Image src={src} alt="" fill sizes={`${size}px`} className="object-cover" /> : initials(name)}
+      {src ? (
+        <Image src={src} alt="" fill sizes={size === "css" ? "48px" : `${size}px`} className="object-cover" />
+      ) : (
+        initials(name)
+      )}
     </span>
   );
 }

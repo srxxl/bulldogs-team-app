@@ -22,20 +22,12 @@ export function GameVotes({
 }) {
   return (
     <div className="space-y-5">
-      {results ? (
-        <p className="text-ink/70">The players vote here. Their votes stay private; only coaches see the results.</p>
+      {results ? null : candidates.length < 3 ? (
+        <p className="rounded-2xl bg-chalk p-4 text-sm text-ink/70">
+          Votes go to players who said they were in for this game, and there aren't enough of them to pick a 3, 2 and 1.
+        </p>
       ) : (
-        <>
-          <p className="text-ink/70">Who were the best on ground?</p>
-          {candidates.length < 3 ? (
-            <p className="rounded-2xl bg-chalk p-4 text-sm text-ink/70">
-              Votes go to players who said they were in for this game, and there aren't enough of them to pick a 3, 2
-              and 1.
-            </p>
-          ) : (
-            <VoteForm eventId={eventId} candidates={candidates} ballot={ballot} />
-          )}
-        </>
+        <VoteForm eventId={eventId} candidates={candidates} ballot={ballot} />
       )}
 
       {results && (

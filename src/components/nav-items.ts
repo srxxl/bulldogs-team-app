@@ -18,7 +18,7 @@ export const ALL: NavItem[] = [
   { href: "/fixture", label: "Fixture", icon: CalendarDays },
   { href: "/ladder", label: "Ladder", icon: Trophy },
   { href: "/training", label: "Training", icon: Dumbbell },
-  { href: "/squad", label: "Squad", icon: Users },
+  { href: "/squad", label: "Team", icon: Users },
   { href: "/boards", label: "Fitness", icon: Apple },
   { href: "/votes", label: "Player's player", short: "Votes", icon: Shirt, minRole: "coach" },
   { href: "/settings", label: "Settings", icon: Settings },

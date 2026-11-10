@@ -7,6 +7,7 @@ import { sql } from "drizzle-orm";
 import { CLUB, isUs } from "@/lib/club";
 import { sameTeam } from "@/lib/club-colours";
 import { CLUB_COLOURS } from "@/lib/club-colours.data";
+import { autoFill } from "@/lib/positions";
 import { perthAt, perthWeekday } from "@/lib/time";
 import { TRAINING, upcomingTrainingSlots } from "@/lib/training";
 import { createDb, isLocalDb } from "./client";
@@ -36,6 +37,12 @@ const PLAYERS: [string, number, t.Position, string?][] = [
   ["Chloe Ng", 4, "midfielder"],
   ["Bec Harding", 25, "ruck"],
   ["Lucy Adams", 1, "defender"],
+  ["Amy Sutherland", 15, "forward"],
+  ["Tash Kerr", 6, "midfielder"],
+  ["Maddie Cole", 10, "defender"],
+  ["Jas Singh", 13, "utility"],
+  ["Imogen Price", 16, "forward"],
+  ["Freya Lowe", 18, "defender"],
 ];
 
 const OPPONENTS = [
@@ -188,28 +195,40 @@ async function main() {
     },
   ]);
 
-  // RSVPs for the next game, votes for the last one.
-  const next = inserted.filter((e) => e.kind === "game" && e.startsAt > now)[0];
-  const last = inserted.filter((e) => e.kind === "game" && e.startsAt < now).at(-1);
-  const statuses = ["yes", "yes", "yes", "no"] as const;
-  if (next) {
-    await db.insert(t.availability).values(
-      users.slice(1, 15).map((u, i) => ({
-        eventId: next.id,
-        userId: u.id,
-        status: statuses[i % statuses.length],
+  // RSVPs and a picked team for every game played and the next two to come, so every game page has people on
+  // it. A couple of different players can't make each one. Votes for the last game played.
+  const gameRows = inserted
+    .filter((e) => e.kind === "game")
+    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+  const next = gameRows.find((e) => e.startsAt > now);
+  const last = gameRows.filter((e) => e.startsAt < now).at(-1);
+  const players = users.slice(1, PLAYERS.length);
+  const covered = gameRows.filter((e) => e.startsAt < now).concat(gameRows.filter((e) => e.startsAt > now).slice(0, 2));
+  for (const [g, game] of covered.entries()) {
+    // last game: the voting below only goes to players who were in
+    const out = game === last ? [7, 15] : [(g * 3) % players.length, (g * 3 + 8) % players.length];
+    const rsvps = players.map((u, i) => ({
+      eventId: game.id,
+      userId: u.id,
+      status: out.includes(i) ? ("no" as const) : ("yes" as const),
+    }));
+    await db.insert(t.availability).values(rsvps);
+    // the game after next hasn't been picked yet
+    if (game.startsAt > now && game !== next) continue;
+    const lineup = autoFill(
+      {},
+      players.map((u, i) => ({
+        id: u.id,
+        position: PLAYERS[i + 1][2],
+        secondaryPosition: null,
+        available: rsvps[i].status === "yes",
       })),
     );
+    await db
+      .insert(t.lineupSlot)
+      .values(Object.entries(lineup).map(([slot, userId]) => ({ eventId: game.id, slot, userId })));
   }
   if (last) {
-    // Who said they'd play last week (votes can only go to these players). Two couldn't make it.
-    await db.insert(t.availability).values(
-      users.slice(1, 17).map((u, i) => ({
-        eventId: last.id,
-        userId: u.id,
-        status: i === 7 || i === 15 ? ("no" as const) : ("yes" as const),
-      })),
-    );
     await db.insert(t.vote).values(
       users.slice(3, 9).flatMap((u, i) => [
         {
@@ -234,6 +253,24 @@ async function main() {
     );
   }
 
+  if (last) {
+    await db.insert(t.note).values([
+      {
+        authorId: users[0].id,
+        eventId: last.id,
+        title: "What a second half",
+        body: "Down at the main break and we kept running. Proud of every one of you. Recovery session Tuesday.",
+        createdAt: new Date(last.startsAt.getTime() + 3 * 3600_000),
+      },
+      {
+        authorId: users[4].id,
+        eventId: last.id,
+        title: "Pizza at the clubrooms",
+        body: "Order's in for 4pm. Bring your own drinks.",
+        createdAt: new Date(last.startsAt.getTime() + 2 * 3600_000),
+      },
+    ]);
+  }
   if (next) {
     await db.insert(t.note).values([
       {

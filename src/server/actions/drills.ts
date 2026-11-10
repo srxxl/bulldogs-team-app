@@ -20,7 +20,7 @@ async function requirePlanner() {
 }
 
 const refresh = (eventId: string) => {
-  revalidatePath("/training");
+  revalidatePath("/training", "layout");
 };
 
 async function trainingSession(eventId: string) {

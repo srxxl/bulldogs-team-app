@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { type HoopWeek, weeksBetween } from "@/lib/hoops";
 import { db } from "@/server/db";
 import {
@@ -34,6 +34,7 @@ export function getGameNotes(eventId: string) {
       createdAt: note.createdAt,
       authorId: note.authorId,
       ...authorName,
+      image: sql<string | null>`coalesce(${playerProfile.photoUrl}, ${user.image})`,
     })
     .from(note)
     .innerJoin(user, eq(user.id, note.authorId))

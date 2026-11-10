@@ -7,7 +7,9 @@ import { type ReactNode, ViewTransition } from "react";
  * class in globals.css). A name must be on one element per page, so name only the list rows, not a second link
  * to the same thing.
  */
-export function Morph({ name, children }: { name: string; children: ReactNode }) {
+export function Morph({ name, children }: { name: string | null; children: ReactNode }) {
+  // no name: just the children (e.g. a row whose game is already shown, and morphed, by a bigger card)
+  if (name == null) return children;
   return (
     <ViewTransition name={name} share="morph" default="none">
       {children}
@@ -20,4 +22,8 @@ export const morphName = {
   team: (slug: string) => `team-${slug}`,
   player: (id: string) => `player-${id}`,
   board: (board: string) => `board-${board}`,
+  /** A training session's card on the Training page, growing into the session's own page. */
+  session: (id: string) => `session-${id}`,
+  /** A tile on a game's page, growing into that tile's own page. */
+  gameTile: (id: string, tile: string) => `game-${id}-${tile}`,
 };

@@ -30,7 +30,7 @@ export async function saveLineup(input: z.input<typeof schema>): Promise<ActionR
   const [game, squad] = await Promise.all([getEvent(eventId), getSquad()]);
   if (game?.kind !== "game") return fail("That game doesn't exist");
   const ids = new Set(squad.map((p) => p.id));
-  if (Object.values(lineup).some((id) => !ids.has(id))) return fail("Someone in that lineup isn't in the squad");
+  if (Object.values(lineup).some((id) => !ids.has(id))) return fail("Someone in that lineup isn't in the team");
 
   await db.transaction(async (tx) => {
     await tx.delete(lineupSlot).where(eq(lineupSlot.eventId, eventId));

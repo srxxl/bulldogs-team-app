@@ -27,6 +27,6 @@ export async function saveTimeline(input: z.input<typeof schema>): Promise<Actio
 
   const steps = parsed.data.steps && !isDefault(parsed.data.steps) ? sortSteps(parsed.data.steps) : null;
   await db.update(event).set({ timeline: steps }).where(eq(event.id, game.id));
-  revalidatePath(`/fixture/${game.id}`);
+  revalidatePath(`/fixture/${game.id}`, "layout");
   return ok(steps ? "Timeline saved" : "Back to the usual timeline");
 }

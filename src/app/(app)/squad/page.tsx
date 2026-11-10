@@ -5,7 +5,7 @@ import { POSITIONS } from "@/lib/positions";
 import { requireMember } from "@/server/auth/session";
 import { getSquad } from "@/server/queries/squad";
 
-export const metadata: Metadata = { title: "Squad" };
+export const metadata: Metadata = { title: "Team" };
 
 export default async function SquadPage() {
   const me = await requireMember();
@@ -15,7 +15,7 @@ export default async function SquadPage() {
 
   return (
     <>
-      <PageHeader title="Squad"></PageHeader>
+      <PageHeader title="Team"></PageHeader>
       {players.length === 0 && (
         <EmptyState title="No players yet">Approve sign-ups in Settings and they'll show up here.</EmptyState>
       )}
@@ -25,9 +25,8 @@ export default async function SquadPage() {
           if (group.length === 0) return null;
           return (
             <section key={value} aria-labelledby={`pos-${value}`}>
-              <h2 id={`pos-${value}`} className="mb-4 flex items-baseline gap-3 text-4xl font-extrabold text-navy">
+              <h2 id={`pos-${value}`} className="mb-4 text-4xl font-extrabold text-navy">
                 {plural}
-                <span className="font-sans text-base font-medium text-ink/50">{group.length}</span>
               </h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-5">
                 {group.map((p) => (

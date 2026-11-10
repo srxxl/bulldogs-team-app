@@ -19,15 +19,27 @@ const MY = {
 } as const;
 
 /** A fixture list row: a game as a head-to-head (GameRowLink), anything else with a date stub like a ticket. */
-export function EventRowLink({ ev, myStatus, yesCount }: { ev: Ev; myStatus?: AvailabilityStatus; yesCount?: number }) {
-  if (ev.kind === "game" && ev.opponent) return <GameRowLink ev={ev} />;
+export function EventRowLink({
+  ev,
+  myStatus,
+  yesCount,
+  morph = true,
+}: {
+  ev: Ev;
+  myStatus?: AvailabilityStatus;
+  yesCount?: number;
+  /** Off when something bigger on the page (the next game's card) already grows into this event's page. */
+  morph?: boolean;
+}) {
+  const name = morph ? morphName.event(ev.id) : null;
+  if (ev.kind === "game" && ev.opponent) return <GameRowLink ev={ev} name={name} />;
   const scores = ev.kind === "game" ? scoresOf(ev) : null;
   const result = scores && resultOf(scores.team, scores.opp);
   const past = ev.startsAt < new Date();
   const { weekday, day } = dayStub(ev.startsAt);
 
   return (
-    <Morph name={morphName.event(ev.id)}>
+    <Morph name={name}>
       <Link
         href={`/fixture/${ev.id}`}
         className={cn(
@@ -104,7 +116,7 @@ type Side = {
  * and date in the middle. Both halves are white with our name in navy, each with its club's guernsey design
  * faded in from the outer edge.
  */
-function GameRowLink({ ev }: { ev: Ev }) {
+function GameRowLink({ ev, name }: { ev: Ev; name: string | null }) {
   const scores = scoresOf(ev);
   const result = scores && resultOf(scores.team, scores.opp);
   const us: Side = {
@@ -168,7 +180,7 @@ function GameRowLink({ ev }: { ev: Ev }) {
     </div>
   );
   return (
-    <Morph name={morphName.event(ev.id)}>
+    <Morph name={name}>
       <Link
         href={`/fixture/${ev.id}`}
         className={cn(

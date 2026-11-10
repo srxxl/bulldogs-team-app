@@ -10,8 +10,14 @@ export const POSITIONS: { value: Position; label: string; plural: string }[] = [
 
 export const positionLabel = (p: Position) => POSITIONS.find((x) => x.value === p)?.label ?? p;
 
-/** The ground is drawn as a portrait ellipse in a 400 × 500 box (forwards at the top). */
+/**
+ * Positions are laid out on a portrait ellipse in a 400 × 500 box (forwards at the top). Every ground on screen is
+ * drawn on its side instead (forwards on the right): see `sideways`.
+ */
 export const GROUND = { width: 400, height: 500 } as const;
+
+/** Where a position sits on the ground drawn on its side, forwards on the right (fractions of width and height). */
+export const sideways = (s: { x: number; y: number }) => ({ x: 1 - s.y, y: s.x });
 /** Position markers are circles this fraction of the ground's width. */
 export const MARKER = 0.14;
 

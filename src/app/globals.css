@@ -367,24 +367,20 @@ dialog::backdrop {
   overflow: visible;
 }
 
-/* Team board: a top-down oval in mown club navy with players on their spots. */
+/* Team board: the oval as a coach's whiteboard, on its side (forwards on the right), with players on their
+   spots. The Back and Forward labels sit just outside each end, so the ground leaves room for them. */
 .board-ground {
   position: relative;
   margin-inline: auto;
-  width: min(100%, 30rem);
-  aspect-ratio: 4 / 5;
+  width: min(100% - 2.5rem, 44rem);
+  aspect-ratio: 5 / 4;
 }
 .board-surface {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse at 50% 40%, rgb(255 255 255 / 0.08), transparent 60%),
-    repeating-linear-gradient(180deg, #2c3b8b 0 6.25%, #253277 6.25% 12.5%);
-  box-shadow:
-    inset 0 0 0 0.35rem #1e2860,
-    0 10px 0 #151b45;
+  box-shadow: 0 8px 0 rgb(21 27 69 / 0.12);
 }
 
 /* a position on the ground: a ring on the grass, with the player on it */
@@ -399,10 +395,10 @@ dialog::backdrop {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 2px dashed rgb(255 255 255 / 0.35);
+  border: 2px dashed rgb(40 53 124 / 0.3);
   font-size: 0.7rem;
   font-weight: 700;
-  color: rgb(255 255 255 / 0.55);
+  color: rgb(40 53 124 / 0.5);
   transition:
     background-color 0.2s,
     border-color 0.2s;
@@ -410,19 +406,19 @@ dialog::backdrop {
 .board-ring-filled {
   border-style: solid;
   border-color: transparent;
-  background: radial-gradient(circle, rgb(21 27 69 / 0.55), transparent 70%);
+  background: radial-gradient(circle, rgb(21 27 69 / 0.12), transparent 70%);
 }
 .board-ring-over {
   border: 2px solid var(--color-red);
   background: rgb(211 36 39 / 0.3);
 }
 .board-ring-ready {
-  border-color: rgb(255 255 255 / 0.85);
+  border-color: rgb(40 53 124 / 0.75);
   animation: board-pulse 1.2s ease-in-out infinite;
 }
 @keyframes board-pulse {
   50% {
-    background: rgb(255 255 255 / 0.15);
+    background: rgb(40 53 124 / 0.1);
   }
 }
 .board-stander {
@@ -459,25 +455,57 @@ dialog::backdrop {
   color: white;
   box-shadow: 0 2px 0 rgb(0 0 0 / 0.25);
 }
+/* the guernsey number: a red numeral outlined in white, sitting under the initials over the bottom edge of the face */
 .board-number {
   position: absolute;
-  right: -0.4rem;
-  bottom: -0.2rem;
-  display: grid;
-  place-items: center;
-  min-width: 1.1rem;
-  height: 1.1rem;
-  padding-inline: 0.15rem;
-  border-radius: 999px;
-  background: var(--color-red);
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: white;
+  left: 50%;
+  bottom: -0.5rem;
+  translate: -50% 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-red);
+  -webkit-text-stroke: 3px white;
+  paint-order: stroke fill;
+  pointer-events: none;
 }
-.board-number-lg {
-  min-width: 1.5rem;
-  height: 1.5rem;
-  font-size: 0.8rem;
+/* a player who can't make it is greyed out, number and all */
+.board-number-out {
+  color: rgb(21 27 69 / 0.3);
+}
+/* room under the face for the number before the name pill */
+.board-face + .board-name {
+  margin-top: 0.4rem;
+}
+/* on a laptop there's room, so names and numbers on the ground and bench are bigger and easier to read */
+@media (width >= 64rem) {
+  .board-name {
+    max-width: 6.5rem;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.82rem;
+  }
+  .board-ground .board-number,
+  .board-seat .board-number {
+    bottom: -0.65rem;
+    font-size: 1.3rem;
+    -webkit-text-stroke-width: 3.5px;
+  }
+  .board-face + .board-name {
+    margin-top: 0.6rem;
+  }
+}
+/* on a phone the sideways ground is short: the initials do without the name pill, and the number shrinks */
+@media (width < 40rem) {
+  .board-ground .board-name {
+    display: none;
+  }
+  .board-ground .board-number {
+    bottom: -0.4rem;
+    font-size: 0.8rem;
+    -webkit-text-stroke-width: 2.5px;
+  }
 }
 
 /* interchange bench: a navy plank with seats */

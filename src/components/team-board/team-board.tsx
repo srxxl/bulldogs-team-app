@@ -13,12 +13,13 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Eraser, RotateCcw, Save, Sparkles } from "lucide-react";
-import { useId, useMemo, useState, useTransition } from "react";
+import { Eraser, Sparkles } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import { cn } from "@/lib/cn";
-import { autoFill, BENCH_SLOTS, EMERGENCY_SLOTS, FIELD_SLOTS, GROUND, MARKER, positionLabel } from "@/lib/positions";
+import { autoFill, BENCH_SLOTS, EMERGENCY_SLOTS, FIELD_SLOTS, GROUND, MARKER, sideways } from "@/lib/positions";
 import { saveLineup } from "@/server/actions/lineup";
 import { Avatar } from "../avatar";
+import { GROUND_M, GroundLines } from "../ground-lines";
 import { Button } from "../ui";
 import type { BoardPlayer, Lineup } from "./types";
 
@@ -29,13 +30,12 @@ const SLOT_LABEL = new Map<string, string>([
   ...BENCH_SLOTS.map((s) => [s, `Interchange ${s.slice(1)}`] as [string, string]),
   ...EMERGENCY_SLOTS.map((s) => [s, `Emergency ${s.slice(1)}`] as [string, string]),
 ]);
-const STATUS_TEXT = { yes: "Said they're in", no: "Can't make it", null: "Hasn't said yet" } as const;
 const STATUS_ORDER = { yes: 0, null: 1, no: 2 } as const;
 
 /**
  * The team board: a top-down oval with players on their positions.
  * Captains and coaches drag players on (or tap a player, then tap a spot), auto-fill from RSVPs
- * and save; everyone else can tap players for details.
+ * and save; everyone else just sees the team.
  */
 export function TeamBoard({
   eventId,
@@ -66,7 +66,25 @@ export function TeamBoard({
         STATUS_ORDER[a.status ?? "null"] - STATUS_ORDER[b.status ?? "null"] || (a.guernsey ?? 99) - (b.guernsey ?? 99),
     );
   const dirty = JSON.stringify(lineup) !== JSON.stringify(saved);
-  const onField = FIELD_SLOTS.filter((s) => lineup[s.id]).length;
+
+  // Every change saves itself, shortly after the last one (a quick run of moves is one save). Only the latest
+  // save's answer counts, so a slow earlier one can't undo a newer lineup.
+  const latestSave = useRef(0);
+  useEffect(() => {
+    if (!editable || !dirty) return;
+    const n = ++latestSave.current;
+    const timer = setTimeout(
+      () =>
+        start(async () => {
+          const res = await saveLineup({ eventId, lineup });
+          if (n !== latestSave.current) return;
+          if (res.ok) setSaved(lineup);
+          else setMessage({ ok: false, text: res.error });
+        }),
+      400,
+    );
+    return () => clearTimeout(timer);
+  }, [editable, dirty, eventId, lineup]);
   const selectedPlayer = selected ? byId.get(selected) : undefined;
 
   const sensors = useSensors(
@@ -100,8 +118,10 @@ export function TeamBoard({
     if (e.over) place(String(e.active.id), String(e.over.id));
   };
 
-  /** Tap a player to see them; with one selected, tap a spot to move them there. */
-  const tapPlayer = (id: string) => setSelected((s) => (s === id ? null : id));
+  /** Tap a player to pick them up; with one picked up, tap a spot to move them there. Only for whoever picks the team. */
+  const tapPlayer = (id: string) => {
+    if (editable) setSelected((s) => (s === id ? null : id));
+  };
   function tapSlot(slot: string) {
     if (editable && selected && lineup[slot] !== selected) {
       place(selected, slot);
@@ -127,136 +147,111 @@ export function TeamBoard({
     setLineup(next);
     setMessage({
       ok: added > 0,
-      text:
-        added > 0
-          ? `Placed ${added} players who said they're in. Save to keep it.`
-          : "Everyone who's in is already placed",
-    });
-  }
-
-  function save() {
-    start(async () => {
-      const res = await saveLineup({ eventId, lineup });
-      if (res.ok) setSaved(lineup);
-      setMessage({ ok: res.ok, text: res.ok ? (res.message ?? "Saved") : res.error });
+      text: added > 0 ? `Placed ${added} players who said they're in.` : "Everyone who's in is already placed",
     });
   }
 
   const board = (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr]">
-      <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
-        <div className="mb-3">
-          <p className="text-sm text-ink/70">
-            <span className="display-num mr-1 text-3xl font-bold text-navy">{onField}</span>
-            of {FIELD_SLOTS.length} on the ground
-          </p>
-        </div>
-
-        <Ground>
-          {FIELD_SLOTS.map((s) => {
-            return (
-              <FieldSpot
-                key={s.id}
-                id={s.id}
-                short={s.short}
-                title={s.label}
-                x={s.x}
-                y={s.y}
-                player={byId.get(lineup[s.id])}
-                editable={editable}
-                selected={selected}
-                onTapSlot={tapSlot}
-              />
-            );
-          })}
-        </Ground>
-
-        <div className="board-bench mt-6 grid gap-4 sm:grid-cols-[2fr_1fr]">
-          {(
-            [
-              ["Interchange", BENCH_SLOTS],
-              ["Emergencies", EMERGENCY_SLOTS],
-            ] as const
-          ).map(([title, slots]) => (
-            <div key={title}>
-              <h3 className="mb-2 px-1 text-lg font-bold text-white">{title}</h3>
-              <div className={cn("grid gap-2", slots.length === 4 ? "grid-cols-4" : "grid-cols-2")}>
-                {slots.map((s) => (
-                  <BenchSpot
-                    key={s}
-                    id={s}
-                    label={SLOT_LABEL.get(s) ?? s}
-                    player={byId.get(lineup[s])}
-                    editable={editable}
-                    selected={selected}
-                    onTapSlot={tapSlot}
-                  />
+    <div className="space-y-5">
+      {editable && (
+        <div className="space-y-2">
+          {/* the bar above the ground: who's not picked on the left (drop players here to take them off), the
+              buttons on the right */}
+          <PoolDrop className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-chalk px-4 py-3">
+            {/* a phone gives the players the whole row, and the buttons wrap underneath */}
+            <div className="flex min-w-0 basis-full items-center gap-3 md:basis-0 md:flex-1">
+              <h3 className="shrink-0 text-xl font-bold text-navy">Not picked</h3>
+              <ul className="flex min-w-0 flex-1 gap-2 overflow-x-auto p-1">
+                {pool.map((p) => (
+                  <li key={p.id} className="shrink-0">
+                    <PoolToken player={p} selected={selected === p.id} onTap={tapPlayer} />
+                  </li>
                 ))}
-              </div>
+                {pool.length === 0 && <li className="self-center text-sm text-ink/50">Everyone's placed.</li>}
+              </ul>
             </div>
-          ))}
+            <div className="flex shrink-0 gap-2">
+              <Button variant="outline" onClick={fill}>
+                <Sparkles size={16} /> Auto-fill
+              </Button>
+              <Button variant="ghost" onClick={() => setLineup({})} disabled={Object.keys(lineup).length === 0}>
+                <Eraser size={16} /> Clear
+              </Button>
+            </div>
+          </PoolDrop>
+          {/* changes save themselves: "Saving…" only while one is on its way, and anything that needs saying */}
+          {(pending || dirty || message) && (
+            <p
+              role="status"
+              className={cn(
+                "px-1 text-sm",
+                message ? (message.ok ? "font-medium text-grass" : "font-medium text-red") : "text-ink/60",
+              )}
+            >
+              {message ? message.text : "Saving…"}
+            </p>
+          )}
+          {selectedPlayer && (
+            <SelectedActions
+              spot={slotOf.get(selectedPlayer.id)}
+              onBench={() => toBench(selectedPlayer.id)}
+              onRemove={() => {
+                place(selectedPlayer.id, POOL);
+                setSelected(null);
+              }}
+              onClose={() => setSelected(null)}
+            />
+          )}
         </div>
+      )}
+
+      <Ground>
+        {FIELD_SLOTS.map((s) => {
+          return (
+            <FieldSpot
+              key={s.id}
+              id={s.id}
+              short={s.short}
+              title={s.label}
+              x={s.x}
+              y={s.y}
+              player={byId.get(lineup[s.id])}
+              editable={editable}
+              selected={selected}
+              onTapSlot={tapSlot}
+            />
+          );
+        })}
+      </Ground>
+
+      <div className="board-bench grid gap-4 sm:grid-cols-[2fr_1fr]">
+        {(
+          [
+            ["Interchange", BENCH_SLOTS],
+            ["Emergencies", EMERGENCY_SLOTS],
+          ] as const
+        ).map(([title, slots]) => (
+          <div key={title}>
+            <h3 className="mb-2 px-1 text-lg font-bold text-white">{title}</h3>
+            <div className={cn("grid gap-2", slots.length === 4 ? "grid-cols-4" : "grid-cols-2")}>
+              {slots.map((s) => (
+                <BenchSpot
+                  key={s}
+                  id={s}
+                  label={SLOT_LABEL.get(s) ?? s}
+                  player={byId.get(lineup[s])}
+                  editable={editable}
+                  selected={selected}
+                  onTapSlot={tapSlot}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <aside className="space-y-4 lg:col-start-2 lg:row-start-1">
-        {selectedPlayer ? (
-          <PlayerCard
-            player={selectedPlayer}
-            spot={slotOf.get(selectedPlayer.id)}
-            editable={editable}
-            onBench={() => toBench(selectedPlayer.id)}
-            onRemove={() => {
-              place(selectedPlayer.id, POOL);
-              setSelected(null);
-            }}
-            onClose={() => setSelected(null)}
-          />
-        ) : (
-          <p className="rounded-2xl bg-white p-4 text-sm text-ink/70">
-            {editable
-              ? "Drag players onto the ground, or tap a player and then tap a spot. Tap anyone on the ground for details."
-              : "Tap a player to see where they're starting."}
-          </p>
-        )}
-
-        {editable && (
-          <div className="grid grid-cols-2 gap-2">
-            <Button onClick={save} disabled={!dirty || pending} className="col-span-2">
-              <Save size={18} /> {pending ? "Saving…" : "Save lineup"}
-            </Button>
-            <Button variant="outline" onClick={fill}>
-              <Sparkles size={16} /> Auto-fill
-            </Button>
-            <Button variant="ghost" onClick={() => setLineup({})} disabled={Object.keys(lineup).length === 0}>
-              <Eraser size={16} /> Clear
-            </Button>
-            {dirty && (
-              <Button variant="ghost" onClick={() => setLineup(saved)} className="col-span-2">
-                <RotateCcw size={16} /> Undo changes
-              </Button>
-            )}
-          </div>
-        )}
-        {message && (
-          <p role="status" className={cn("text-sm font-medium", message.ok ? "text-grass" : "text-red")}>
-            {message.text}
-          </p>
-        )}
-      </aside>
-
-      {/* On phones the unpicked players sit right above the ground as a swipeable strip. */}
       {editable && (
-        <PoolDrop className="order-first lg:order-none lg:col-start-2 lg:row-start-2 lg:self-start">
-          <h3 className="mb-1 text-xl font-bold text-navy">Not picked</h3>
-          <ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:flex-wrap lg:overflow-visible">
-            {pool.map((p) => (
-              <li key={p.id} className="shrink-0">
-                <PoolToken player={p} selected={selected === p.id} onTap={tapPlayer} />
-              </li>
-            ))}
-            {pool.length === 0 && <li className="text-sm text-ink/50">Everyone's placed.</li>}
-          </ul>
-        </PoolDrop>
+        <p className="text-sm text-ink/60">Drag players onto the ground, or tap a player and then tap a spot.</p>
       )}
     </div>
   );
@@ -280,29 +275,20 @@ export function TeamBoard({
 
 /* -------------------------------------------------------------------------- */
 
-const { width: GW, height: GH } = GROUND;
+/** Spot size as a fraction of the ground's width, now that it's drawn on its side (its long side across). */
+const SPOT = (MARKER * GROUND.width) / GROUND.height;
 
-/** The oval, drawn with real ground markings. */
+/** The oval as a coach's whiteboard, on its side with forwards on the right, with real ground markings. */
 function Ground({ children }: { children: React.ReactNode }) {
   return (
     <div className="board-ground">
       <div className="board-surface" aria-hidden>
-        <svg aria-hidden viewBox={`0 0 ${GW} ${GH}`} className="absolute inset-0 size-full">
-          <defs>
-            <clipPath id="board-ground-clip">
-              <ellipse cx={GW / 2} cy={GH / 2} rx={GW / 2} ry={GH / 2} />
-            </clipPath>
-          </defs>
-          <g fill="none" stroke="white" strokeOpacity="0.45" strokeWidth="2" clipPath="url(#board-ground-clip)">
-            <ellipse cx={GW / 2} cy={GH / 2} rx={GW / 2 - 9} ry={GH / 2 - 9} strokeOpacity="0.8" strokeWidth="3" />
-            <circle cx={GW / 2} cy={0} r={165} />
-            <circle cx={GW / 2} cy={GH} r={165} />
-            <rect x={GW / 2 - 12} y={9} width={24} height={14} />
-            <rect x={GW / 2 - 12} y={GH - 23} width={24} height={14} />
-            <rect x={GW / 2 - 50} y={GH / 2 - 50} width={100} height={100} />
-            <circle cx={GW / 2} cy={GH / 2} r={18} />
-            <line x1={GW / 2} y1={GH / 2 - 18} x2={GW / 2} y2={GH / 2 + 18} />
-          </g>
+        <svg
+          aria-hidden
+          viewBox={`0 0 ${GROUND_M.width} ${GROUND_M.height}`}
+          className="absolute inset-0 size-full overflow-visible"
+        >
+          <GroundLines id="board-ground" />
         </svg>
       </div>
       {children}
@@ -332,8 +318,9 @@ function FieldSpot({
   onTapSlot: (slot: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id, disabled: !editable });
+  const at = sideways({ x, y });
   return (
-    <div className="board-spot" style={{ left: `${x * 100}%`, top: `${y * 100}%`, width: `${MARKER * 100}%` }}>
+    <div className="board-spot" style={{ left: `${at.x * 100}%`, top: `${at.y * 100}%`, width: `${SPOT * 100}%` }}>
       <button
         ref={editable ? setNodeRef : undefined}
         type="button"
@@ -381,8 +368,14 @@ function Stander({
       aria-label={`${player.name}, ${SLOT_LABEL.get(slot)}`}
       className={cn("board-stander", selected && "board-stander-selected", isDragging && "opacity-30")}
     >
-      <span className="relative">
-        <Avatar name={player.name} src={player.image} size={38} className="ring-2 ring-white" />
+      <span className="board-face relative">
+        {/* smaller on a phone, where the sideways ground is short */}
+        <Avatar
+          name={player.name}
+          src={player.image}
+          size="css"
+          className="size-7 text-[0.72rem] ring-2 ring-white sm:size-[38px] sm:text-base lg:size-12 lg:text-xl"
+        />
         {player.guernsey != null && <span className="board-number">{player.guernsey}</span>}
       </span>
       <span className="board-name">{player.name.split(" ")[0]}</span>
@@ -429,10 +422,17 @@ function BenchSpot({
           )}
         >
           <span className="relative">
-            <Avatar name={player.name} src={player.image} size={32} />
+            <Avatar
+              name={player.name}
+              src={player.image}
+              size="css"
+              className="size-8 text-sm lg:size-10 lg:text-base"
+            />
             {player.guernsey != null && <span className="board-number">{player.guernsey}</span>}
           </span>
-          <span className="max-w-16 truncate text-[11px] font-semibold text-white">{player.name.split(" ")[0]}</span>
+          <span className="mt-1.5 max-w-16 truncate text-[11px] font-semibold text-white lg:mt-2 lg:max-w-20 lg:text-[13px]">
+            {player.name.split(" ")[0]}
+          </span>
         </button>
       ) : (
         <button
@@ -478,87 +478,67 @@ function PoolToken({
       {...attributes}
       onClick={() => onTap(player.id)}
       aria-pressed={selected}
-      className={cn("touch-none rounded-full", isDragging && "opacity-30", selected && "ring-2 ring-red ring-offset-2")}
+      className={cn("touch-none rounded-2xl", isDragging && "opacity-30", selected && "ring-2 ring-red ring-offset-2")}
     >
       <Chip player={player} />
     </button>
   );
 }
 
+/**
+ * A player not on the team yet, like a board token: face with the guernsey number over its bottom edge and their
+ * first name. Players who can't make it are greyed out; anyone who hasn't said gets a dashed ring.
+ */
 function Chip({ player, lifted }: { player: BoardPlayer; lifted?: boolean }) {
+  const status = player.status ?? "null";
   return (
     <span
       className={cn(
-        "flex items-center gap-1.5 rounded-full bg-white py-1 pr-3 pl-1 text-left text-ink",
+        "grid w-16 justify-items-center gap-0.5 rounded-2xl bg-white px-1 pt-1.5 pb-1 text-center text-ink",
         lifted && "rotate-3 shadow-stamp",
       )}
     >
-      <span className="relative">
-        <Avatar name={player.name} src={player.image} size={30} />
-        <span
+      <span className="board-face relative">
+        <Avatar
+          name={player.name}
+          src={player.image}
+          size={34}
           className={cn(
-            "absolute -top-0.5 -left-0.5 size-2.5 rounded-full ring-2 ring-white",
-            player.status === "yes" ? "bg-grass" : player.status === "no" ? "bg-red" : "bg-ink/20",
+            status === "no" && "opacity-45 grayscale",
+            status === "null" && "outline-2 outline-offset-2 outline-navy/40 outline-dashed",
           )}
         />
+        {player.guernsey != null && (
+          <span className={cn("board-number", status === "no" && "board-number-out")}>{player.guernsey}</span>
+        )}
       </span>
-      <span className="max-w-24 truncate text-xs font-semibold">
-        {player.guernsey != null && <span className="mr-1 text-ink/50">{player.guernsey}</span>}
-        {player.name.split(" ")[0]}
-      </span>
+      <span className="mt-2 max-w-full truncate text-xs font-semibold">{player.name.split(" ")[0]}</span>
     </span>
   );
 }
 
-function PlayerCard({
-  player,
+/** With a player picked up: where to tap next, and moving them to the bench or off the team. */
+function SelectedActions({
   spot,
-  editable,
   onBench,
   onRemove,
   onClose,
 }: {
-  player: BoardPlayer;
   spot?: string;
-  editable: boolean;
   onBench: () => void;
   onRemove: () => void;
   onClose: () => void;
 }) {
-  const positions = [player.position, player.secondaryPosition]
-    .filter((p) => p !== null)
-    .map(positionLabel)
-    .join(" / ");
   return (
     <div className="rounded-2xl bg-navy p-4 text-white">
-      <div className="flex items-center gap-3">
-        <span className="relative">
-          <Avatar name={player.name} src={player.image} size={52} className="ring-2 ring-white" />
-          {player.guernsey != null && <span className="board-number board-number-lg">{player.guernsey}</span>}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-2xl font-bold leading-tight">{player.name}</p>
-          <p className="text-sm text-powder">{positions}</p>
-        </div>
-      </div>
-      <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-        <div className="rounded-xl bg-white/10 p-2">
-          <dt className="text-xs text-powder">This week</dt>
-          <dd className="font-semibold">{spot ? SLOT_LABEL.get(spot) : "Not picked"}</dd>
-        </div>
-        <div className="rounded-xl bg-white/10 p-2">
-          <dt className="text-xs text-powder">Availability</dt>
-          <dd className="font-semibold">{STATUS_TEXT[player.status ?? "null"]}</dd>
-        </div>
-      </dl>
-      {editable && spot && <p className="mt-3 text-xs text-powder">Tap any spot on the ground to move them there.</p>}
+      <p className="text-sm text-powder">Tap a spot on the ground to move them there.</p>
       <div className="mt-3 flex flex-wrap gap-2">
-        {editable && spot && !BENCH_SLOTS.includes(spot) && !EMERGENCY_SLOTS.includes(spot) && (
+        {spot && !BENCH_SLOTS.includes(spot) && !EMERGENCY_SLOTS.includes(spot) && (
           <Button variant="ghost" className="min-h-9 bg-white/10 text-white hover:bg-white/20" onClick={onBench}>
             Move to bench
           </Button>
         )}
-        {editable && spot && (
+        {spot && (
           <Button variant="ghost" className="min-h-9 bg-white/10 text-white hover:bg-white/20" onClick={onRemove}>
             Take off the team
           </Button>

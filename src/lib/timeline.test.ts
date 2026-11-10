@@ -8,7 +8,7 @@ describe("timeline", () => {
   it("starts an hour and a half before bounce and ends at bounce", () => {
     const s = scheduled(DEFAULT_TIMELINE, bounce);
     expect(s[0]).toMatchObject({ label: "Arrive", at: new Date("2026-11-14T04:40:00Z") });
-    expect(s.at(-1)).toMatchObject({ label: "Bounce", at: bounce, until: null });
+    expect(s.at(-1)).toMatchObject({ label: "Bounce down", at: bounce, until: null });
     expect(s[1].until).toEqual(s[2].at);
   });
 
@@ -29,7 +29,7 @@ describe("timeline", () => {
     expect(currentStep(DEFAULT_TIMELINE, bounce, new Date("2026-11-14T04:40:00Z"))).toBe(0);
     // 1:12pm: coach talk started at 1:10pm
     expect(DEFAULT_TIMELINE[currentStep(DEFAULT_TIMELINE, bounce, new Date("2026-11-14T05:12:00Z")) ?? 0].label).toBe(
-      "Coach",
+      "Coach's talk in the rooms",
     );
     expect(currentStep(DEFAULT_TIMELINE, bounce, new Date("2026-11-14T06:20:00Z"))).toBeNull();
   });

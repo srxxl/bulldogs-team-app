@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronDown, ExternalLink, Plus, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ExternalLink, Plus, Search, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useOptimistic, useState, useTransition } from "react";
 import { cn } from "@/lib/cn";
 import { addDrillToSession, createDrill, removeDrillFromSession, reorderSessionDrills } from "@/server/actions/drills";
@@ -68,25 +68,19 @@ export function SessionPlan({
         <ol className="space-y-1.5">
           {order.map((d, i) => (
             <li key={d.id} className="flex items-start gap-1 rounded-xl bg-chalk">
-              <details className="group min-w-0 flex-1">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-2 [&::-webkit-details-marker]:hidden">
+              {/* always open: how to run it is the point of the plan */}
+              <div className="min-w-0 flex-1">
+                <div className="flex min-h-11 items-center gap-3 px-3 py-2">
                   <span className="display-num w-5 shrink-0 text-2xl font-black text-red">{i + 1}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold text-navy">{d.title}</span>
+                    <span className="block font-semibold text-navy">{d.title}</span>
                     {(d.minutes != null || d.focus) && (
                       <span className="block text-xs text-ink/60">
                         {[d.minutes != null && `${d.minutes} min`, d.focus].filter(Boolean).join(", ")}
                       </span>
                     )}
                   </span>
-                  {(d.howTo || d.link) && (
-                    <ChevronDown
-                      size={16}
-                      className="shrink-0 text-navy/60 transition-transform group-open:rotate-180"
-                      aria-hidden
-                    />
-                  )}
-                </summary>
+                </div>
                 {(d.howTo || d.link) && (
                   <div className="px-3 pb-3 pl-11">
                     {d.howTo && <p className="whitespace-pre-line text-sm text-ink/80">{d.howTo}</p>}
@@ -102,7 +96,7 @@ export function SessionPlan({
                     )}
                   </div>
                 )}
-              </details>
+              </div>
               {editable && (
                 <div className="flex shrink-0 items-center py-1 pr-1">
                   <IconButton label={`Move ${d.title} up`} disabled={i === 0} onClick={() => move(i, -1)}>

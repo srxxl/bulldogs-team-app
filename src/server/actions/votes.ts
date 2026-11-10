@@ -43,7 +43,7 @@ export async function submitBallot(_prev: unknown, formData: FormData): Promise<
       { eventId, voterId: me.id, nomineeId: ballot.one, points: 1 },
     ]);
   });
-  revalidatePath(`/fixture/${eventId}`);
+  revalidatePath(`/fixture/${eventId}`, "layout");
   revalidatePath("/");
   return ok("Votes in. You can change them any time.");
 }

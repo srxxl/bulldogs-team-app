@@ -1,20 +1,17 @@
 "use client";
 
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type { ActionResult } from "@/lib/action-result";
 import { cn } from "@/lib/cn";
 import { formatTime, fromLocalInput, toLocalInput } from "@/lib/time";
-import { currentStep, DEFAULT_TIMELINE, isDefault, type Step, scheduled, sortSteps } from "@/lib/timeline";
+import { currentStep, DEFAULT_TIMELINE, isDefault, isOwnTime, type Step, scheduled, sortSteps } from "@/lib/timeline";
 import { saveTimeline } from "@/server/actions/timeline";
 import { FormMessage } from "./forms";
 import { buttonClass } from "./ui";
 
-/** Free time between the planned steps ("Free", or "Own time") is set quieter. */
-const isOwnTime = (label: string) => /^(free|own time|free time)$/i.test(label.trim());
-
 /**
- * A game's timeline from arriving to bounce down, running left to right. On game day the step that's on now is lit up (it moves on by
+ * A game's timeline from arriving to bounce down, running top to bottom. On game day the step that's on now is lit up (it moves on by
  * itself). Skips, coaches and admins can change it for this game, or put it back to the usual one.
  */
 export function GameTimeline({
@@ -40,88 +37,79 @@ export function GameTimeline({
     return () => clearInterval(t);
   }, []);
   const on = now ? currentStep(steps, bounce, now) : null;
-  // on a phone the track scrolls sideways: bring the step that's on now into view
-  const track = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (on == null) return;
-    track.current?.querySelector("[data-on]")?.scrollIntoView({ inline: "center", block: "nearest" });
-  }, [on]);
-
   if (editing)
     return <TimelineEditor eventId={eventId} bounce={bounce} steps={steps} onDone={() => setEditing(false)} />;
 
   return (
     <div>
-      {/* left to right, ending at bounce: all of it across a laptop, swiped sideways on a phone */}
-      <div ref={track} className="-mx-5 overflow-x-auto px-5 pb-2 md:-mx-7 md:px-7">
-        <ol className="flex min-w-max md:min-w-0">
-          {scheduled(steps, bounce).map((s, i) => {
-            const first = i === 0;
-            const last = i === steps.length - 1;
-            const quiet = isOwnTime(s.label);
-            return (
-              <li
-                key={`${s.minutesBefore}-${s.label}`}
-                data-on={on === i || undefined}
+      {/* top to bottom, ending at bounce: the time, then a dot on the track, then what's on */}
+      <ol>
+        {scheduled(steps, bounce).map((s, i) => {
+          const first = i === 0;
+          const last = i === steps.length - 1;
+          const quiet = isOwnTime(s.label);
+          return (
+            <li
+              key={`${s.minutesBefore}-${s.label}`}
+              className={cn(
+                "grid grid-cols-[5.5rem_2rem_1fr] items-center gap-x-4 rounded-2xl",
+                last ? "min-h-16" : quiet ? "min-h-11" : "min-h-14",
+                on === i && "bg-red/[0.07]",
+              )}
+            >
+              <time
+                dateTime={s.at.toISOString()}
                 className={cn(
-                  "flex w-24 shrink-0 flex-col items-center text-center md:w-auto md:flex-1",
-                  on === i && "rounded-2xl bg-red/[0.07]",
+                  "pl-2 text-right font-display text-2xl font-bold tabular-nums",
+                  quiet ? "text-ink/45" : "text-navy",
+                  (last || on === i) && "text-red",
                 )}
               >
-                <time
-                  dateTime={s.at.toISOString()}
-                  className={cn(
-                    "pt-2 font-display text-lg font-bold tabular-nums",
-                    quiet ? "text-ink/45" : "text-navy",
-                    (last || on === i) && "text-red",
-                  )}
-                >
-                  {formatTime(s.at)}
-                </time>
-                {/* the track: a line through every step, with a dot per step */}
-                <div className="relative my-2 flex h-5 w-full items-center justify-center" aria-hidden>
-                  <span
-                    className={cn(
-                      "absolute h-0.5 bg-ink/12",
-                      first ? "left-1/2 right-0" : last ? "right-1/2 left-0" : "inset-x-0",
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "relative rounded-full",
-                      last ? "size-5 bg-red" : quiet ? "size-2.5 bg-ink/25" : "size-3.5 bg-navy",
-                      on === i && "size-5 bg-red ring-4 ring-red/20",
-                    )}
-                  />
-                </div>
+                {formatTime(s.at)}
+              </time>
+              {/* the track: a line down through every step, with a dot per step */}
+              <div className="relative flex h-full items-center justify-center self-stretch" aria-hidden>
                 <span
                   className={cn(
-                    "px-1 pb-2 text-sm leading-tight text-balance",
-                    quiet ? "text-ink/55" : "font-semibold text-ink",
-                    last && "font-display text-xl leading-none font-black text-red",
+                    "absolute w-0.5 bg-ink/12",
+                    first ? "top-1/2 bottom-0" : last ? "top-0 bottom-1/2" : "inset-y-0",
                   )}
-                >
-                  {s.label}
-                  {on === i && !last && <span className="block text-xs font-semibold text-red">Now</span>}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
-      </div>
+                />
+                <span
+                  className={cn(
+                    "relative rounded-full",
+                    last ? "size-6 bg-red" : quiet ? "size-3 bg-ink/25" : "size-4 bg-navy",
+                    on === i && "size-6 bg-red ring-4 ring-red/20",
+                  )}
+                />
+              </div>
+              <span
+                className={cn(
+                  "py-2 pr-2 text-lg leading-snug text-pretty",
+                  quiet ? "text-base text-ink/55" : "font-semibold text-ink",
+                  last && "font-display text-3xl leading-none font-black text-red",
+                )}
+              >
+                {s.label}
+                {on === i && !last && <span className="ml-2 text-sm font-semibold text-red">Now</span>}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
       {canEdit && (
-        // the panel's top-right corner, level with its title
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          aria-label="Change the timeline for this game"
-          title="Change for this game"
-          className="absolute top-4 right-4 grid size-11 place-items-center rounded-xl text-navy hover:bg-mist focus-visible:outline-2 focus-visible:outline-navy md:top-6 md:right-6"
-        >
-          <Pencil size={18} aria-hidden />
-        </button>
+        // a footer row under the steps, like a training session's Add to calendar and Edit
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-ink/10 pt-2 text-sm">
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2 font-semibold text-navy hover:bg-mist"
+          >
+            <Pencil size={14} aria-hidden /> Change for this game
+          </button>
+          {custom && <span className="text-ink/55">Changed from the usual timeline</span>}
+        </div>
       )}
-      {canEdit && custom && <p className="mt-3 text-sm text-ink/55">Changed from the usual timeline</p>}
     </div>
   );
 }
@@ -187,7 +175,7 @@ function TimelineEditor({
             <input
               id={`l-${r.key}`}
               value={r.label}
-              maxLength={40}
+              maxLength={60}
               onChange={(e) => update(r.key, { label: e.target.value })}
               className="min-h-11 min-w-0 flex-1 rounded-xl border border-ink/15 bg-white px-3"
             />

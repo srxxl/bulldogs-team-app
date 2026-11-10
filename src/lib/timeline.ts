@@ -8,21 +8,21 @@ export type Step = { label: string; minutesBefore: number };
 
 export const DEFAULT_TIMELINE: Step[] = [
   { label: "Arrive", minutesBefore: 90 },
-  { label: "Free", minutesBefore: 85 },
-  { label: "Coach", minutesBefore: 60 },
-  { label: "Lines", minutesBefore: 50 },
-  { label: "Warm-up", minutesBefore: 40 },
-  { label: "Free", minutesBefore: 25 },
-  { label: "Drills", minutesBefore: 20 },
-  { label: "Free", minutesBefore: 8 },
-  { label: "Bounce", minutesBefore: 0 },
+  { label: "Free time", minutesBefore: 85 },
+  { label: "Coach's talk in the rooms", minutesBefore: 60 },
+  { label: "Line meetings", minutesBefore: 50 },
+  { label: "Team warm-up", minutesBefore: 40 },
+  { label: "Free time", minutesBefore: 25 },
+  { label: "Drills and kicking", minutesBefore: 20 },
+  { label: "Free time", minutesBefore: 8 },
+  { label: "Bounce down", minutesBefore: 0 },
 ];
 
 /** What a saved timeline must look like: 1 to 20 named steps, each between 4 hours before bounce and bounce. */
 export const timelineSchema = z
   .array(
     z.object({
-      label: z.string().trim().min(1, "Every step needs a name").max(40, "Keep step names short"),
+      label: z.string().trim().min(1, "Every step needs a name").max(60, "Keep step names to a line or two"),
       minutesBefore: z
         .number()
         .int()
@@ -38,6 +38,9 @@ export function timelineFor(saved: unknown): Step[] {
   const parsed = timelineSchema.safeParse(saved);
   return sortSteps(parsed.success ? parsed.data : DEFAULT_TIMELINE);
 }
+
+/** Free time between the planned steps ("Free time", "Free" or "Own time"); the timeline sets it quieter. */
+export const isOwnTime = (label: string) => /^(free|own time|free time)$/i.test(label.trim());
 
 export const sortSteps = (steps: Step[]) => [...steps].sort((a, b) => b.minutesBefore - a.minutesBefore);
 

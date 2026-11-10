@@ -38,11 +38,43 @@ export function VoteForm({
   const byId = new Map(candidates.map((c) => [c.id, c]));
 
   return (
-    <form action={action} className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <form action={action} className="space-y-5">
       <input type="hidden" name="eventId" value={eventId} />
       {SLOTS.map((s, i) => (
         <input key={s.key} type="hidden" name={s.key} value={picks[i] ?? ""} />
       ))}
+
+      {/* your 3, 2 and 1 across the top, filling in as you tap */}
+      <div className="space-y-3">
+        <ol className="grid grid-cols-3 gap-2">
+          {SLOTS.map((s, i) => {
+            const c = byId.get(picks[i]);
+            return (
+              <li
+                key={s.key}
+                className={cn(
+                  "flex min-w-0 flex-col items-center gap-1.5 rounded-2xl p-3 text-center",
+                  c ? "bg-chalk" : "border-2 border-dashed border-navy/20",
+                )}
+              >
+                <span className="display-num text-5xl leading-none font-black text-red">{s.points}</span>
+                {c ? (
+                  <>
+                    <Avatar name={c.name} src={c.image} size={40} />
+                    <span className="w-full truncate text-sm font-semibold">{c.name.split(" ")[0]}</span>
+                  </>
+                ) : (
+                  <span className="grid min-h-[4.25rem] place-items-center text-sm text-ink/50">Pick a player</span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+        <FormMessage state={state} />
+        <SubmitButton pending="Submitting…" disabled={picks.length < 3} className="w-full">
+          {picks.length < 3 ? `Pick ${3 - picks.length} more` : ballot ? "Update my votes" : "Submit votes"}
+        </SubmitButton>
+      </div>
 
       <div>
         <p className="mb-3 text-sm text-ink/70">Tap your 3-vote player first, then 2, then 1.</p>
@@ -75,29 +107,6 @@ export function VoteForm({
           })}
         </ul>
       </div>
-
-      <aside className="space-y-3 lg:sticky lg:top-6 lg:self-start">
-        {SLOTS.map((s, i) => {
-          const c = byId.get(picks[i]);
-          return (
-            <div key={s.key} className="flex items-center gap-3 rounded-2xl bg-white p-3">
-              <span className="display-num w-10 text-center text-5xl font-black text-red">{s.points}</span>
-              {c ? (
-                <span className="flex items-center gap-2 font-semibold">
-                  <Avatar name={c.name} src={c.image} size={32} />
-                  {c.name}
-                </span>
-              ) : (
-                <span className="text-sm text-ink/50">Pick a player</span>
-              )}
-            </div>
-          );
-        })}
-        <FormMessage state={state} />
-        <SubmitButton pending="Submitting…" className="w-full">
-          {ballot ? "Update my votes" : "Submit votes"}
-        </SubmitButton>
-      </aside>
     </form>
   );
 }

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
 import { MatchCard } from "@/components/match-card";
+import { Morph, morphName } from "@/components/morph";
 import { ButtonLink, EmptyState, PageHeader, RedRule } from "@/components/ui";
 import { findByes } from "@/lib/byes";
 import { CLUB } from "@/lib/club";
@@ -68,7 +69,7 @@ export default async function FixturePage() {
           {voteFor && (
             // a red strip along the top of the card
             <Link
-              href={`/fixture/${voteFor.id}#votes`}
+              href={`/fixture/${voteFor.id}/votes`}
               className={cn(
                 "flex min-h-14 items-center gap-3 bg-red px-5 py-3 text-white transition-colors hover:bg-red-deep md:px-8",
                 nextGame ? "rounded-t-[28px]" : "rounded-[28px]",
@@ -83,12 +84,15 @@ export default async function FixturePage() {
             </Link>
           )}
           {nextGame && (
-            <MatchCard
-              game={nextGame}
-              myStatus={mine.get(nextGame.id) ?? null}
-              yesCount={yes.get(nextGame.id) ?? 0}
-              className={voteFor ? "rounded-t-none" : undefined}
-            />
+            // grows into the game's header when you open it (so the game's row below doesn't)
+            <Morph name={morphName.event(nextGame.id)}>
+              <MatchCard
+                game={nextGame}
+                href={`/fixture/${nextGame.id}`}
+                rsvp={{ myStatus: mine.get(nextGame.id) ?? null, yesCount: yes.get(nextGame.id) ?? 0 }}
+                className={voteFor ? "rounded-t-none" : undefined}
+              />
+            </Morph>
           )}
         </section>
       )}
@@ -113,7 +117,13 @@ export default async function FixturePage() {
                     "bye" in i ? (
                       <ByeCard key={i.bye.round} bye={i.bye} />
                     ) : (
-                      <EventRowLink key={i.ev.id} ev={i.ev} myStatus={mine.get(i.ev.id)} yesCount={yes.get(i.ev.id)} />
+                      <EventRowLink
+                        key={i.ev.id}
+                        ev={i.ev}
+                        myStatus={mine.get(i.ev.id)}
+                        yesCount={yes.get(i.ev.id)}
+                        morph={i.ev.id !== nextGame?.id}
+                      />
                     ),
                   )}
                 </div>

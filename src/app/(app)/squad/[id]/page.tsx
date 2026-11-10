@@ -41,7 +41,7 @@ export default async function PlayerPage({ params }: PageProps<"/squad/[id]">) {
         <div className="relative aspect-[4/5] bg-powder md:aspect-auto md:min-h-[560px]">
           <BackButton
             href="/squad"
-            to="the squad"
+            to="the team"
             className="absolute top-3 left-3 z-10 bg-white/85 text-navy hover:bg-white"
           />
           {p.image ? (
