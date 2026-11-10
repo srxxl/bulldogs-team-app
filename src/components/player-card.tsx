@@ -20,7 +20,7 @@ export function PlayerCard({
   return (
     <Morph name={morphName.player(player.id)}>
       <Link
-        href={isMe ? "/me" : `/squad/${player.id}`}
+        href={isMe ? "/settings" : `/squad/${player.id}`}
         aria-label={isMe ? `${player.displayName}, you: edit your profile` : undefined}
         className={cn(
           "group relative block overflow-hidden rounded-2xl bg-white transition-transform hover:-translate-y-1",

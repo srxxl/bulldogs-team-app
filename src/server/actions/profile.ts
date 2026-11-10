@@ -52,6 +52,6 @@ export async function updateProfile(_prev: unknown, formData: FormData): Promise
     throw err;
   }
   revalidatePath("/squad", "layout");
-  revalidatePath("/me");
+  revalidatePath("/settings");
   return ok("Profile saved");
 }

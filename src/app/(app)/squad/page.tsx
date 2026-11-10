@@ -17,7 +17,7 @@ export default async function SquadPage() {
     <>
       <PageHeader title="Squad"></PageHeader>
       {players.length === 0 && (
-        <EmptyState title="No players yet">Approve sign-ups in Admin and they'll show up here.</EmptyState>
+        <EmptyState title="No players yet">Approve sign-ups in Settings and they'll show up here.</EmptyState>
       )}
       <div className="space-y-12">
         {POSITIONS.map(({ value, plural }) => {

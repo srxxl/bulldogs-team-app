@@ -89,7 +89,7 @@ export default async function PlayerPage({ params }: PageProps<"/squad/[id]">) {
             </dl>
           )}
           {p.id === me.id && (
-            <ButtonLink href="/me" className="mt-8 self-start">
+            <ButtonLink href="/settings" className="mt-8 self-start">
               Edit my profile
             </ButtonLink>
           )}

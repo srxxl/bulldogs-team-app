@@ -1,34 +1,27 @@
-import { Apple, CalendarDays, Dumbbell, type LucideIcon, Menu, Settings, Shirt, Trophy, Users } from "lucide-react";
+import { Apple, CalendarDays, Dumbbell, type LucideIcon, Settings, Shirt, Trophy, Users } from "lucide-react";
 import { hasRole } from "@/lib/roles";
 import type { Role } from "@/server/db/schema";
 
 export type NavItem = {
   href: string;
   label: string;
+  /** A shorter label for the phone tab bar, where every tab shares one row. */
+  short?: string;
   icon: LucideIcon;
   minRole?: Role;
   /** Only for people who run the app (user.isAdmin). */
   adminOnly?: boolean;
 };
 
-/** Bottom bar on phones (five max). */
-export const PRIMARY: NavItem[] = [
-  { href: "/fixture", label: "Fixture", icon: CalendarDays },
-  { href: "/training", label: "Training", icon: Dumbbell },
-  { href: "/squad", label: "Squad", icon: Users },
-  { href: "/boards", label: "Fitness", icon: Apple },
-  { href: "/more", label: "More", icon: Menu },
-];
-
-/** Everything, for the desktop rail and the More page. */
+/** Every page, for the desktop rail and the phone tab bar. */
 export const ALL: NavItem[] = [
   { href: "/fixture", label: "Fixture", icon: CalendarDays },
   { href: "/ladder", label: "Ladder", icon: Trophy },
   { href: "/training", label: "Training", icon: Dumbbell },
   { href: "/squad", label: "Squad", icon: Users },
-  { href: "/boards", label: "Fitness and nutrition", icon: Apple },
-  { href: "/votes", label: "Player's player", icon: Shirt, minRole: "coach" },
-  { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
+  { href: "/boards", label: "Fitness", icon: Apple },
+  { href: "/votes", label: "Player's player", short: "Votes", icon: Shirt, minRole: "coach" },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 /** The nav entries this person can open. */

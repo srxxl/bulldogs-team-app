@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BoardsNav } from "@/components/boards-nav";
 import { HoopRing } from "@/components/hoop-ring";
-import { PageHeader } from "@/components/ui";
+import { PageHeader, RedRule } from "@/components/ui";
 import { bestStreak, hoop } from "@/lib/hoops";
 import { formatDateOnly, perthWeekStart } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
@@ -44,7 +44,7 @@ export default async function HistoryPage() {
 
   return (
     <>
-      <PageHeader title="Fitness and nutrition" />
+      <PageHeader title="Fitness" />
       <BoardsNav current="/boards/history" />
       <div className="max-w-3xl">
         <section aria-labelledby="weeks-heading">
@@ -68,7 +68,7 @@ export default async function HistoryPage() {
           ) : (
             [...months].map(([month, ws]) => (
               <div key={month} className="mt-6">
-                <h3 className="font-display text-xl font-bold text-ink/55">{month}</h3>
+                <RedRule className="text-xl">{month}</RedRule>
                 <ul className="mt-2 grid grid-cols-4 gap-3 sm:grid-cols-6">
                   {ws.map((w) => {
                     const h = hoop(w);

@@ -8,7 +8,7 @@ Team hub for the Brentwood Booragoon Bulldogs Women's C3 side (Perth Football Le
 - Women train Tues + Thurs 18:00–19:30 at Karoonda Reserve, Oval 2 (West), Booragoon.
 - PFL fixtures/ladders live on **PlayHQ** (tenant `afl`). playhq.com blocks automated access, so we do **not** scrape. Options:
   1. **Official public API** — club admin requests an API Client ID from PlayHQ support (reviewed by PlayHQ + PFL). Endpoints used: `GET /v1/teams/:teamId/fixture`, `GET /v1/grades/:gradeId/ladder` with headers `x-api-key`, `x-phq-tenant: afl`. Response shapes are validated loosely with zod; confirm field names against a real response once a key exists (`src/server/playhq/map.ts`).
-  2. **Paste import** — a coach copies the ladder table from the PlayHQ page in their browser and pastes it into Admin → PFL data.
+  2. **Paste import** — a coach copies the ladder table from the PlayHQ page in their browser and pastes it into Settings → PFL data.
   3. Manual event entry (always available).
 - 2026 season started 11 April and is finished; the app targets the 2027 season.
 
@@ -28,7 +28,7 @@ Team hub for the Brentwood Booragoon Bulldogs Women's C3 side (Perth Football Le
 | Team board (drag & drop lineup: 18 on the ground, 4 interchange, 2 emergencies) | `/fixture/[id]` (games) | Captains/coaches edit; auto-fill from RSVPs; everyone views |
 | Player's player votes (3-2-1) | `/fixture/[id]` (per game), `/votes` (season) | Players vote on the game page; coaches see that game's results and the season tally |
 | Live ladder | `/` (widget) | From PlayHQ sync or paste |
-| Admin                                              | `/admin`                               | Members, events, PFL data, settings                       |
+| Settings | `/settings` | Everyone: profile, sign out. Admins also: members, PFL data, season |
 
 ## Data model (Drizzle, `src/server/db/schema.ts`)
 

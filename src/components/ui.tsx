@@ -46,6 +46,26 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
   );
 }
 
+/**
+ * A label followed by a thin club-red rule out to the edge: splits a long list into groups (months on the fixture
+ * and in fitness history, the finals line on the ladder). Renders an h3 unless told otherwise.
+ */
+export function RedRule({
+  as: Tag = "h3",
+  className,
+  ...props
+}: { as?: "h2" | "h3" | "p" | "div" } & ComponentProps<"h3">) {
+  return (
+    <Tag
+      className={cn(
+        "flex items-center gap-3.5 font-display text-2xl font-bold text-navy after:h-0.5 after:flex-1 after:rounded-full after:bg-red",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
 type ButtonVariant = "primary" | "red" | "ghost" | "outline";
 const buttonStyles: Record<ButtonVariant, string> = {
   primary: "bg-navy text-white hover:bg-navy-deep",

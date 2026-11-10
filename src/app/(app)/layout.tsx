@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <main className="min-w-0 flex-1 px-4 pt-6 pb-32 md:px-10 md:pt-10 md:pb-16">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
-      <BottomNav />
+      <BottomNav role={me.role} isAdmin={me.isAdmin} />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import type { Role } from "@/server/db/schema";
 import { Avatar } from "./avatar";
-import { ALL, PRIMARY, visibleNav } from "./nav-items";
+import { ALL, visibleNav } from "./nav-items";
 
 const isActive = (pathname: string, href: string) =>
   href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -66,7 +66,7 @@ export function SideNav({
           );
         })}
       </ul>
-      <Link href="/me" className="mt-4 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-white/10">
+      <Link href="/settings" className="mt-4 flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-white/10">
         <Avatar name={name} src={image} size={36} />
         <span className="min-w-0 truncate text-sm font-semibold">{name}</span>
       </Link>
@@ -74,21 +74,22 @@ export function SideNav({
   );
 }
 
-export function BottomNav() {
+/** The phone tab bar: one tab per page this person can open (five to seven). */
+export function BottomNav({ role, isAdmin }: { role: Role; isAdmin: boolean }) {
   const pathname = usePathname();
-  const current =
-    activeHref(
-      pathname,
-      PRIMARY.map((i) => i.href),
-    ) ?? "/more";
+  const items = visibleNav(ALL, { role, isAdmin });
+  const current = activeHref(
+    pathname,
+    items.map((i) => i.href),
+  );
   return (
     // its own view-transition layer, so a row growing into a page (Morph) passes under the bar, not over it
     <nav
       aria-label="Main"
       className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 [view-transition-name:bottom-nav] md:hidden"
     >
-      <ul className="grid grid-cols-5 rounded-2xl bg-ink/95 p-1.5 text-white backdrop-blur">
-        {PRIMARY.map(({ href, label, icon: Icon }) => {
+      <ul className="grid grid-flow-col auto-cols-fr rounded-2xl bg-ink/95 p-1.5 text-white backdrop-blur">
+        {items.map(({ href, label, short, icon: Icon }) => {
           const active = href === current;
           return (
             <li key={href}>
@@ -101,7 +102,7 @@ export function BottomNav() {
                 )}
               >
                 <Icon size={20} className={active ? "text-red" : undefined} />
-                {label}
+                {short ?? label}
               </Link>
             </li>
           );

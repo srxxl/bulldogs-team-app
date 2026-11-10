@@ -33,7 +33,7 @@ export default async function BoardPage({ params }: PageProps<"/boards/[board]">
       <Morph name={morphName.board(board)}>
         <header className={cn("rounded-[28px] p-5 md:p-8", c.card)}>
           <div className="flex items-center gap-3">
-            <BackButton href="/boards" to="fitness and nutrition" />
+            <BackButton href="/boards" to="fitness" />
             <p className={cn("text-sm font-semibold", c.soft)}>
               {pins.length} {pins.length === 1 ? "pin" : "pins"}
             </p>

@@ -14,7 +14,7 @@ import { formatDistance, formatDuration, formatPace } from "@/lib/workout";
 import { requireMember } from "@/server/auth/session";
 import { getMyHoopWeeks, getPinCounts, getWeekDone, getWeekPicks } from "@/server/queries/content";
 
-export const metadata: Metadata = { title: "Fitness and nutrition" };
+export const metadata: Metadata = { title: "Fitness" };
 
 const ICON = { fitness: Dumbbell, nutrition: Apple } as const;
 const HOOP_BAND =
@@ -53,7 +53,7 @@ export default async function YourWeekPage() {
   return (
     <>
       <header className="mb-6 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
-        <TitleRow>Fitness and nutrition</TitleRow>
+        <TitleRow>Fitness</TitleRow>
         {/* the boards, always a tap away: side by side on a phone, beside the title on a laptop */}
         <div className="grid grid-cols-2 gap-2 md:flex">
           {BOARD_KEYS.map((key) => {

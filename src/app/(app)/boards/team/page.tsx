@@ -25,7 +25,7 @@ export default async function TeamWeekPage({ searchParams }: PageProps<"/boards/
 
   return (
     <>
-      <PageHeader title="Fitness and nutrition" />
+      <PageHeader title="Fitness" />
       <BoardsNav current={past ? "/boards/history" : "/boards/team"} />
       <div className="max-w-2xl">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">

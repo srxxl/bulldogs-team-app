@@ -80,7 +80,7 @@ Rules of thumb:
 - **Game day timeline**: every game page shows a left-to-right timeline from arriving (90 minutes before bounce) to bounce down. Steps are stored as minutes before bounce in `event.timeline` (null = `DEFAULT_TIMELINE` in `src/lib/timeline.ts`, tested), so they follow the game if its time changes. Skips, coaches and admins (`canPickTeam`) can change it per game or reset it.
 - **Won games** get soft blurred confetti behind the game page (`<Confetti variant="ambient" />`).
 - **Training**: Tues + Thurs 18:00–19:30, Karoonda Reserve Oval 2 (West). Sessions are generated 14 days ahead by the daily cron while the `training_enabled` setting is on.
-- **PlayHQ**: never scrape playhq.com — it blocks bots and we respect that. Data comes from the official public API (`PLAYHQ_API_KEY`, tenant `afl`) or a coach pasting a table copied from the PlayHQ site into Admin → PFL data. Synced events are matched by `playhqGameId`; manual edits to synced fields are overwritten on the next sync.
+- **PlayHQ**: never scrape playhq.com — it blocks bots and we respect that. Data comes from the official public API (`PLAYHQ_API_KEY`, tenant `afl`) or a coach pasting a table copied from the PlayHQ site into Settings → PFL data. Synced events are matched by `playhqGameId`; manual edits to synced fields are overwritten on the next sync.
 
 ## Design system
 

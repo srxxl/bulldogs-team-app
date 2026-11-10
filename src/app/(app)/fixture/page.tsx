@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
 import { MatchCard } from "@/components/match-card";
-import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
+import { ButtonLink, EmptyState, PageHeader, RedRule } from "@/components/ui";
 import { findByes } from "@/lib/byes";
 import { CLUB } from "@/lib/club";
 import { cn } from "@/lib/cn";
@@ -107,9 +107,7 @@ export default async function FixturePage() {
           <div className="space-y-10">
             {[...months].map(([key, monthItems]) => (
               <section key={key}>
-                <h3 className="sticky top-0 z-10 -mx-4 mb-3 bg-chalk/90 px-4 py-2 text-2xl font-bold text-navy backdrop-blur md:mx-0 md:px-0">
-                  {formatMonth(at(monthItems[0]))}
-                </h3>
+                <RedRule className="mb-3">{formatMonth(at(monthItems[0]))}</RedRule>
                 <div className="space-y-2">
                   {monthItems.map((i) =>
                     "bye" in i ? (

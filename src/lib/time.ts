@@ -26,8 +26,8 @@ export const formatDateOnly = (iso: string) => {
   const [y, m, d] = iso.split("-").map(Number);
   return format(new Date(y, m - 1, d), "d MMM");
 };
-/** "April 2027" */
-export const formatMonth = (d: Date) => format(inPerth(d), "MMMM yyyy");
+/** "April" */
+export const formatMonth = (d: Date) => format(inPerth(d), "MMMM");
 /** "2025" */
 export const formatYear = (d: Date) => format(inPerth(d), "yyyy");
 /** Stable grouping key, "2027-04" */

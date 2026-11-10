@@ -10,7 +10,7 @@ const VIEWS = [
 /** The fitness and nutrition views, as a segmented switch under the page title. */
 export function BoardsNav({ current }: { current: (typeof VIEWS)[number]["href"] }) {
   return (
-    <nav aria-label="Fitness and nutrition" className="mb-6 flex max-w-md rounded-full bg-ink/[0.07] p-1">
+    <nav aria-label="Fitness" className="mb-6 flex max-w-md rounded-full bg-ink/[0.07] p-1">
       {VIEWS.map((v) => (
         <Link
           key={v.href}
