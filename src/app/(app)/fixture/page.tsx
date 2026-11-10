@@ -15,14 +15,13 @@ type Bye = { round: string; startsAt: Date };
 /** A round we don't play: a quiet grey card where the game would be. */
 function ByeCard({ bye }: { bye: Bye }) {
   return (
-    <div className="flex min-h-16 items-center rounded-2xl bg-ink/[0.07]">
-      <p className="flex-1 px-3 font-display text-2xl font-bold text-ink/45 md:px-4 md:text-3xl">Bye</p>
-      {/* round and date in the middle, where the game rows have theirs */}
-      <p className="w-24 shrink-0 px-1 py-2 text-center text-xs leading-snug text-ink/60 md:w-32">
+    // stacked in the middle, where the game rows have "vs", the round and the date
+    <div className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl bg-ink/[0.07] px-3 py-2 text-center">
+      <p className="font-display text-lg leading-none font-bold text-ink/50">Bye</p>
+      <p className="text-xs leading-snug text-ink/60">
         <span className="block">{bye.round}</span>
         {formatDay(bye.startsAt)}
       </p>
-      <p className="flex-1 px-3 text-right text-sm text-ink/55 md:px-4">No game this round</p>
     </div>
   );
 }

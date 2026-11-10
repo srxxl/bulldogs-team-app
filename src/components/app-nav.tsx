@@ -82,7 +82,11 @@ export function BottomNav() {
       PRIMARY.map((i) => i.href),
     ) ?? "/more";
   return (
-    <nav aria-label="Main" className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 md:hidden">
+    // its own view-transition layer, so a row growing into a page (Morph) passes under the bar, not over it
+    <nav
+      aria-label="Main"
+      className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 [view-transition-name:bottom-nav] md:hidden"
+    >
       <ul className="grid grid-cols-5 rounded-2xl bg-ink/95 p-1.5 text-white backdrop-blur">
         {PRIMARY.map(({ href, label, icon: Icon }) => {
           const active = href === current;

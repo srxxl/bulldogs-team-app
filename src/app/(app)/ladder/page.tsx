@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Morph, morphName } from "@/components/morph";
 import { EmptyState, PageHeader } from "@/components/ui";
 import { CLUB, isUs } from "@/lib/club";
 import { clubGuernsey, teamSlug } from "@/lib/club-colours";
@@ -44,39 +45,41 @@ export default async function LadderPage() {
                 <li key={r.position}>
                   {/* a card per team, set like a footy record's ladder: a big outlined position, the team large, points on the
                       right over the club's guernsey design fading in */}
-                  <Link
-                    href={`/ladder/${teamSlug(r.team)}`}
-                    className={cn(
-                      "group relative grid grid-cols-[2.6rem_1fr_auto] items-center gap-3 overflow-hidden rounded-2xl bg-white px-4 py-3 transition-colors hover:bg-mist md:grid-cols-[3.6rem_1fr_auto] md:gap-4 md:px-6",
-                      mine ? "text-red" : "text-ink",
-                    )}
-                  >
-                    <span
+                  <Morph name={morphName.team(teamSlug(r.team))}>
+                    <Link
+                      href={`/ladder/${teamSlug(r.team)}`}
                       className={cn(
-                        "display-num num-outline relative text-5xl font-extrabold md:text-6xl",
-                        mine ? "text-red" : "text-navy",
+                        "group relative grid grid-cols-[2.6rem_1fr_auto] items-center gap-3 overflow-hidden rounded-2xl bg-white px-4 py-3 transition-colors hover:bg-mist md:grid-cols-[3.6rem_1fr_auto] md:gap-4 md:px-6",
+                        mine ? "text-red" : "text-ink",
                       )}
                     >
-                      {r.position}
-                    </span>
-                    {design && (
                       <span
-                        aria-hidden
-                        className="ladder-design absolute inset-y-0 right-0 w-2/5 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${design})` }}
-                      />
-                    )}
-                    <span className="relative min-w-0">
-                      <span className="block font-display text-2xl leading-none font-extrabold group-hover:underline md:text-4xl">
-                        {r.team}
+                        className={cn(
+                          "display-num num-outline relative text-5xl font-extrabold md:text-6xl",
+                          mine ? "text-red" : "text-navy",
+                        )}
+                      >
+                        {r.position}
                       </span>
-                      <span className="mt-1 block text-sm text-ink/60">{record}</span>
-                    </span>
-                    <span className="ladder-points display-num relative text-5xl font-extrabold md:text-6xl">
-                      <span className="sr-only">Points </span>
-                      {r.premiershipPoints}
-                    </span>
-                  </Link>
+                      {design && (
+                        <span
+                          aria-hidden
+                          className="ladder-design absolute inset-y-0 right-0 w-2/5 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${design})` }}
+                        />
+                      )}
+                      <span className="relative min-w-0">
+                        <span className="block font-display text-2xl leading-none font-extrabold group-hover:underline md:text-4xl">
+                          {r.team}
+                        </span>
+                        <span className="mt-1 block text-sm text-ink/60">{record}</span>
+                      </span>
+                      <span className="ladder-points display-num relative text-5xl font-extrabold md:text-6xl">
+                        <span className="sr-only">Points </span>
+                        {r.premiershipPoints}
+                      </span>
+                    </Link>
+                  </Morph>
                 </li>
               );
             })}

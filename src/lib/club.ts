@@ -4,6 +4,8 @@ export const CLUB = {
   ladderName: "Brentwood Booragoon",
   grade: "Women's C3",
   league: "Perth Football League",
+  /** For tight spots, like beside a back button. */
+  leagueShort: "PFL",
   homeGround: "Karoonda Reserve, Booragoon",
 } as const;
 

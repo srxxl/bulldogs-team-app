@@ -1,10 +1,11 @@
-import { ChevronLeft, MapPin, Pencil } from "lucide-react";
-import Link from "next/link";
+import { MapPin, Pencil } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
+import { BackButton } from "@/components/back-button";
 import { GameNotes } from "@/components/game-notes";
 import { GameVotes } from "@/components/game-votes";
 import { MarginBar } from "@/components/margin-bar";
+import { Morph, morphName } from "@/components/morph";
 import { NoteForm } from "@/components/note-form";
 import { RsvpButtons } from "@/components/rsvp-buttons";
 import { SectionPanel } from "@/components/section-panel";
@@ -69,68 +70,71 @@ export async function EventDetail({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <Link
-        href="/fixture"
-        className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-navy hover:bg-white/60"
-      >
-        <ChevronLeft size={18} aria-hidden /> Fixture
-      </Link>
-      <header className="rounded-[28px] bg-navy p-5 text-white md:p-8">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 pt-2 text-sm text-powder">
-            {ev.round && <span className="font-semibold">{ev.round}</span>}
-            {ev.isHome != null && <Chip className="bg-white/10 text-white">{ev.isHome ? "Home" : "Away"}</Chip>}
-            {ev.isFinal && <Chip className="bg-red text-white">Final</Chip>}
-            {ev.cancelled && <Chip className="bg-red text-white">Cancelled</Chip>}
-          </div>
-          {me.isAdmin && (
-            <ButtonLink
-              href={`/admin/events/${id}`}
-              variant="ghost"
-              className="min-h-10 shrink-0 px-3 text-white hover:bg-white/10"
-            >
-              <Pencil size={16} /> Edit
-            </ButtonLink>
-          )}
-        </div>
-        <h1 className="mt-3 font-display text-[clamp(3rem,10vw,6rem)] font-black leading-[0.85]">{ev.title}</h1>
-        {scores && (
-          <p className="mt-4 font-display text-3xl font-bold">
-            {formatScore(scores.team)} to {formatScore(scores.opp)}
-            <span className="ml-3 rounded-full bg-white px-3 py-0.5 align-middle text-base text-navy">
-              {{ win: "Won", loss: "Lost", draw: "Drew" }[resultOf(scores.team, scores.opp)]}
-            </span>
-          </p>
-        )}
-        {scores && ev.opponent && (
-          <MarginBar opponent={ev.opponent} isHome={ev.isHome} ours={points(scores.team)} theirs={points(scores.opp)} />
-        )}
-        <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div>
-            <dt className="text-sm text-powder">When</dt>
-            <dd className="font-semibold">
-              {formatLongDay(ev.startsAt)}, {formatTime(ev.startsAt)}
-              {ev.endsAt && ` to ${formatTime(ev.endsAt)}`}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm text-powder">Where</dt>
-            <dd className="font-semibold">{ev.venueName ?? "To be confirmed"}</dd>
-            {ev.venueAddress && (
-              <dd>
-                <a
-                  className="inline-flex items-center gap-1 text-sm text-white/80 underline underline-offset-4"
-                  target="_blank"
-                  rel="noreferrer"
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.venueAddress)}`}
-                >
-                  <MapPin size={14} /> {ev.venueAddress}
-                </a>
-              </dd>
+      {/* grows out of the game's fixture row when you open it, and back into it when you go back */}
+      <Morph name={morphName.event(id)}>
+        <header className="rounded-[28px] bg-navy p-5 text-white md:p-8">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-powder">
+              <BackButton href="/fixture" to="the fixture" className="mr-1 text-white" />
+              {ev.round && <span className="font-semibold">{ev.round}</span>}
+              {ev.isHome != null && <Chip className="bg-white/10 text-white">{ev.isHome ? "Home" : "Away"}</Chip>}
+              {ev.isFinal && <Chip className="bg-red text-white">Final</Chip>}
+              {ev.cancelled && <Chip className="bg-red text-white">Cancelled</Chip>}
+            </div>
+            {me.isAdmin && (
+              <ButtonLink
+                href={`/admin/events/${id}`}
+                variant="ghost"
+                className="min-h-10 shrink-0 px-3 text-white hover:bg-white/10"
+              >
+                <Pencil size={16} /> Edit
+              </ButtonLink>
             )}
           </div>
-        </dl>
-      </header>
+          <h1 className="mt-3 font-display text-[clamp(3rem,10vw,6rem)] font-black leading-[0.85]">{ev.title}</h1>
+          {scores && (
+            <p className="mt-4 font-display text-3xl font-bold">
+              {formatScore(scores.team)} to {formatScore(scores.opp)}
+              <span className="ml-3 rounded-full bg-white px-3 py-0.5 align-middle text-base text-navy">
+                {{ win: "Won", loss: "Lost", draw: "Drew" }[resultOf(scores.team, scores.opp)]}
+              </span>
+            </p>
+          )}
+          {scores && ev.opponent && (
+            <MarginBar
+              opponent={ev.opponent}
+              isHome={ev.isHome}
+              ours={points(scores.team)}
+              theirs={points(scores.opp)}
+            />
+          )}
+          <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-sm text-powder">When</dt>
+              <dd className="font-semibold">
+                {formatLongDay(ev.startsAt)}, {formatTime(ev.startsAt)}
+                {ev.endsAt && ` to ${formatTime(ev.endsAt)}`}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-powder">Where</dt>
+              <dd className="font-semibold">{ev.venueName ?? "To be confirmed"}</dd>
+              {ev.venueAddress && (
+                <dd>
+                  <a
+                    className="inline-flex items-center gap-1 text-sm text-white/80 underline underline-offset-4"
+                    target="_blank"
+                    rel="noreferrer"
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.venueAddress)}`}
+                  >
+                    <MapPin size={14} /> {ev.venueAddress}
+                  </a>
+                </dd>
+              )}
+            </div>
+          </dl>
+        </header>
+      </Morph>
 
       {ev.kind === "game" && (
         <SectionPanel id="notes" title="Notes" meta={notes.length || undefined} action={<NoteForm eventId={id} />}>

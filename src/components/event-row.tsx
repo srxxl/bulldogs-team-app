@@ -5,6 +5,7 @@ import { cn } from "@/lib/cn";
 import { formatScore, points, resultOf, scoresOf } from "@/lib/score";
 import { dayStub, formatDay, formatTime } from "@/lib/time";
 import type { AvailabilityStatus, EventRow as Ev } from "@/server/db/schema";
+import { Morph, morphName } from "./morph";
 import { Chip } from "./ui";
 
 const RESULT = {
@@ -26,61 +27,63 @@ export function EventRowLink({ ev, myStatus, yesCount }: { ev: Ev; myStatus?: Av
   const { weekday, day } = dayStub(ev.startsAt);
 
   return (
-    <Link
-      href={`/fixture/${ev.id}`}
-      className={cn(
-        "group flex items-stretch gap-4 rounded-2xl bg-white p-3 pr-4 transition-colors hover:bg-mist",
-        ev.cancelled && "opacity-60",
-      )}
-    >
-      <div
+    <Morph name={morphName.event(ev.id)}>
+      <Link
+        href={`/fixture/${ev.id}`}
         className={cn(
-          "grid w-16 shrink-0 place-items-center rounded-xl py-2 text-center",
-          ev.kind === "game" ? "bg-navy text-white" : "bg-mist text-navy",
+          "group flex items-stretch gap-4 rounded-2xl bg-white p-3 pr-4 transition-colors hover:bg-mist",
+          ev.cancelled && "opacity-60",
         )}
       >
-        <span className="text-xs font-semibold opacity-80">{weekday}</span>
-        <span className="display-num text-4xl font-bold">{day}</span>
-      </div>
-      <div className="min-w-0 flex-1 py-1">
-        <p className="text-sm text-ink/60">
-          {[ev.round, formatTime(ev.startsAt), ev.venueName].filter(Boolean).join(", ")}
-        </p>
-        <p className={cn("truncate font-display text-2xl font-bold text-navy", ev.cancelled && "line-through")}>
-          {ev.title}
-        </p>
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          {ev.cancelled && <Chip className="bg-red/10 text-red">Cancelled</Chip>}
-          {ev.isFinal && <Chip className="bg-red text-white">Final</Chip>}
-          {ev.kind !== "game" && (
-            <Chip>{ev.kind === "social" ? "Social" : ev.kind === "training" ? "Training" : "Event"}</Chip>
+        <div
+          className={cn(
+            "grid w-16 shrink-0 place-items-center rounded-xl py-2 text-center",
+            ev.kind === "game" ? "bg-navy text-white" : "bg-mist text-navy",
           )}
-          {!past && myStatus && (
-            <Chip className={myStatus === "no" ? "bg-red/10 text-red" : undefined}>{MY[myStatus]}</Chip>
-          )}
-          {!past && !myStatus && !ev.cancelled && <Chip className="bg-red/10 text-red">Let us know</Chip>}
-          {!past && yesCount != null && yesCount > 0 && (
-            <Chip className="bg-transparent text-ink/60">{yesCount} in</Chip>
-          )}
+        >
+          <span className="text-xs font-semibold opacity-80">{weekday}</span>
+          <span className="display-num text-4xl font-bold">{day}</span>
         </div>
-      </div>
-      {scores && result && (
-        <div className="flex shrink-0 items-center gap-3 text-right">
-          <div className="hidden text-sm sm:block">
-            <p className="font-semibold">{formatScore(scores.team)}</p>
-            <p className="text-ink/60">{formatScore(scores.opp)}</p>
-          </div>
-          <span
-            className={cn(
-              "grid size-10 place-items-center rounded-full font-display text-xl font-black",
-              RESULT[result][1],
+        <div className="min-w-0 flex-1 py-1">
+          <p className="text-sm text-ink/60">
+            {[ev.round, formatTime(ev.startsAt), ev.venueName].filter(Boolean).join(", ")}
+          </p>
+          <p className={cn("truncate font-display text-2xl font-bold text-navy", ev.cancelled && "line-through")}>
+            {ev.title}
+          </p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {ev.cancelled && <Chip className="bg-red/10 text-red">Cancelled</Chip>}
+            {ev.isFinal && <Chip className="bg-red text-white">Final</Chip>}
+            {ev.kind !== "game" && (
+              <Chip>{ev.kind === "social" ? "Social" : ev.kind === "training" ? "Training" : "Event"}</Chip>
             )}
-          >
-            {RESULT[result][0]}
-          </span>
+            {!past && myStatus && (
+              <Chip className={myStatus === "no" ? "bg-red/10 text-red" : undefined}>{MY[myStatus]}</Chip>
+            )}
+            {!past && !myStatus && !ev.cancelled && <Chip className="bg-red/10 text-red">Let us know</Chip>}
+            {!past && yesCount != null && yesCount > 0 && (
+              <Chip className="bg-transparent text-ink/60">{yesCount} in</Chip>
+            )}
+          </div>
         </div>
-      )}
-    </Link>
+        {scores && result && (
+          <div className="flex shrink-0 items-center gap-3 text-right">
+            <div className="hidden text-sm sm:block">
+              <p className="font-semibold">{formatScore(scores.team)}</p>
+              <p className="text-ink/60">{formatScore(scores.opp)}</p>
+            </div>
+            <span
+              className={cn(
+                "grid size-10 place-items-center rounded-full font-display text-xl font-black",
+                RESULT[result][1],
+              )}
+            >
+              {RESULT[result][0]}
+            </span>
+          </div>
+        )}
+      </Link>
+    </Morph>
   );
 }
 
@@ -165,42 +168,44 @@ function GameRowLink({ ev }: { ev: Ev }) {
     </div>
   );
   return (
-    <Link
-      href={`/fixture/${ev.id}`}
-      className={cn(
-        "flex items-stretch overflow-hidden rounded-2xl bg-white transition-colors hover:bg-chalk",
-        ev.cancelled && "opacity-60",
-      )}
-      aria-label={`${home.name} vs ${away.name}, ${when}${
-        scores && result ? `, ${RESULT_WORD[result]} ${points(scores.team)} to ${points(scores.opp)}` : ""
-      }`}
-    >
-      {side(home, "left")}
-      <div className="flex w-24 shrink-0 flex-col items-center justify-center gap-1 px-1 py-2 text-center md:w-32">
-        {result ? (
-          <span
-            className={cn(
-              "grid size-9 place-items-center rounded-full font-display text-lg font-black",
-              RESULT[result][1],
-            )}
-          >
-            {RESULT[result][0]}
-          </span>
-        ) : (
-          <span className="font-display text-lg leading-none font-bold text-ink/50">vs</span>
+    <Morph name={morphName.event(ev.id)}>
+      <Link
+        href={`/fixture/${ev.id}`}
+        className={cn(
+          "flex items-stretch overflow-hidden rounded-2xl bg-white transition-colors hover:bg-chalk",
+          ev.cancelled && "opacity-60",
         )}
-        <span className="text-xs leading-snug text-ink/60">
-          {ev.round && <span className="block">{ev.round}</span>}
-          {formatDay(ev.startsAt)}
-        </span>
-        {(ev.cancelled || ev.isFinal) && (
-          <span className="flex flex-wrap justify-center gap-1">
-            {ev.cancelled && <Chip className="bg-red/10 text-red">Cancelled</Chip>}
-            {ev.isFinal && <Chip className="bg-red text-white">Final</Chip>}
+        aria-label={`${home.name} vs ${away.name}, ${when}${
+          scores && result ? `, ${RESULT_WORD[result]} ${points(scores.team)} to ${points(scores.opp)}` : ""
+        }`}
+      >
+        {side(home, "left")}
+        <div className="flex w-24 shrink-0 flex-col items-center justify-center gap-1 px-1 py-2 text-center md:w-32">
+          {result ? (
+            <span
+              className={cn(
+                "grid size-9 place-items-center rounded-full font-display text-lg font-black",
+                RESULT[result][1],
+              )}
+            >
+              {RESULT[result][0]}
+            </span>
+          ) : (
+            <span className="font-display text-lg leading-none font-bold text-ink/50">vs</span>
+          )}
+          <span className="text-xs leading-snug text-ink/60">
+            {ev.round && <span className="block">{ev.round}</span>}
+            {formatDay(ev.startsAt)}
           </span>
-        )}
-      </div>
-      {side(away, "right")}
-    </Link>
+          {(ev.cancelled || ev.isFinal) && (
+            <span className="flex flex-wrap justify-center gap-1">
+              {ev.cancelled && <Chip className="bg-red/10 text-red">Cancelled</Chip>}
+              {ev.isFinal && <Chip className="bg-red text-white">Final</Chip>}
+            </span>
+          )}
+        </div>
+        {side(away, "right")}
+      </Link>
+    </Morph>
   );
 }

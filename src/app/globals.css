@@ -567,3 +567,34 @@ dialog::backdrop {
     transform: translateY(0) rotate(0);
   }
 }
+
+/* Morph (components/morph.tsx): a list row grows into the header of the page it opens, and back again. The
+   blur mid-flight hides the stretch while a short row becomes a tall header. */
+::view-transition-group(.morph) {
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: morph-blur;
+  animation-duration: 400ms;
+}
+@keyframes morph-blur {
+  35% {
+    filter: blur(3px);
+  }
+}
+/* the rest of the page crossfades quickly around it */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(.morph),
+  ::view-transition-image-pair(.morph),
+  ::view-transition-old(.morph),
+  ::view-transition-new(.morph),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

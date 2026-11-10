@@ -1,8 +1,9 @@
-import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
+import { BackButton } from "@/components/back-button";
+import { Morph, morphName } from "@/components/morph";
 import { SeasonRun } from "@/components/season-run";
 import { SectionPanel } from "@/components/section-panel";
 import { LadderPoints, Percentage, Scoring, WinLoss } from "@/components/team-charts";
@@ -116,48 +117,61 @@ export default async function TeamPage({ params }: PageProps<"/ladder/[team]">) 
 
   return (
     <div className="space-y-6" style={style}>
-      <Link
-        href="/ladder"
-        className="-ml-2 inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-navy hover:bg-white/60"
-      >
-        <ChevronLeft size={18} aria-hidden /> Ladder
-      </Link>
-
-      <header className="relative overflow-hidden rounded-[28px] bg-[var(--team)] text-[var(--on-team)]">
-        {/* the club's guernsey design as wallpaper, fading in from behind the text, on whichever side keeps its
+      {/* grows out of the team's ladder row when you open it, and back into it when you go back */}
+      <Morph name={morphName.team(teamSlug(row.team))}>
+        <header className="relative overflow-hidden rounded-[28px] bg-[var(--team)] text-[var(--on-team)]">
+          {/* the club's guernsey design as wallpaper, fading in from behind the text, on whichever side keeps its
             emblem clear of the fade */}
-        {guernsey && (
-          <div
-            aria-hidden
-            className={cn("team-pattern absolute bg-cover bg-center", onLeft && "team-pattern-left")}
-            style={{ backgroundImage: `url(${guernsey})` }}
-          />
-        )}
-        <div className={cn("relative max-w-xl p-5 md:p-8 md:py-12", onLeft && "ml-auto text-right")}>
-          <p className="text-sm font-semibold opacity-80">
-            {CLUB.league} {CLUB.grade}
-          </p>
-          <h1 className="mt-2 text-5xl leading-[0.9] font-extrabold md:text-7xl">{row.team}</h1>
-          {/* the number sits on the outer edge: on the left normally, on the right when the text is */}
-          <div className={cn("mt-4 flex items-end gap-3", onLeft && "flex-row-reverse")}>
-            <span className="sr-only">Ladder position {row.position}</span>
-            <span
-              className="display-num num-outline text-7xl font-extrabold text-[var(--team-numeral)] md:text-8xl"
+          {guernsey && (
+            <div
               aria-hidden
-            >
-              {row.position}
-            </span>
-            <p className="pb-1 text-sm leading-snug">
-              <span className="block font-semibold" aria-hidden>
-                on the ladder
+              className={cn("team-pattern absolute bg-cover bg-center", onLeft && "team-pattern-left")}
+              style={{ backgroundImage: `url(${guernsey})` }}
+            />
+          )}
+          {/* the way back: always the card's top-left corner, like on a game or a player, level with the grade line */}
+          <BackButton
+            href="/ladder"
+            to="the ladder"
+            className={cn(
+              "absolute top-5 left-5 z-10 md:top-12 md:left-8",
+              // over the club's design (emblem on the left) it needs a solid fill to stand out
+              onLeft && "bg-[var(--team)] ring-1 ring-current/25 hover:bg-[var(--team)] hover:ring-current/50",
+            )}
+          />
+          <div className={cn("relative max-w-xl p-5 md:p-8 md:py-12", onLeft && "ml-auto text-right")}>
+            {/* the grade, beside the back button (clear of it when the text starts on the left) */}
+            <div className={cn("flex min-h-11 items-center", !onLeft && "pl-14")}>
+              <p className={cn("text-sm font-semibold opacity-80", onLeft && "ml-auto")}>
+                <abbr title={CLUB.league} className="no-underline">
+                  {CLUB.leagueShort}
+                </abbr>{" "}
+                {CLUB.grade}
+              </p>
+            </div>
+            <h1 className="mt-3 text-5xl leading-[0.9] font-extrabold md:text-7xl">{row.team}</h1>
+            {/* the number sits on the outer edge: on the left normally, on the right when the text is */}
+            <div className={cn("mt-4 flex items-end gap-3", onLeft && "flex-row-reverse")}>
+              <span className="sr-only">Ladder position {row.position}</span>
+              <span
+                className="display-num num-outline text-7xl font-extrabold text-[var(--team-numeral)] md:text-8xl"
+                aria-hidden
+              >
+                {row.position}
               </span>
-              <span className="opacity-80">
-                {row.won} won, {row.lost} lost{row.drawn > 0 && `, ${row.drawn} drawn`}, {row.premiershipPoints} points
-              </span>
-            </p>
+              <p className="pb-1 text-sm leading-snug">
+                <span className="block font-semibold" aria-hidden>
+                  on the ladder
+                </span>
+                <span className="opacity-80">
+                  {row.won} won, {row.lost} lost{row.drawn > 0 && `, ${row.drawn} drawn`}, {row.premiershipPoints}{" "}
+                  points
+                </span>
+              </p>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </Morph>
 
       {season.length > 0 && (
         <SectionPanel title={us ? "Our season" : "Their season"} titleClassName="text-[var(--team-title)]">
