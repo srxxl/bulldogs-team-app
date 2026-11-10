@@ -137,7 +137,7 @@ export async function setSeasonStart(_prev: unknown, formData: FormData): Promis
   const v = String(formData.get("seasonStart") ?? "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return fail("Pick a date");
   await setSetting("season_start", v);
-  revalidatePath("/votes");
+  revalidatePath("/fixture", "layout");
   return ok("Season start saved");
 }
 

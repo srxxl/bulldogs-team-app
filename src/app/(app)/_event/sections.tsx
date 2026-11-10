@@ -245,7 +245,15 @@ export function tilePage(tile: GameTile, data: LoadedEvent) {
     case "votes":
       return {
         title: "Player's player",
-        body: <GameVotes eventId={ev.id} candidates={data.candidates} ballot={data.ballot} results={data.results} />,
+        body: (
+          <GameVotes
+            eventId={ev.id}
+            candidates={data.candidates}
+            ballot={data.ballot}
+            results={data.results}
+            season={data.seasonResults}
+          />
+        ),
       };
   }
 }

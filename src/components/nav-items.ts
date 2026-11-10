@@ -1,4 +1,4 @@
-import { Apple, CalendarDays, Dumbbell, type LucideIcon, Settings, Shirt, Trophy, Users } from "lucide-react";
+import { Apple, CalendarDays, Dumbbell, type LucideIcon, Settings, Trophy, Users } from "lucide-react";
 import { hasRole } from "@/lib/roles";
 import type { Role } from "@/server/db/schema";
 
@@ -20,7 +20,6 @@ export const ALL: NavItem[] = [
   { href: "/training", label: "Training", icon: Dumbbell },
   { href: "/squad", label: "Team", icon: Users },
   { href: "/boards", label: "Fitness", icon: Apple },
-  { href: "/votes", label: "Player's player", short: "Votes", icon: Shirt, minRole: "coach" },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

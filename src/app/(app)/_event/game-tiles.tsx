@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/avatar";
 import { GameTile } from "@/components/game-tile";
+import { VoteRows } from "@/components/game-votes";
 import { MiniGround } from "@/components/mini-ground";
 import { morphName } from "@/components/morph";
 import { RsvpButtons } from "@/components/rsvp-buttons";
@@ -271,19 +272,13 @@ function TileFor({
         const p = data.byId.get(id);
         return { id, name: p?.displayName ?? "Former player", image: p?.image ?? null };
       };
-      // coaches: this game's top three, with their place as a big red outlined numeral;
-      // players: their own 3, 2, 1 on a badge, or three empty spots
-      const faces = coach
-        ? (data.results ?? []).slice(0, 3).map((r, i) => ({ ...person(r.userId), place: i + 1, badge: null }))
-        : data.ballot
-          ? [data.ballot.three, data.ballot.two, data.ballot.one].map((id, i) => ({
-              ...person(id),
-              place: null,
-              badge: 3 - i,
-            }))
-          : null;
+      // coaches: this game's top three, as on the votes page; players: their own 3, 2, 1, or three empty spots
+      const top = coach ? (data.results ?? []).slice(0, 3) : [];
+      const faces = data.ballot
+        ? [data.ballot.three, data.ballot.two, data.ballot.one].map((id, i) => ({ ...person(id), badge: 3 - i }))
+        : null;
       const text = coach
-        ? faces?.length
+        ? top.length
           ? null
           : "No votes in yet."
         : data.ballot
@@ -297,30 +292,9 @@ function TileFor({
               : "Tap to vote";
       return (
         <GameTile {...common} title="Player's player" tone={hot ? "red" : "white"}>
-          {coach && faces?.length ? (
-            // coaches: the top three as a ranked list, places as big red outlined numerals
-            <ol className={cn("mt-1 grid", big ? "gap-2.5" : "gap-1.5")}>
-              {faces.map((f) => (
-                <li key={f.id} className="flex min-w-0 items-center gap-2.5">
-                  <span className={cn("flex shrink-0 items-baseline text-red", big ? "w-11" : "w-8")}>
-                    <span
-                      className={cn(
-                        "display-num num-outline font-extrabold",
-                        big ? "text-4xl [-webkit-text-stroke-width:1.5px]" : "text-2xl [-webkit-text-stroke-width:1px]",
-                      )}
-                    >
-                      {f.place}
-                    </span>
-                    <span className={cn("font-display font-bold", big ? "text-base" : "text-xs")}>
-                      {suffix(f.place ?? 0)}
-                    </span>
-                  </span>
-                  <Avatar name={f.name} src={f.image} size={big ? 40 : 28} />
-                  <span className={cn("truncate font-semibold", big ? "text-base" : "text-sm")}>{f.name}</span>
-                </li>
-              ))}
-            </ol>
-          ) : (
+          {top.length ? (
+            <VoteRows rows={top} plain compact={!big} className="mt-1" />
+          ) : coach ? null : (
             <ul className={cn("mt-1 flex", big ? "gap-5" : "gap-2.5")}>
               {faces
                 ? faces.map((f) => (

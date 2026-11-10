@@ -4,8 +4,9 @@ import { isCoach } from "@/lib/roles";
 import { headToHead, scoresOf } from "@/lib/score";
 import { tally } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
-import { getGameNotes, getGameVotes, getLadder, getLineup, getMyBallot } from "@/server/queries/content";
+import { getGameNotes, getGameVotes, getLadder, getLineup, getMyBallot, getVotesSince } from "@/server/queries/content";
 import { getEvent, getPastGamesAgainst, getRsvps } from "@/server/queries/events";
+import { getSetting } from "@/server/queries/settings";
 import { getSquad } from "@/server/queries/squad";
 
 /**
@@ -20,7 +21,7 @@ export const loadEvent = cache(async (id: string) => {
   const isGame = ev.kind === "game";
   const opponent = isGame ? ev.opponent : null;
   const coach = isCoach(me.role);
-  const [rsvps, history, ladder, notes, squad, lineup, ballot, gameVotes] = await Promise.all([
+  const [rsvps, history, ladder, notes, squad, lineup, ballot, gameVotes, season] = await Promise.all([
     getRsvps(id),
     opponent ? getPastGamesAgainst(opponent, ev.startsAt) : [],
     opponent ? getLadder() : [],
@@ -29,6 +30,10 @@ export const loadEvent = cache(async (id: string) => {
     isGame ? getLineup(id) : ({} as Record<string, string>),
     isGame ? getMyBallot(id, me.id) : null,
     isGame && coach ? getGameVotes(id) : [],
+    // coaches: the season's player's player tally, shown on every game's votes page
+    isGame && coach
+      ? getSetting("season_start").then(async (start) => ({ start, votes: await getVotesSince(new Date(start)) }))
+      : null,
   ]);
 
   // Player's player: only people who said they were in for this game. Those on the team board come first.
@@ -39,13 +44,14 @@ export const loadEvent = cache(async (id: string) => {
     .sort((a, b) => Number(played.has(b.id)) - Number(played.has(a.id)) || (a.guernsey ?? 99) - (b.guernsey ?? 99))
     .map((p) => ({ id: p.id, name: p.displayName, guernsey: p.guernsey, image: p.image, played: played.has(p.id) }));
   const byId = new Map(squad.map((p) => [p.id, p]));
-  const results = coach
-    ? tally(gameVotes).map((r) => ({
-        ...r,
-        name: byId.get(r.userId)?.displayName ?? "Former player",
-        image: byId.get(r.userId)?.image ?? null,
-      }))
-    : null;
+  const named = (rows: ReturnType<typeof tally>) =>
+    rows.map((r) => ({
+      ...r,
+      name: byId.get(r.userId)?.displayName ?? "Former player",
+      image: byId.get(r.userId)?.image ?? null,
+    }));
+  const results = coach ? named(tally(gameVotes)) : null;
+  const seasonResults = season ? { start: season.start, rows: named(tally(season.votes)) } : null;
 
   return {
     me,
@@ -67,6 +73,7 @@ export const loadEvent = cache(async (id: string) => {
     ballot,
     candidates,
     results,
+    seasonResults,
   };
 });
 
