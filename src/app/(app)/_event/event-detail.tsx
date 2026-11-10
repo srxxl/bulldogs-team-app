@@ -4,14 +4,16 @@ import { notFound, redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { GameNotes } from "@/components/game-notes";
 import { GameVotes } from "@/components/game-votes";
+import { MarginBar } from "@/components/margin-bar";
 import { NoteForm } from "@/components/note-form";
 import { RsvpButtons } from "@/components/rsvp-buttons";
 import { SectionPanel } from "@/components/section-panel";
 import { TeamSection } from "@/components/team-board/team-section";
+import { TeamSheetFill } from "@/components/team-sheet-fill";
 import { ButtonLink, Chip } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { canModerate, canPickTeam, isCoach } from "@/lib/roles";
-import { formatScore, headToHead, resultOf, scoresOf } from "@/lib/score";
+import { formatScore, headToHead, points, resultOf, scoresOf } from "@/lib/score";
 import { formatDay, formatLongDay, formatTime } from "@/lib/time";
 import { tally } from "@/lib/votes";
 import { requireMember } from "@/server/auth/session";
@@ -100,6 +102,9 @@ export async function EventDetail({ id }: { id: string }) {
             </span>
           </p>
         )}
+        {scores && ev.opponent && (
+          <MarginBar opponent={ev.opponent} isHome={ev.isHome} ours={points(scores.team)} theirs={points(scores.opp)} />
+        )}
         <dl className="mt-6 grid gap-4 sm:grid-cols-2">
           <div>
             <dt className="text-sm text-powder">When</dt>
@@ -145,6 +150,11 @@ export async function EventDetail({ id }: { id: string }) {
           title={upcoming ? "Who's coming" : "Who said they'd come"}
           meta={`${rsvps.filter((r) => r.status === "yes").length} in`}
         >
+          {isGameEvent && upcoming && !ev.cancelled && (
+            <div className="mb-5">
+              <TeamSheetFill yes={rsvps.filter((r) => r.status === "yes").length} />
+            </div>
+          )}
           {upcoming && !ev.cancelled && (
             <div className="mb-6">
               <RsvpButtons eventId={id} status={mine} />

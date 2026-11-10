@@ -1,0 +1,9 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 436 435" width="436" height="435">
+	<title>Footscray (1975-1996)</title>
+	<defs>
+		<image  width="436" height="435" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbQAAAGzAgMAAAA6XwptAAAADFBMVEUOQL4AOab////yABfhYKAnAAAA3UlEQVR4nO3bQQ3AIBREwc8Bf9VZk4ACLqSblMwzMAZ2WyVrWa0/OWzQaDQajUaj0Wg0Go1Go9FoNBqNRqPRaDQajUaj0Wg0Go1Go9FoNBqNRqPRaDQajUaj0Wg0Go12rL05rIpGo9FoNBptow0ajUaj0Wg0Go1Go9FoNBqNRqPRaDQajUaj0Wg0Go1Go9FoNNqH2s1LVBqNRqPRaP/Sbn7u0mg0Go1Go9FoNBqNRqPRaDQajUaj0Wg0Go1Go9FoNBqNRqPRaDQajUaj0Wg0Go1Go9FoNBqNdqrlrNUEgLsEzZYnP8MAAAAASUVORK5CYII="/>
+	</defs>
+	<style>
+	</style>
+	<use id="Background" href="#img1" x="0" y="0"/>
+</svg>

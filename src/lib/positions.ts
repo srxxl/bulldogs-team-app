@@ -59,6 +59,8 @@ export const FIELD_SLOTS: FieldSlot[] = [
  * not on the team sheet, they step in if someone pulls out.
  */
 export const BENCH_SLOTS = ["I1", "I2", "I3", "I4"];
+/** Players needed to name a team, to field a full side, and the most on the team sheet. */
+export const TEAM_SHEET = { minimum: 14, side: 18, full: 22 } as const;
 export const EMERGENCY_SLOTS = ["E1", "E2"];
 export const ALL_SLOTS = new Set([...FIELD_SLOTS.map((s) => s.id), ...BENCH_SLOTS, ...EMERGENCY_SLOTS]);
 

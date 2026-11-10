@@ -1,29 +1,50 @@
-import { CalendarDays, List } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
-import { FixtureCalendar } from "@/components/fixture-calendar";
 import { MatchCard } from "@/components/match-card";
 import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
+import { findByes } from "@/lib/byes";
 import { CLUB } from "@/lib/club";
-import { cn } from "@/lib/cn";
-import { formatMonth, monthKey } from "@/lib/time";
+import { formatDay, formatMonth, monthKey } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
 import { getMyRsvps, getNextGame, getSeason, getYesCounts } from "@/server/queries/events";
 
 export const metadata: Metadata = { title: "Fixture" };
 
-export default async function FixturePage({ searchParams }: PageProps<"/fixture">) {
-  const view = (await searchParams).view === "calendar" ? "calendar" : "list";
+type Bye = { round: string; startsAt: Date };
+
+/** A round we don't play: a quiet grey card where the game would be. */
+function ByeCard({ bye }: { bye: Bye }) {
+  return (
+    <div className="flex min-h-16 items-center rounded-2xl bg-ink/[0.07]">
+      <p className="flex-1 px-3 font-display text-2xl font-bold text-ink/45 md:px-4 md:text-3xl">Bye</p>
+      {/* round and date in the middle, where the game rows have theirs */}
+      <p className="w-24 shrink-0 px-1 py-2 text-center text-xs leading-snug text-ink/60 md:w-32">
+        <span className="block">{bye.round}</span>
+        {formatDay(bye.startsAt)}
+      </p>
+      <p className="flex-1 px-3 text-right text-sm text-ink/55 md:px-4">No game this round</p>
+    </div>
+  );
+}
+
+export default async function FixturePage() {
   const me = await requireMember();
   const [season, nextGame] = await Promise.all([getSeason(), getNextGame()]);
   const ids = season.map((e) => e.id);
   const [mine, yes] = await Promise.all([getMyRsvps(me.id, ids), getYesCounts(ids)]);
 
-  const months = new Map<string, typeof season>();
-  for (const e of season) {
-    const k = monthKey(e.startsAt);
-    months.set(k, [...(months.get(k) ?? []), e]);
+  // games and other events, with our byes slotted in by date
+  type Item = { bye: Bye } | { ev: (typeof season)[number] };
+  const items: Item[] = [
+    ...season.map((ev) => ({ ev })),
+    ...findByes(season.filter((e) => e.kind === "game")).map((bye) => ({ bye })),
+  ];
+  const at = (i: Item) => ("bye" in i ? i.bye.startsAt : i.ev.startsAt);
+  items.sort((a, b) => at(a).getTime() - at(b).getTime());
+  const months = new Map<string, Item[]>();
+  for (const i of items) {
+    const k = monthKey(at(i));
+    months.set(k, [...(months.get(k) ?? []), i]);
   }
 
   return (
@@ -39,48 +60,27 @@ export default async function FixturePage({ searchParams }: PageProps<"/fixture"
       )}
 
       <section aria-labelledby="season-heading">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="season-heading" className="text-3xl font-bold text-navy md:text-4xl">
-            Season
-          </h2>
-          <nav aria-label="Fixture view" className="flex rounded-xl bg-mist p-1">
-            {(
-              [
-                ["list", "List", List],
-                ["calendar", "Calendar", CalendarDays],
-              ] as const
-            ).map(([v, label, Icon]) => (
-              <Link
-                key={v}
-                href={v === "list" ? "/fixture" : "/fixture?view=calendar"}
-                aria-current={view === v ? "page" : undefined}
-                scroll={false}
-                className={cn(
-                  "flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold",
-                  view === v ? "bg-white text-navy" : "text-navy/70 hover:text-navy",
-                )}
-              >
-                <Icon size={16} aria-hidden /> {label}
-              </Link>
-            ))}
-          </nav>
-        </div>
+        <h2 id="season-heading" className="mb-4 text-3xl font-bold text-navy md:text-4xl">
+          Season
+        </h2>
 
         {season.length === 0 ? (
           <EmptyState title="The fixture's empty">Games appear here once the PFL releases the draw.</EmptyState>
-        ) : view === "calendar" ? (
-          <FixtureCalendar events={season} mine={mine} />
         ) : (
           <div className="space-y-10">
-            {[...months].map(([key, events]) => (
+            {[...months].map(([key, monthItems]) => (
               <section key={key}>
                 <h3 className="sticky top-0 z-10 -mx-4 mb-3 bg-chalk/90 px-4 py-2 text-2xl font-bold text-navy backdrop-blur md:mx-0 md:px-0">
-                  {formatMonth(events[0].startsAt)}
+                  {formatMonth(at(monthItems[0]))}
                 </h3>
                 <div className="space-y-2">
-                  {events.map((e) => (
-                    <EventRowLink key={e.id} ev={e} myStatus={mine.get(e.id)} yesCount={yes.get(e.id)} />
-                  ))}
+                  {monthItems.map((i) =>
+                    "bye" in i ? (
+                      <ByeCard key={i.bye.round} bye={i.bye} />
+                    ) : (
+                      <EventRowLink key={i.ev.id} ev={i.ev} myStatus={mine.get(i.ev.id)} yesCount={yes.get(i.ev.id)} />
+                    ),
+                  )}
                 </div>
               </section>
             ))}

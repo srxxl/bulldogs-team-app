@@ -1,0 +1,9 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 437 436" width="437" height="436">
+	<title>North Melbourne</title>
+	<defs>
+		<image  width="437" height="436" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbUAAAG0AQMAAACPOCs7AAAABlBMVEUNP73////VLjUTAAAAc0lEQVR4nO3LsQ0AIAwDQcIEbAwrM0GoIBtQnauXpYtWm+tW9nrz1R71BsdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMdxHMd9dAe69tIPd4diJwAAAABJRU5ErkJggg=="/>
+	</defs>
+	<style>
+	</style>
+	<use id="Background" href="#img1" x="0" y="0"/>
+</svg>

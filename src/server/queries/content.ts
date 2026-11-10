@@ -5,6 +5,7 @@ import {
   type Board,
   event,
   feedback,
+  gradeGame,
   ladderRow,
   lineupSlot,
   note,
@@ -58,6 +59,11 @@ export function getPins(board: Board) {
     .leftJoin(playerProfile, eq(playerProfile.userId, pin.authorId))
     .where(eq(pin.board, board))
     .orderBy(desc(pin.createdAt));
+}
+
+/** The grade's games between other clubs, oldest first. */
+export function getGradeGames() {
+  return db.select().from(gradeGame).orderBy(asc(gradeGame.startsAt));
 }
 
 export function getLadder() {

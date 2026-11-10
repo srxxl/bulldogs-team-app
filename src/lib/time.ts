@@ -1,14 +1,5 @@
 import { TZDate } from "@date-fns/tz";
-import {
-  addDays,
-  differenceInCalendarDays,
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
-  format,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
+import { addDays, differenceInCalendarDays, format } from "date-fns";
 
 export const CLUB_TZ = "Australia/Perth";
 
@@ -34,6 +25,8 @@ export const formatDateOnly = (iso: string) => {
 };
 /** "April 2027" */
 export const formatMonth = (d: Date) => format(inPerth(d), "MMMM yyyy");
+/** "2025" */
+export const formatYear = (d: Date) => format(inPerth(d), "yyyy");
 /** Stable grouping key, "2027-04" */
 export const monthKey = (d: Date) => format(inPerth(d), "yyyy-MM");
 /** For <input type="datetime-local"> values in Perth time */
@@ -46,6 +39,9 @@ export function fromLocalInput(value: string): Date {
   const [, y, mo, d, h, mi] = m.map(Number);
   return new Date(new TZDate(y, mo - 1, d, h, mi, CLUB_TZ).getTime());
 }
+
+/** Midnight on 1 January in Perth, this year: a PFL season runs within one calendar year. */
+export const seasonStart = (now = new Date()) => fromLocalInput(`${perthToday(now).slice(0, 4)}-01-01T00:00`);
 
 /** Perth wall-clock date at a given hour/minute. */
 export function perthAt(day: Date, hour: number, minute = 0): Date {
@@ -66,21 +62,3 @@ export function relativeDay(d: Date, now = new Date()): string {
 export const perthWeekday = (d: Date) => inPerth(d).getDay();
 
 export { addDays };
-
-export type CalendarDay = { key: string; day: number; inMonth: boolean; isToday: boolean };
-
-/** Monday-first weeks covering the Perth calendar month that contains `date`. */
-export function monthGrid(date: Date, now = new Date()): CalendarDay[][] {
-  const month = inPerth(date);
-  const first = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
-  const last = endOfWeek(endOfMonth(month), { weekStartsOn: 1 });
-  const today = format(inPerth(now), "yyyy-MM-dd");
-  const days = eachDayOfInterval({ start: first, end: last }).map((d) => {
-    const key = format(d, "yyyy-MM-dd");
-    return { key, day: d.getDate(), inMonth: d.getMonth() === month.getMonth(), isToday: key === today };
-  });
-  return Array.from({ length: days.length / 7 }, (_, w) => days.slice(w * 7, w * 7 + 7));
-}
-
-/** "2027-04-12" for an instant, on the Perth calendar. */
-export const dayKey = (d: Date) => format(inPerth(d), "yyyy-MM-dd");

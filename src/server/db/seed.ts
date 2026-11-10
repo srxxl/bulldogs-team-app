@@ -4,6 +4,9 @@
  */
 import { hashPassword } from "better-auth/crypto";
 import { sql } from "drizzle-orm";
+import { CLUB, isUs } from "@/lib/club";
+import { sameTeam } from "@/lib/club-colours";
+import { CLUB_COLOURS } from "@/lib/club-colours.data";
 import { perthAt, perthWeekday } from "@/lib/time";
 import { TRAINING, upcomingTrainingSlots } from "@/lib/training";
 import { createDb, isLocalDb } from "./client";
@@ -48,7 +51,7 @@ const OPPONENTS = [
 
 async function main() {
   const db = createDb();
-  await db.execute(sql`truncate "user", event, ladder_row, app_setting, feedback cascade`);
+  await db.execute(sql`truncate "user", event, ladder_row, grade_game, app_setting, feedback cascade`);
 
   const password = await hashPassword("bulldogs-dev");
   const users = PLAYERS.map(([name, , , email], i) => ({
@@ -90,20 +93,21 @@ async function main() {
     })),
   );
 
-  // A season straddling "now": six games played, eight to come, Saturdays at 12:20.
+  // A season straddling "now": six games played, eight to come, Saturdays at 12:20, with a bye in round 9.
   const now = new Date();
   // The Saturday six weeks back, on the Perth calendar (UTC can be a day out).
   const firstSat = perthAt(now, 12);
   firstSat.setTime(firstSat.getTime() - (((perthWeekday(now) + 1) % 7) + 7 * 6) * 86400_000);
   const games = OPPONENTS.concat(OPPONENTS.slice(0, 6)).map((opp, i) => {
-    const startsAt = perthAt(new Date(firstSat.getTime() + i * 7 * 86400_000), 12, 20);
+    const week = i < 8 ? i : i + 1;
+    const startsAt = perthAt(new Date(firstSat.getTime() + week * 7 * 86400_000), 12, 20);
     const played = startsAt < now;
     const home = i % 2 === 0;
     return {
       kind: "game" as const,
       title: `vs ${opp}`,
       opponent: opp,
-      round: `Round ${i + 1}`,
+      round: `Round ${week + 1}`,
       isHome: home,
       startsAt,
       venueName: home ? "Karoonda Reserve, Oval 1" : `${opp} Oval`,
@@ -128,6 +132,36 @@ async function main() {
     oppGoals: null,
     oppBehinds: null,
   });
+  // Past seasons against every club on the ladder (built below), so each team's page has a head-to-head:
+  // one or two games each in 2024 and 2025, with a spread of wins, losses and the odd draw.
+  const history = [...new Set([...OPPONENTS, ...Object.keys(CLUB_COLOURS)])]
+    .filter((team) => !isUs(team) && !OPPONENTS.some((o) => o !== team && sameTeam(o, team)))
+    .flatMap((opp, i) =>
+      [2025, 2024].slice(0, 1 + (i % 2)).map((year, j) => {
+        const round = 1 + ((i * 3 + j * 5) % 18);
+        const startsAt = perthAt(new Date(Date.UTC(year, 3, 12 + round * 7)), 12, 20);
+        const home = (i + j) % 2 === 0;
+        const n = i * 7 + j * 11;
+        const teamGoals = 2 + (n % 8);
+        const oppGoals = n % 13 === 0 ? teamGoals : 1 + ((n * 5) % 9);
+        const [teamBehinds, oppBehinds] = n % 13 === 0 ? [4, 4] : [1 + ((n * 3) % 9), 2 + ((n * 2) % 7)];
+        return {
+          kind: "game" as const,
+          title: `vs ${opp}`,
+          opponent: opp,
+          round: `Round ${round}`,
+          isHome: home,
+          startsAt,
+          venueName: home ? "Karoonda Reserve, Oval 1" : `${opp} Oval`,
+          venueAddress: home ? "Karoonda Reserve, Booragoon WA 6154" : `${opp} WA`,
+          teamGoals,
+          teamBehinds,
+          oppGoals,
+          oppBehinds,
+        };
+      }),
+    );
+  await db.insert(t.event).values(history);
   const inserted = await db.insert(t.event).values(games).returning({
     id: t.event.id,
     startsAt: t.event.startsAt,
@@ -339,29 +373,56 @@ async function main() {
       body: "Huge shoutout to Tayla for the ruck work on the weekend. Every centre bounce!",
     },
   ]);
-  await db.insert(t.ladderRow).values(
-    [
-      "Bayswater",
-      "Brentwood Booragoon",
-      "Kingsway",
-      "Hills Rangers",
-      "Mt Lawley",
-      "Yanchep",
-      "Carlisle",
-      "Ballajura",
-      "Kalamunda",
-    ].map((team, i) => ({
-      position: i + 1,
-      team,
-      played: 6,
-      won: Math.max(0, 6 - i),
-      lost: Math.min(6, i),
-      pointsFor: 300 - i * 25,
-      pointsAgainst: 120 + i * 25,
-      percentage: Math.round(((300 - i * 25) / (120 + i * 25)) * 10000) / 100,
-      premiershipPoints: Math.max(0, 6 - i) * 4,
-    })),
+  // Every PFL club (far more than a real grade) so each club's colours and guernsey can be checked, plus
+  // the made-up opponents above. We sit second.
+  const others = [...new Set([...OPPONENTS, ...Object.keys(CLUB_COLOURS)])].filter(
+    (team) => !isUs(team) && !OPPONENTS.some((o) => o !== team && sameTeam(o, team)),
   );
+  const ladder = [others[0], CLUB.ladderName, ...others.slice(1)];
+  await db.insert(t.ladderRow).values(
+    ladder.map((team, i) => {
+      const won = Math.max(0, 6 - Math.floor((i * 7) / ladder.length));
+      const pointsFor = 320 - i * 3;
+      const pointsAgainst = 110 + i * 4;
+      return {
+        position: i + 1,
+        team,
+        played: 6,
+        won,
+        lost: 6 - won,
+        pointsFor,
+        pointsAgainst,
+        percentage: Math.round((pointsFor / pointsAgainst) * 10000) / 100,
+        premiershipPoints: won * 4,
+      };
+    }),
+  );
+
+  // The rest of the grade's games, round by round on our game days: everyone but our opponent that round
+  // paired up (rotating, so each round has new matchups; an odd one out has a bye). Made-up scores once played.
+  const gradeGames = games
+    .filter((g) => g.kind === "game" && g.round)
+    .flatMap((g, r) => {
+      const pool = others.filter((team) => !sameTeam(team, g.opponent as string));
+      const [first, ...rest] = pool;
+      const turned = [first, ...rest.slice(r % rest.length), ...rest.slice(0, r % rest.length)];
+      const half = Math.floor(turned.length / 2);
+      const played = g.startsAt < now;
+      return Array.from({ length: half }, (_, k) => {
+        const [home, away] =
+          k % 2 === r % 2 ? [turned[k], turned[turned.length - 1 - k]] : [turned[turned.length - 1 - k], turned[k]];
+        const n = (r + 3) * 31 + k * 17;
+        return {
+          round: g.round,
+          startsAt: g.startsAt,
+          home,
+          away,
+          homePoints: played ? 12 + ((n * 7) % 50) : null,
+          awayPoints: played ? 10 + ((n * 11) % 48) : null,
+        };
+      });
+    });
+  await db.insert(t.gradeGame).values(gradeGames);
 
   console.log(`Seeded ${users.length} members, ${games.length} events. Dev password: bulldogs-dev`);
   process.exit(0);

@@ -1,0 +1,576 @@
+{
+  "Armadale": {
+    "file": "/guernseys/armadale.svg",
+    "wikimediaFile": "Essendon_Football_Club_colours.svg",
+    "colours": [
+      "#000000",
+      "#f20018"
+    ]
+  },
+  "Baldivis": {
+    "file": "/guernseys/baldivis.svg",
+    "wikimediaFile": "Baldivis Football Club Colours.svg",
+    "colours": [
+      "#f13a1b",
+      "#fed711",
+      "#0d104f"
+    ]
+  },
+  "Ballajura": {
+    "file": "/guernseys/ballajura.svg",
+    "wikimediaFile": "Ballajura Football Club Colours.svg",
+    "colours": [
+      "#0245be",
+      "#000000"
+    ]
+  },
+  "Bassendean": {
+    "file": "/guernseys/bassendean.svg",
+    "wikimediaFile": "Bassendean Football Club Colours.svg",
+    "colours": [
+      "#ffffff",
+      "#000000"
+    ]
+  },
+  "Bayswater": {
+    "file": "/guernseys/bayswater.svg",
+    "wikimediaFile": "Bayswater Football Club Colours (PFL).svg",
+    "colours": [
+      "#060940",
+      "#ffffff"
+    ]
+  },
+  "Belmont Districts": {
+    "file": "/guernseys/belmont-districts.svg",
+    "wikimediaFile": "Belmont Districts Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#f20017"
+    ]
+  },
+  "Brentwood Booragoon": {
+    "file": "/guernseys/brentwood-booragoon.svg",
+    "wikimediaFile": "Brentwood Booragoon Football Club colours.svg",
+    "colours": [
+      "#ffffff",
+      "#0038a5",
+      "#f20018"
+    ]
+  },
+  "Bullcreek Leeming": {
+    "file": "/guernseys/bullcreek-leeming.svg",
+    "wikimediaFile": "Maffra Football Club Colours.svg",
+    "colours": [
+      "#ff1717",
+      "#000000"
+    ]
+  },
+  "Canning South Perth": {
+    "file": "/guernseys/canning-south-perth.svg",
+    "wikimediaFile": "Laen Litchfield Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#ffc000"
+    ]
+  },
+  "Canning Vale": {
+    "file": "/guernseys/canning-vale.svg",
+    "wikimediaFile": "Canning Vale Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#12aad4"
+    ]
+  },
+  "Carlisle": {
+    "file": "/guernseys/carlisle.svg",
+    "wikimediaFile": "Carlisle Football Club Colours.svg",
+    "colours": [
+      "#02443f",
+      "#7e0427"
+    ]
+  },
+  "Cockburn Cobras": {
+    "file": "/guernseys/cockburn-cobras.svg",
+    "wikimediaFile": "Noble Park-Harrisfield Football Club Colours.svg",
+    "colours": [
+      "#004aad",
+      "#ffc000"
+    ]
+  },
+  "Cockburn Lakes": {
+    "file": "/guernseys/cockburn-lakes.svg",
+    "wikimediaFile": "Footscray_Football_Club_colours_(1975-1996).svg",
+    "colours": [
+      "#0039a6",
+      "#f20017",
+      "#ffffff"
+    ]
+  },
+  "Collegians": {
+    "file": "/guernseys/collegians.svg",
+    "wikimediaFile": "Carlton_Football_Club_colours_(2006-2014).svg",
+    "colours": [
+      "#00132d",
+      "#ffffff"
+    ]
+  },
+  "Coolbellup": {
+    "file": "/guernseys/coolbellup.svg",
+    "wikimediaFile": "Coolbellup Football Club Colours.svg",
+    "colours": [
+      "#000436",
+      "#ffffff"
+    ]
+  },
+  "Coolbinia": {
+    "file": "/guernseys/coolbinia.svg",
+    "wikimediaFile": "Coolbinia Football Club Colours.svg",
+    "colours": [
+      "#f20017",
+      "#1342c7"
+    ]
+  },
+  "Cottesloe": {
+    "file": "/guernseys/cottesloe.svg",
+    "wikimediaFile": "Cottesloe Football Club Colours.svg",
+    "colours": [
+      "#010437",
+      "#da0015"
+    ]
+  },
+  "Curtin University Wesley": {
+    "file": "/guernseys/curtin-university-wesley.svg",
+    "wikimediaFile": "Curtin Uni Wesley Football Club Colours.svg",
+    "colours": [
+      "#ffc000",
+      "#18653b",
+      "#000000"
+    ]
+  },
+  "Dianella Morley": {
+    "file": "/guernseys/dianella-morley.svg",
+    "wikimediaFile": "Dianella Morley Football Club colours.svg",
+    "colours": [
+      "#000000",
+      "#104dbc",
+      "#ffffff",
+      "#ef0b26"
+    ]
+  },
+  "East Fremantle": {
+    "file": "/guernseys/east-fremantle.svg",
+    "wikimediaFile": "East_Fremantle_Amateur_Football_Club_colours.svg",
+    "colours": [
+      "#1852c6",
+      "#ffffff"
+    ]
+  },
+  "Ellenbrook": {
+    "file": "/guernseys/ellenbrook.jpg",
+    "wikimediaFile": "Ellenbrook_Football_Club_colours.jpg",
+    "colours": [
+      "#00183e"
+    ]
+  },
+  "Forrestdale": {
+    "file": "/guernseys/forrestdale.svg",
+    "wikimediaFile": "Forrestdale Football Club Colours.svg",
+    "colours": [
+      "#ffffff",
+      "#e20016"
+    ]
+  },
+  "Forrestfield": {
+    "file": "/guernseys/forrestfield.svg",
+    "wikimediaFile": "West_Perth_Football_Club_Colours.svg",
+    "colours": [
+      "#f20000",
+      "#0027ae"
+    ]
+  },
+  "Fremantle C.B.C": {
+    "file": "/guernseys/fremantle-c-b-c.svg",
+    "wikimediaFile": "Fremantle CBC Football Club Colours.svg",
+    "colours": [
+      "#024228",
+      "#ffb000"
+    ]
+  },
+  "Gosnells": {
+    "file": "/guernseys/gosnells.svg",
+    "wikimediaFile": "Gosnells_Football_Club_colours.svg",
+    "colours": [
+      "#114fb3",
+      "#fbd977"
+    ]
+  },
+  "Hamersley Carine": {
+    "file": "/guernseys/hamersley-carine.svg",
+    "wikimediaFile": "Hamersley Carine Football Club Colours.svg",
+    "colours": [
+      "#9e1237",
+      "#ffbc01",
+      "#ffffff"
+    ]
+  },
+  "Hammond Park": {
+    "file": "/guernseys/hammond-park.svg",
+    "wikimediaFile": "Hammond Park Football Club colours.svg",
+    "colours": [
+      "#06564b",
+      "#001c46",
+      "#ffffff"
+    ]
+  },
+  "High Wycombe": {
+    "file": "/guernseys/high-wycombe.svg",
+    "wikimediaFile": "High Wycombe Football Club Colours.svg",
+    "colours": [
+      "#0036a7",
+      "#f20010",
+      "#ffffff"
+    ]
+  },
+  "Hills Rangers": {
+    "file": "/guernseys/hills-rangers.svg",
+    "wikimediaFile": "Hills Rangers Football Club Colours.svg",
+    "colours": [
+      "#fe4f00",
+      "#262a33",
+      "#ffffff"
+    ]
+  },
+  "Jandakot": {
+    "file": "/guernseys/jandakot.svg",
+    "wikimediaFile": "Jandakot Football Club Colours.svg",
+    "colours": [
+      "#ffffff",
+      "#f20010"
+    ]
+  },
+  "Joondalup": {
+    "file": "/guernseys/joondalup.svg",
+    "wikimediaFile": "Joondalup Football Club Colours.svg",
+    "colours": [
+      "#020147"
+    ]
+  },
+  "Kalamunda": {
+    "file": "/guernseys/kalamunda.svg",
+    "wikimediaFile": "Collingwood_icon.svg",
+    "colours": [
+      "#000000",
+      "#ffffff"
+    ]
+  },
+  "Kelmscott": {
+    "file": "/guernseys/kelmscott.svg",
+    "wikimediaFile": "Kelmscott Football Club Colours.svg",
+    "colours": [
+      "#ffffff",
+      "#053dbe"
+    ]
+  },
+  "Kenwick": {
+    "file": "/guernseys/kenwick.svg",
+    "wikimediaFile": "Kenwick Football Club Colours.svg",
+    "colours": [
+      "#162ea4",
+      "#000000"
+    ]
+  },
+  "Kingsley": {
+    "file": "/guernseys/kingsley.svg",
+    "wikimediaFile": "Port_Melbourne_Football_Club_colours.svg",
+    "colours": [
+      "#1410a8",
+      "#e32319"
+    ]
+  },
+  "Kingsway": {
+    "file": "/guernseys/kingsway.svg",
+    "wikimediaFile": "Kingsway Football Club Colours.svg",
+    "colours": [
+      "#05a4bf",
+      "#000000",
+      "#ffffff"
+    ]
+  },
+  "Koongamia": {
+    "file": "/guernseys/koongamia.svg",
+    "wikimediaFile": "Adelaide_Football_Club_Colours.svg",
+    "colours": [
+      "#0d1d41",
+      "#fe0000",
+      "#ffd300"
+    ]
+  },
+  "Kwinana": {
+    "file": "/guernseys/kwinana.svg",
+    "wikimediaFile": "Kwinana Football Club Colours.svg",
+    "colours": [
+      "#091a81",
+      "#ee0000"
+    ]
+  },
+  "Lynwood Ferndale": {
+    "file": "/guernseys/lynwood-ferndale.jpg",
+    "wikimediaFile": "Lynwood_Ferndale_Football_Club_colours.jpg",
+    "colours": [
+      "#fec907",
+      "#000000"
+    ]
+  },
+  "Maddington": {
+    "file": "/guernseys/maddington.svg",
+    "wikimediaFile": "Maddington Football Club Colours.svg",
+    "colours": [
+      "#600c2a",
+      "#ffc000"
+    ]
+  },
+  "Manning Rippers": {
+    "file": "/guernseys/manning-rippers.svg",
+    "wikimediaFile": "Manning Rippers Football Club Colours.svg",
+    "colours": [
+      "#861032",
+      "#090055",
+      "#ffc000"
+    ]
+  },
+  "Melville": {
+    "file": "/guernseys/melville.svg",
+    "wikimediaFile": "Melville Football Club Colours.svg",
+    "colours": [
+      "#ffc000",
+      "#035543"
+    ]
+  },
+  "Mosman Park": {
+    "file": "/guernseys/mosman-park.svg",
+    "wikimediaFile": "Mosman Park Football Club Colours.svg",
+    "colours": [
+      "#ee0000",
+      "#000000"
+    ]
+  },
+  "Mount Lawley": {
+    "file": "/guernseys/mount-lawley.svg",
+    "wikimediaFile": "Mount Lawley Football Club Colours.svg",
+    "colours": [
+      "#f20017",
+      "#ffffff",
+      "#080204"
+    ]
+  },
+  "Noranda": {
+    "file": "/guernseys/noranda.svg",
+    "wikimediaFile": "Hawthorn_Football_Club_Colours.svg",
+    "colours": [
+      "#4d2003",
+      "#fcbf16"
+    ]
+  },
+  "North Beach": {
+    "file": "/guernseys/north-beach.svg",
+    "wikimediaFile": "North Beach Football Club Colours.svg",
+    "colours": [
+      "#ffc301",
+      "#000000",
+      "#ed0006"
+    ]
+  },
+  "North Fremantle": {
+    "file": "/guernseys/north-fremantle.svg",
+    "wikimediaFile": "North Fremantle Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#ffffff"
+    ]
+  },
+  "North Mandurah": {
+    "file": "/guernseys/north-mandurah.svg",
+    "wikimediaFile": "North Mandurah Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#ffffff"
+    ]
+  },
+  "Piara Waters": {
+    "file": "/guernseys/piara-waters.svg",
+    "wikimediaFile": "Piara Waters Football Club Colours.svg",
+    "colours": [
+      "#2e2d35"
+    ]
+  },
+  "Quinns District": {
+    "file": "/guernseys/quinns-district.svg",
+    "wikimediaFile": "Quinns District Football Club Colours.svg",
+    "colours": [
+      "#710632",
+      "#ffca02",
+      "#ffffff"
+    ]
+  },
+  "Roleystone": {
+    "file": "/guernseys/roleystone.svg",
+    "wikimediaFile": "Roleystone Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#ffca02"
+    ]
+  },
+  "Safety Bay": {
+    "file": "/guernseys/safety-bay.svg",
+    "wikimediaFile": "Safety Bay Football Club Colours.svg",
+    "colours": [
+      "#092cab",
+      "#ffffff",
+      "#000000"
+    ]
+  },
+  "Scarborough": {
+    "file": "/guernseys/scarborough.svg",
+    "wikimediaFile": "Scarborough Football Club Colours.svg",
+    "colours": [
+      "#04764d",
+      "#ffc000"
+    ]
+  },
+  "Secret Harbour": {
+    "file": "/guernseys/secret-harbour.svg",
+    "wikimediaFile": "Fremantle_Football_Club_Colours.svg",
+    "colours": [
+      "#2e1654",
+      "#ffffff"
+    ]
+  },
+  "SNESA": {
+    "file": "/guernseys/snesa.svg",
+    "wikimediaFile": "SNESA Football Club Colours.svg",
+    "colours": [
+      "#082db4",
+      "#ffc715"
+    ]
+  },
+  "Stirling": {
+    "file": "/guernseys/stirling.svg",
+    "wikimediaFile": "Stirling Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#ffffff",
+      "#f20017"
+    ]
+  },
+  "Swan Athletic": {
+    "file": "/guernseys/swan-athletic.svg",
+    "wikimediaFile": "Swan Athletic Football Club Colours.svg",
+    "colours": [
+      "#ffc715",
+      "#000000"
+    ]
+  },
+  "Swan Valley": {
+    "file": "/guernseys/swan-valley.svg",
+    "wikimediaFile": "Swan Valley Football Club Colours.svg",
+    "colours": [
+      "#103327",
+      "#184d3b",
+      "#143f30",
+      "#ffffff"
+    ]
+  },
+  "Swan View": {
+    "file": "/guernseys/swan-view.svg",
+    "wikimediaFile": "Swan_View_Football_Club_Colours.svg",
+    "colours": [
+      "#a0104b",
+      "#ffc000",
+      "#009cff"
+    ]
+  },
+  "Thornlie": {
+    "file": "/guernseys/thornlie.svg",
+    "wikimediaFile": "Woodville_Football_Club_colours_(1964_to_1982).svg",
+    "colours": [
+      "#005947",
+      "#ffc324"
+    ]
+  },
+  "Trinity Aquinas": {
+    "file": "/guernseys/trinity-aquinas.svg",
+    "wikimediaFile": "Trinity Aquinas Football Club Colours.svg",
+    "colours": [
+      "#61c4f5",
+      "#18864f",
+      "#051eb3"
+    ]
+  },
+  "University": {
+    "file": "/guernseys/university.svg",
+    "wikimediaFile": "University Football Club Colours (PFL).svg",
+    "colours": [
+      "#197154",
+      "#ffc000",
+      "#041b9d"
+    ]
+  },
+  "Wanneroo": {
+    "file": "/guernseys/wanneroo.svg",
+    "wikimediaFile": "Collingwood Districts Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#fefffe"
+    ]
+  },
+  "Warnbro Swans": {
+    "file": "/guernseys/warnbro-swans.svg",
+    "wikimediaFile": "Warnbro Swans Football Club Colours.svg",
+    "colours": [
+      "#ffc000",
+      "#511791",
+      "#ffffff",
+      "#ee0000"
+    ]
+  },
+  "Warwick Greenwood": {
+    "file": "/guernseys/warwick-greenwood.svg",
+    "wikimediaFile": "Warwick Greenwood Football Club Colours.svg",
+    "colours": [
+      "#592b1d",
+      "#ffc611"
+    ]
+  },
+  "Wembley": {
+    "file": "/guernseys/wembley.svg",
+    "wikimediaFile": "Wembley Football Club Colours.svg",
+    "colours": [
+      "#000000",
+      "#ffffff"
+    ]
+  },
+  "West Coast": {
+    "file": "/guernseys/west-coast.svg",
+    "wikimediaFile": "West Coast Football Club Colours.svg",
+    "colours": [
+      "#161e58",
+      "#ffc000"
+    ]
+  },
+  "Whitford": {
+    "file": "/guernseys/whitford.svg",
+    "wikimediaFile": "North_Melbourne_Football_Club_colours.svg",
+    "colours": [
+      "#0d3fbd",
+      "#ffffff"
+    ]
+  },
+  "Willetton": {
+    "file": "/guernseys/willetton.svg",
+    "wikimediaFile": "Willetton Football Club Colours.svg",
+    "colours": [
+      "#0a0a3e",
+      "#ffffff"
+    ]
+  }
+}

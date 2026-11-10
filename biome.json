@@ -17,6 +17,7 @@
       "!drizzle",
       "!.data",
       "!public",
+      "!assets/club-colours",
       "!**/*.md"
     ]
   },

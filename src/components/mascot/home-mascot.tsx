@@ -5,42 +5,98 @@ import { cn } from "@/lib/cn";
 import {
   FRONT_ON,
   fetchBall,
+  fetchSpot,
   GREETING,
   type MascotState,
   nextSteps,
-  type Pose,
   reactToTap,
   type Step,
+  TAP_ACTIONS,
+  withTransitions,
 } from "@/lib/mascot";
 
 const START: Step = { pose: "stand", x: 12, facing: "right", ms: 900 };
 
 /** The drawings in public/mascot. Every one faces left; the stage mirrors them to face right. */
-const ART = ["stand", "turn", "walk", "run", "sit", "sleep", "sleep-right", "bark", "play", "hold", "show"] as const;
+const ART = [
+  "stand",
+  "turn",
+  "front",
+  "walk",
+  "run",
+  "sit",
+  "sitside",
+  "beg",
+  "sleep",
+  "sleep-right",
+  "bark",
+  "play",
+  "hold",
+  "show",
+] as const;
 type Art = (typeof ART)[number];
+/**
+ * One-off animations (they play once, start to finish). An <img> can't restart an SVG's animation, so
+ * these are fetched once and put inline, remounted each time they play.
+ */
+const ONCE = ["pickup", "sitdown", "standup", "sitdown-ball", "standup-ball"] as const;
+type Once = (typeof ONCE)[number];
+const isOnce = (name: string): name is Once => (ONCE as readonly string[]).includes(name);
 
-/** Which drawing a moment uses, and whether to mirror it. Asleep facing right has its own file so the z's read right. */
-function artFor(pose: Pose, facing: MascotState["facing"]): { art: Art; mirror: boolean } {
+/**
+ * Which drawing a moment uses, and whether to mirror it. Asleep facing right has its own file so the z's
+ * read right; lying down and getting up are the sitting drawing lowering or rising (see globals.css), and
+ * dropping the footy is the plain sitting drawing (the footy falls on its own, from the stage). Turning
+ * to sit front-on and back goes through the slight turn and the front-on standing drawing; sitting down
+ * and standing up side-on are animated, with or without the footy.
+ */
+function artFor({ pose, facing, ball }: Step): { art: Art | Once; mirror: boolean } {
   if (pose === "sleep") return { art: facing === "right" ? "sleep-right" : "sleep", mirror: false };
-  const art: Art = pose === "hop" ? "stand" : pose;
-  return { art, mirror: facing === "right" && !FRONT_ON.has(pose) };
+  if (pose === "liedown" || pose === "getup" || pose === "drop" || pose === "sitfront")
+    return { art: "sit", mirror: false };
+  const mirror = facing === "right" && !FRONT_ON.has(pose);
+  if (pose === "turnin" || pose === "turnout") return { art: "turn", mirror };
+  if (pose === "facein" || pose === "faceout") return { art: "front", mirror };
+  if (pose === "sitdown" || pose === "standup") return { art: ball ? `${pose}-ball` : pose, mirror };
+  return { art: pose, mirror };
 }
 
-type Ball = { id: number; x: number };
+/** The footy on the stage: thrown there, or `dropped` from the sitting dog's mouth (it falls instead of flying in). */
+type Ball = { id: number; x: number; dropped?: boolean };
 
 /**
  * The home-screen bulldog, after VS Code Pets: it wanders on its own (walks, sits, naps, barks, play-bows),
- * turns through the slight-turn stance instead of snapping round, does a trick when tapped, and chases
- * the footy when you throw one (tap the grass, or the footy button). Holds still under reduced motion.
+ * turns through the slight-turn stance instead of snapping round, does a trick when tapped (begs, spins,
+ * barks), and chases the footy when you throw one (tap anywhere on the grass), picking it up in its mouth.
+ * Holds still under reduced motion.
  */
 export function HomeMascot() {
   const [step, setStep] = useState<Step>(START);
   const [ball, setBall] = useState<Ball | null>(null);
+  const [hearts, setHearts] = useState<Burst[]>([]); // a burst of hearts per tap while it begs
   const [still, setStill] = useState(false);
+  const [once, setOnce] = useState<Partial<Record<Once, string>>>({});
+  const plays = useRef(0); // bumps on every step, so a one-off animation restarts each time
+  const art = useRef<HTMLSpanElement>(null);
   const stateRef = useRef<MascotState>(START);
   const queue = useRef<Step[]>([]);
   const timer = useRef<number | undefined>(undefined);
   const stage = useRef<HTMLDivElement>(null);
+  const dog = useRef<HTMLDivElement>(null);
+
+  /**
+   * Where the dog really is right now. Mid-walk the state already holds where it's heading, so anything
+   * that interrupts it (a tap, a throw) starts from its spot on screen instead: otherwise it would slide
+   * on to the old target in its new pose, or run off facing the wrong way.
+   */
+  const here = (): MascotState => {
+    const now = stateRef.current;
+    if (!dog.current || !stage.current || (now.pose !== "walk" && now.pose !== "run")) return now;
+    const room = stage.current.clientWidth - dog.current.offsetWidth;
+    const left = dog.current.getBoundingClientRect().left - stage.current.getBoundingClientRect().left;
+    stateRef.current = { ...now, x: Math.min(100, Math.max(0, (left / Math.max(1, room)) * 100)) };
+    return stateRef.current;
+  };
 
   // Play steps one after another; when the queue runs dry, the dog decides what to do next.
   const play = (steps: Step[]) => {
@@ -50,10 +106,14 @@ export function HomeMascot() {
   };
   const advance = () => {
     if (!queue.current.length) queue.current = nextSteps(stateRef.current);
-    const next = queue.current.shift() as Step;
+    // sit down, lie down or get up first if this step needs a different posture
+    const [next, ...after] = withTransitions(stateRef.current, queue.current.shift() as Step);
+    queue.current = [...after, ...queue.current];
     stateRef.current = next;
+    plays.current += 1;
     setStep(next);
-    if (next.pose === "hold") setBall(null); // the footy is in its mouth now (it's part of the drawing)
+    if (next.pose === "pickup") setBall(null); // the pick-up drawing has the footy in it from here on
+    if (next.pose === "drop") dropBall(next.x);
     timer.current = window.setTimeout(advance, next.ms);
   };
 
@@ -65,19 +125,46 @@ export function HomeMascot() {
       return;
     }
     timer.current = window.setTimeout(() => play([GREETING]), START.ms);
+    for (const name of ONCE) {
+      fetch(`/mascot/${name}.svg`)
+        .then((r) => (r.ok ? r.text() : Promise.reject()))
+        .then((svg) => setOnce((all) => ({ ...all, [name]: svg })))
+        .catch(() => {}); // without it the dog just stands for that moment
+    }
     return () => window.clearTimeout(timer.current);
   }, []);
 
+  /** Barking or play-bowing, or on its way to begging, playing or barking: a tap waits for it to finish. */
+  const busy = (now: MascotState) => TAP_ACTIONS.has(now.pose) || queue.current.some((s) => TAP_ACTIONS.has(s.pose));
+
   const onTapDog = () => {
-    if (!still) play(reactToTap(stateRef.current));
+    if (still) return;
+    const now = here();
+    if (now.pose === "beg") {
+      const burst = heartBurst();
+      setHearts((all) => [...all, burst]);
+      window.setTimeout(() => setHearts((all) => all.filter((b) => b !== burst)), 1600);
+    } else if (busy(now)) return; // let the action finish
+    play(reactToTap(now));
   };
 
-  /** Throw the footy to a spot on the stage (0–100) and send the dog after it. */
+  /** Throw the footy to a spot on the stage (0–100) and send the dog after it, to stop with its mouth at the ball. */
   const throwBall = (x: number) => {
-    if (still) return;
-    const to = Math.min(96, Math.max(4, x));
-    setBall({ id: Date.now(), x: to });
-    play(fetchBall(stateRef.current, to));
+    if (still || !stage.current || !art.current) return;
+    const stageW = stage.current.clientWidth;
+    const from = here();
+    const spot = fetchSpot(from, (x / 100) * stageW, stageW, art.current.offsetWidth);
+    setBall({ id: Date.now(), x: (spot.ballPx / stageW) * 100 });
+    play(fetchBall(from, spot.dogX));
+  };
+
+  /** Let the footy fall from the mouth of the dog sitting front-on at `x`: its mouth is mid-way across. */
+  const dropBall = (x: number) => {
+    if (!stage.current || !art.current) return;
+    const stageW = stage.current.clientWidth;
+    const dogW = art.current.offsetWidth;
+    const middle = (x / 100) * (stageW - dogW) + dogW / 2;
+    setBall({ id: Date.now(), x: (middle / stageW) * 100, dropped: true });
   };
 
   const onTapGrass = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -86,17 +173,25 @@ export function HomeMascot() {
     throwBall(((e.clientX - r.left) / r.width) * 100);
   };
 
-  const { art, mirror } = artFor(step.pose, step.facing);
+  const { art: drawing, mirror } = artFor(step);
+  const inline = isOnce(drawing) ? once[drawing] : undefined;
+  const shown = isOnce(drawing) && !inline ? "stand" : drawing; // not loaded yet: stand for that moment
   const moving = step.pose === "walk" || step.pose === "run";
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: tapping the grass is a bonus; the footy button does the same for keyboards.
+    // biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: throwing the footy is a bonus; the dog itself is a button for keyboards.
     <div ref={stage} className="mascot-stage" onClick={onTapGrass}>
       {ball && (
-        <span key={ball.id} className="mascot-ball" style={{ left: `${ball.x}%` }} aria-hidden>
+        <span
+          key={ball.id}
+          className={cn("mascot-ball", ball.dropped && "mascot-ball-drop")}
+          style={{ left: `${ball.x}%` }}
+          aria-hidden
+        >
           <Footy />
         </span>
       )}
       <div
+        ref={dog}
         className={cn("mascot", `mascot-${step.pose}`)}
         style={{
           left: `${step.x}%`,
@@ -106,30 +201,66 @@ export function HomeMascot() {
       >
         <button type="button" className="mascot-dog" onClick={onTapDog} aria-label="Club bulldog. Tap to play.">
           {/* Every drawing stays mounted and only the current one shows, so switching pose is instant. */}
-          <span className={cn("mascot-art", mirror && "mascot-mirror")}>
+          <span ref={art} className={cn("mascot-art", mirror && "mascot-mirror")}>
             {ART.map((name) => (
               // biome-ignore lint/performance/noImgElement: animated SVGs; next/image adds nothing here.
               <img
                 key={name}
                 src={`/mascot/${name}.svg`}
                 alt=""
-                data-on={name === art || undefined}
+                data-on={name === shown || undefined}
                 draggable={false}
               />
             ))}
+            {inline && (
+              // Our own drawing from public/mascot; remounted per play so its animation starts from the top.
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: a static SVG we ship, fetched from our own origin.
+              <span key={plays.current} className="mascot-once" dangerouslySetInnerHTML={{ __html: inline }} />
+            )}
           </span>
         </button>
+        {hearts.map((burst) => (
+          <span
+            key={burst.id}
+            className="mascot-hearts"
+            style={{ left: step.facing === "right" ? "56%" : "44%" }}
+            aria-hidden
+          >
+            {burst.hearts.map((heart) => (
+              <Heart key={heart.key} dx={heart.dx} dy={heart.dy} size={heart.size} delay={heart.delay} />
+            ))}
+          </span>
+        ))}
       </div>
-      {!still && (
-        <button
-          type="button"
-          className="mascot-throw"
-          onClick={() => throwBall(stateRef.current.x > 50 ? 15 + Math.random() * 25 : 60 + Math.random() * 25)}
-        >
-          <Footy /> Throw the footy
-        </button>
-      )}
     </div>
+  );
+}
+
+type Burst = { id: number; hearts: HeartProps[] };
+type HeartProps = { key: number; dx: number; dy: number; size: number; delay: number };
+
+/** Three hearts flying off in random directions: anywhere from up-left to up-right, at random heights. */
+function heartBurst(): Burst {
+  const r = (min: number, max: number) => min + Math.random() * (max - min);
+  return {
+    id: Date.now() + Math.random(),
+    hearts: [0, 1, 2].map((key) => ({
+      key,
+      dx: r(-2.4, 2.4),
+      dy: r(-3.6, -1.8),
+      size: r(0.75, 1.15),
+      delay: key * r(0.06, 0.16),
+    })),
+  };
+}
+
+/** A small club-red heart, floated up over the begging dog's head when it's tapped. */
+function Heart({ dx, dy, size, delay }: Omit<HeartProps, "key">) {
+  const style = { "--dx": `${dx}rem`, "--dy": `${dy}rem`, width: `${size}rem`, animationDelay: `${delay}s` };
+  return (
+    <svg viewBox="0 0 24 22" className="mascot-heart" style={style as React.CSSProperties} aria-hidden="true">
+      <path d="M12 21.5C5 16 0 11.6 0 6.6 0 2.9 2.9 0 6.5 0 8.8 0 10.8 1.2 12 3 13.2 1.2 15.2 0 17.5 0 21.1 0 24 2.9 24 6.6c0 5-5 9.4-12 14.9Z" />
+    </svg>
   );
 }
 

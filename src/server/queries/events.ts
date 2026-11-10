@@ -1,6 +1,7 @@
 import "server-only";
 import { and, asc, desc, eq, gte, inArray, lt, ne } from "drizzle-orm";
 import { cache } from "react";
+import { seasonStart } from "@/lib/time";
 import { db } from "@/server/db";
 import { type AvailabilityStatus, availability, type EventKind, event, playerProfile, user } from "@/server/db/schema";
 
@@ -41,9 +42,18 @@ export async function getLastGame(now = new Date()) {
   return g ?? null;
 }
 
-/** Everything except training, for the season calendar. */
-export function getSeason() {
-  return db.select().from(event).where(ne(event.kind, "training")).orderBy(asc(event.startsAt));
+/** Everything this season except training, for the season calendar (past seasons' games stay for head-to-head). */
+export function getSeason(now = new Date()) {
+  return db
+    .select()
+    .from(event)
+    .where(and(ne(event.kind, "training"), gte(event.startsAt, seasonStart(now))))
+    .orderBy(asc(event.startsAt));
+}
+
+/** Every game, oldest first (for a team's page on the ladder, which matches the opponent by name). */
+export function getGames() {
+  return db.select().from(event).where(eq(event.kind, "game")).orderBy(asc(event.startsAt));
 }
 
 export function getPastGamesAgainst(opponent: string, before: Date) {

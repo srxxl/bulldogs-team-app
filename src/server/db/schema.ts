@@ -312,6 +312,26 @@ export const ladderRow = pgTable("ladder_row", {
   updatedAt: updatedAt(),
 });
 
+/**
+ * Every game in our grade between other clubs (our own games are events), so each team's page can show its
+ * season round by round. Team names are as the ladder writes them. Points are null until the result is in.
+ */
+export const gradeGame = pgTable(
+  "grade_game",
+  {
+    id: id(),
+    round: text(),
+    startsAt: timestamp({ withTimezone: true }).notNull(),
+    home: text().notNull(),
+    away: text().notNull(),
+    homePoints: smallint(),
+    awayPoints: smallint(),
+    playhqGameId: text().unique(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index().on(t.startsAt)],
+);
+
 export const appSetting = pgTable("app_setting", {
   key: text().primaryKey(),
   value: jsonb().notNull(),
@@ -345,4 +365,5 @@ export type Board = (typeof boardEnum.enumValues)[number];
 export type FeedbackKind = (typeof feedbackKindEnum.enumValues)[number];
 export type EventRow = typeof event.$inferSelect;
 export type LadderRow = typeof ladderRow.$inferSelect;
+export type GradeGame = typeof gradeGame.$inferSelect;
 export type DrillRow = typeof drill.$inferSelect;
