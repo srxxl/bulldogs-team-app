@@ -42,12 +42,12 @@ export async function getLastGame(now = new Date()) {
   return g ?? null;
 }
 
-/** Everything this season except training, for the season calendar (past seasons' games stay for head-to-head). */
+/** This season's games, for the fixture (past seasons' games stay for head-to-head). */
 export function getSeason(now = new Date()) {
   return db
     .select()
     .from(event)
-    .where(and(ne(event.kind, "training"), gte(event.startsAt, seasonStart(now))))
+    .where(and(eq(event.kind, "game"), gte(event.startsAt, seasonStart(now))))
     .orderBy(asc(event.startsAt));
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import type { Role } from "@/server/db/schema";
 import { Avatar } from "./avatar";
@@ -13,6 +13,16 @@ const isActive = (pathname: string, href: string) =>
 /** The most specific nav entry wins, so /boards/fitness doesn't also light up a parent entry. */
 function activeHref(pathname: string, hrefs: string[]) {
   return hrefs.filter((h) => isActive(pathname, h)).sort((a, b) => b.length - a.length)[0];
+}
+
+/**
+ * The path the nav highlights. A team's page opened from a game (/ladder/kalamunda?from=<game>) belongs to the
+ * fixture you came from, so Fixture stays lit rather than Ladder.
+ */
+function useNavPath() {
+  const pathname = usePathname();
+  const from = useSearchParams().get("from");
+  return from && pathname.startsWith("/ladder/") ? "/fixture" : pathname;
 }
 
 export function SideNav({
@@ -28,7 +38,7 @@ export function SideNav({
   image: string | null;
   crest: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  const pathname = useNavPath();
   const items = visibleNav(ALL, { role, isAdmin });
   const current = activeHref(
     pathname,
@@ -76,7 +86,7 @@ export function SideNav({
 
 /** The phone tab bar: one tab per page this person can open (five to seven). */
 export function BottomNav({ role, isAdmin }: { role: Role; isAdmin: boolean }) {
-  const pathname = usePathname();
+  const pathname = useNavPath();
   const items = visibleNav(ALL, { role, isAdmin });
   const current = activeHref(
     pathname,

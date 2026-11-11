@@ -134,7 +134,8 @@ export default async function TeamPage({ params, searchParams }: PageProps<"/lad
           )}
           {/* the way back: always the card's top-left corner, like on a game or a player, level with the grade line */}
           <BackButton
-            href={fromGame ? `/fixture/${fromGame}` : "/ladder"}
+            // back to the opponent tile on the game, not the top of the game page
+            href={fromGame ? `/fixture/${fromGame}#${morphName.team(teamSlug(row.team))}` : "/ladder"}
             to={fromGame ? "the game" : "the ladder"}
             className={cn(
               "absolute top-5 left-5 z-10 md:top-12 md:left-8",

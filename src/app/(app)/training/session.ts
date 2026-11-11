@@ -1,7 +1,7 @@
 import { formatTime, perthAt } from "@/lib/time";
 import { TRAINING } from "@/lib/training";
 
-/** A session at the usual time and place, which the Training page's intro already says. */
+/** A session at the usual time and place: its card on the Training page doesn't repeat them (its own page does). */
 export const usual = (s: { startsAt: Date; endsAt: Date | null; venueName: string | null }) =>
   formatTime(s.startsAt) === formatTime(perthAt(s.startsAt, TRAINING.startHour)) &&
   s.endsAt != null &&

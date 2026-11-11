@@ -1,200 +1,123 @@
-import { Apple, Check, Dumbbell } from "lucide-react";
+import { Check } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { BoardsNav } from "@/components/boards-nav";
+import Image from "next/image";
+import { GameTile } from "@/components/game-tile";
 import { HoopRing } from "@/components/hoop-ring";
-import { Morph, morphName } from "@/components/morph";
-import { DoneSheet } from "@/components/pin-actions";
-import { TitleRow } from "@/components/ui";
-import { BOARD_KEYS, BOARDS } from "@/lib/boards";
+import { morphName } from "@/components/morph";
+import { PageHeader } from "@/components/ui";
 import { cn } from "@/lib/cn";
+import { pickOfTheDay } from "@/lib/daily";
 import { currentStreak, hoop } from "@/lib/hoops";
-import { perthWeekStart } from "@/lib/time";
-import { formatDistance, formatDuration, formatPace } from "@/lib/workout";
+import { perthToday, perthWeekStart } from "@/lib/time";
 import { requireMember } from "@/server/auth/session";
-import { getMyHoopWeeks, getPinCounts, getWeekDone, getWeekPicks } from "@/server/queries/content";
+import { getMyHoopWeeks, getPins, getWeekDone, getWeekPicks } from "@/server/queries/content";
 
 export const metadata: Metadata = { title: "Fitness" };
 
-const ICON = { fitness: Dumbbell, nutrition: Apple } as const;
-const HOOP_BAND =
-  "bg-[repeating-linear-gradient(180deg,var(--color-red)_0_33%,#fff_33%_66%,var(--color-red)_66%_100%)] ring-2 ring-red";
-
 /**
- * Your week: one line for your hoop and streak, then this week's picks as big workout cards (swipe through them
- * on a phone, side by side on a laptop), the ones still to do first. The two boards sit up in the header so
- * they're always a tap away.
+ * Fitness and nutrition as tiles, like a game's page: your hoop and this week's activities, and the recipe of the
+ * day. Each tile grows into its own page.
  */
-export default async function YourWeekPage() {
+export default async function BoardsPage() {
   const me = await requireMember();
   const week = perthWeekStart();
-  const [picks, done, hoops, counts] = await Promise.all([
+  const [picks, done, hoops, recipes] = await Promise.all([
     getWeekPicks(week),
     getWeekDone(week),
     getMyHoopWeeks(me.id, week),
-    getPinCounts(),
+    getPins("nutrition"),
   ]);
-  const mine = done.filter((d) => d.userId === me.id);
-  const ring = hoop({ picks: picks.map((p) => ({ pinId: p.id, board: p.board })), mine });
+  const mine = new Set(done.filter((d) => d.userId === me.id).map((d) => d.pinId));
+  const ring = hoop({
+    picks: picks.map((p) => ({ pinId: p.id, board: p.board })),
+    mine: done.filter((d) => d.userId === me.id),
+  });
   const streak = currentStreak(hoops.weeks, week);
-  const logOf = (id: string) => mine.find((m) => m.pinId === id) ?? null;
-  // the ones still to do first, then what you've done
-  const ordered = [...picks.filter((p) => !logOf(p.id)), ...picks.filter((p) => logOf(p.id))];
+  // still to do first
+  const ordered = [...picks.filter((p) => !mine.has(p.id)), ...picks.filter((p) => mine.has(p.id))];
 
-  const headline =
-    picks.length === 0 ? "Nothing picked yet" : ring.closed ? "Hoop closed" : `${ring.done} of ${ring.total} done`;
-  const subline =
-    picks.length === 0
-      ? "The skips and coaches pick a few things each week."
-      : ring.closed
-        ? "Nice work. See what the team's been up to."
-        : null;
+  const today = pickOfTheDay(recipes, perthToday());
 
   return (
     <>
-      <header className="mb-6 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
-        <TitleRow>Fitness</TitleRow>
-        {/* the boards, always a tap away: side by side on a phone, beside the title on a laptop */}
-        <div className="grid grid-cols-2 gap-2 md:flex">
-          {BOARD_KEYS.map((key) => {
-            const Icon = ICON[key];
-            return (
-              <Morph key={key} name={morphName.board(key)}>
-                <Link
-                  href={`/boards/${key}`}
-                  className={cn(
-                    "flex min-h-12 items-center justify-center gap-2 rounded-2xl px-3 text-sm font-semibold md:px-4 md:text-base transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy",
-                    key === "fitness" ? "bg-navy text-white hover:bg-navy-deep" : "bg-white text-navy hover:bg-mist",
-                  )}
-                >
-                  <Icon size={18} aria-hidden />
-                  <span>
-                    {BOARDS[key].title} board
-                    <span
-                      className={cn("ml-2 text-sm font-normal", key === "fitness" ? "text-white/70" : "text-ink/55")}
-                    >
-                      {counts[key]}
-                    </span>
-                  </span>
-                </Link>
-              </Morph>
-            );
-          })}
-        </div>
-      </header>
-      <BoardsNav current="/boards" />
-
-      <section
-        aria-label="Your hoop this week"
-        className="flex max-w-2xl items-center gap-4 rounded-2xl border border-ink/[0.06] bg-white p-3 pr-4"
-      >
-        <HoopRing total={ring.total} done={ring.done} size={56} tone="light" />
-        <div className="min-w-0 flex-1">
-          <h2 className="font-display text-3xl leading-none font-black text-navy">{headline}</h2>
-          {subline && <p className="mt-1 text-sm text-ink/60">{subline}</p>}
-        </div>
-        {streak > 0 && (
-          <p className="flex shrink-0 items-center gap-2 text-sm font-semibold text-navy">
-            <span className="grid size-8 place-items-center rounded-full bg-red font-display text-lg font-black text-white">
-              {streak}
-            </span>
-            <span className="hidden sm:inline">{streak === 1 ? "week in a row" : "weeks in a row"}</span>
-            <span className="sm:hidden">in a row</span>
-          </p>
-        )}
-      </section>
-
-      {picks.length > 0 && (
-        // swipe sideways on a phone (each card snaps into place, the next one peeking in); a row of cards on a laptop
-        <ul
-          aria-label="This week's picks"
-          className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 lg:grid-cols-3"
+      <PageHeader title="Fitness" />
+      {/* a phone: fitness above nutrition. Wider: side by side */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <GameTile
+          href="/boards/fitness"
+          name={morphName.board("fitness")}
+          title="Fitness"
+          tone="navy"
+          big
+          badge={streak > 0 ? `${streak} week streak` : undefined}
         >
-          {ordered.map((p) => {
-            const log = logOf(p.id);
-            const pace = log?.distanceM != null && log.durationS != null && formatPace(log.distanceM, log.durationS);
-            return (
-              <li
-                key={p.id}
-                className={cn(
-                  "relative flex min-h-80 w-[82%] shrink-0 snap-start flex-col rounded-[28px] p-5 md:w-auto",
-                  log ? "border border-ink/[0.06] bg-white text-ink" : "bg-navy text-white",
-                )}
-              >
-                {log && (
-                  <span
-                    aria-hidden
-                    className={cn("absolute top-4 right-4 grid size-9 place-items-center rounded-full", HOOP_BAND)}
-                  >
-                    <Check size={16} strokeWidth={3.5} className="text-navy" />
+          <div className="mt-3 flex items-center gap-4">
+            <HoopRing total={ring.total} done={ring.done} size={84} tone="dark" />
+            <p className="font-display text-4xl leading-[0.9] font-black">
+              {picks.length === 0
+                ? "Nothing picked yet"
+                : ring.closed
+                  ? "Complete"
+                  : `${ring.done} of ${ring.total} done`}
+            </p>
+          </div>
+          {ordered.length > 0 ? (
+            <ul className="mt-4 space-y-2">
+              {ordered.map((p) => (
+                <li key={p.id} className="flex min-w-0 items-center gap-3">
+                  {mine.has(p.id) ? (
+                    <span
+                      aria-hidden
+                      className="grid size-6 shrink-0 place-items-center rounded-full bg-red text-white"
+                    >
+                      <Check size={14} strokeWidth={3} />
+                    </span>
+                  ) : (
+                    <span aria-hidden className="size-6 shrink-0 rounded-full border-2 border-white/35" />
+                  )}
+                  <span className={cn("truncate font-semibold", mine.has(p.id) && "text-white/60")}>
+                    {p.title}
+                    <span className="sr-only">{mine.has(p.id) ? ", done" : ", to do"}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-white/75">The skips and coaches pick a few things each week.</p>
+          )}
+        </GameTile>
+
+        <GameTile href="/boards/nutrition" name={morphName.board("nutrition")} title="Nutrition" big>
+          {today ? (
+            <div className="mt-2 flex min-w-0 items-start gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-navy">Recipe of the day</p>
+                <p className="mt-1 font-display text-3xl leading-[0.95] font-black text-ink text-balance">
+                  {today.title}
+                </p>
+                {today.body && <p className="mt-1.5 line-clamp-2 text-sm text-ink/60">{today.body}</p>}
+                {today.tag && (
+                  <span className="mt-2 inline-block rounded-full bg-powder px-2.5 py-0.5 text-xs font-semibold text-navy">
+                    {today.tag}
                   </span>
                 )}
-                <h3 className={cn("pr-10 font-display text-4xl leading-[0.92] font-black", log && "text-navy")}>
-                  <Link href={`/boards/${p.board}`} className="hover:underline">
-                    {p.title}
-                  </Link>
-                </h3>
-
-                {log ? (
-                  <div className="mt-auto pt-6">
-                    <p className="font-display text-6xl leading-[0.9] font-black text-navy">
-                      {log.distanceM != null ? (
-                        <>
-                          {formatDistance(log.distanceM).replace(/ (km|m)$/, "")}
-                          <span className="ml-1 text-2xl">
-                            {formatDistance(log.distanceM).endsWith("km") ? "km" : "m"}
-                          </span>
-                        </>
-                      ) : log.durationS != null ? (
-                        formatDuration(log.durationS)
-                      ) : (
-                        "Done"
-                      )}
-                    </p>
-                    {(log.distanceM != null && log.durationS != null) || log.note ? (
-                      <p className="mt-1.5 text-sm text-ink/65">
-                        {[log.distanceM != null && log.durationS != null && formatDuration(log.durationS), pace]
-                          .filter(Boolean)
-                          .join(", ")}
-                        {log.note && <span className="block truncate text-ink/80">{log.note}</span>}
-                      </p>
-                    ) : null}
-                    <div className="mt-3">
-                      <DoneSheet
-                        pinId={p.id}
-                        title={p.title}
-                        fitness={p.board === "fitness"}
-                        mine={log}
-                        dark={false}
-                        triggerClassName="-ml-2 inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-semibold text-navy/75 hover:bg-mist hover:text-navy"
-                        trigger="Change"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {p.body && (
-                      <p className="mt-3 line-clamp-4 text-sm text-pretty whitespace-pre-line text-white/80">
-                        {p.body}
-                      </p>
-                    )}
-                    <div className="mt-auto pt-6">
-                      <DoneSheet
-                        pinId={p.id}
-                        title={p.title}
-                        fitness={p.board === "fitness"}
-                        mine={null}
-                        dark
-                        triggerClassName="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-lg font-bold text-navy transition-colors hover:bg-mist"
-                      />
-                    </div>
-                  </>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+              </div>
+              {today.imageUrl && (
+                <Image
+                  src={today.imageUrl}
+                  alt=""
+                  width={240}
+                  height={240}
+                  sizes="(min-width: 768px) 10vw, 28vw"
+                  className="aspect-square w-24 shrink-0 rounded-xl object-cover md:w-32"
+                />
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-ink/60">Share your go-to pre-game meal.</p>
+          )}
+        </GameTile>
+      </div>
     </>
   );
 }

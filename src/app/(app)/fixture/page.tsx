@@ -4,9 +4,8 @@ import Link from "next/link";
 import { EventRowLink } from "@/components/event-row";
 import { MatchCard } from "@/components/match-card";
 import { Morph, morphName } from "@/components/morph";
-import { ButtonLink, EmptyState, PageHeader, RedRule } from "@/components/ui";
+import { EmptyState, PageHeader, RedRule } from "@/components/ui";
 import { findByes } from "@/lib/byes";
-import { CLUB } from "@/lib/club";
 import { cn } from "@/lib/cn";
 import { isCoach } from "@/lib/roles";
 import { formatDay, formatMonth, monthKey, perthToday } from "@/lib/time";
@@ -46,7 +45,7 @@ export default async function FixturePage() {
   ]);
   const voteFor = voteDay && !ballot ? voteDay : null;
 
-  // games and other events, with our byes slotted in by date
+  // our games, with our byes slotted in by date
   type Item = { bye: Bye } | { ev: (typeof season)[number] };
   const items: Item[] = [
     ...season.map((ev) => ({ ev })),
@@ -62,7 +61,7 @@ export default async function FixturePage() {
 
   return (
     <div className="space-y-10">
-      <PageHeader title="Fixture" intro={`${CLUB.grade}, ${CLUB.league}. Games, socials and club events.`} />
+      <PageHeader title="Fixture" />
 
       {(nextGame || voteFor) && (
         <section aria-label="Next game">
@@ -89,7 +88,7 @@ export default async function FixturePage() {
               <MatchCard
                 game={nextGame}
                 href={`/fixture/${nextGame.id}`}
-                rsvp={{ myStatus: mine.get(nextGame.id) ?? null, yesCount: yes.get(nextGame.id) ?? 0 }}
+                rsvp={{ myStatus: mine.get(nextGame.id) ?? null }}
                 className={voteFor ? "rounded-t-none" : undefined}
               />
             </Morph>
@@ -97,14 +96,7 @@ export default async function FixturePage() {
         </section>
       )}
 
-      <section aria-labelledby="season-heading">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 id="season-heading" className="text-3xl font-bold text-navy md:text-4xl">
-            Season
-          </h2>
-          {me.isAdmin && <ButtonLink href="/admin/events/new">Add event</ButtonLink>}
-        </div>
-
+      <section aria-label="This season's games">
         {season.length === 0 ? (
           <EmptyState title="The fixture's empty">Games appear here once the PFL releases the draw.</EmptyState>
         ) : (

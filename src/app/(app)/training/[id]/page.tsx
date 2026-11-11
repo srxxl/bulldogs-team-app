@@ -1,4 +1,4 @@
-import { CalendarPlus, Pencil } from "lucide-react";
+import { CalendarPlus, MapPin, Pencil } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -8,11 +8,11 @@ import { Morph, morphName } from "@/components/morph";
 import { RsvpButtons } from "@/components/rsvp-buttons";
 import { SessionPlan } from "@/components/session-plan";
 import { canPlanSessions } from "@/lib/roles";
-import { formatLongDay, relativeDay } from "@/lib/time";
+import { formatLongDay, formatTime, relativeDay } from "@/lib/time";
+import { TRAINING } from "@/lib/training";
 import { requireMember } from "@/server/auth/session";
 import { getDrillCatalog, getSessionDrillsFor } from "@/server/queries/drills";
 import { getEvent, getRsvps } from "@/server/queries/events";
-import { usual, whenWhere } from "../session";
 
 const SHOWN_FACES = 8;
 
@@ -45,7 +45,20 @@ export default async function TrainingSessionPage({ params }: PageProps<"/traini
           <BackButton href="/training" to="training" className="text-navy" />
           <div className="min-w-0 flex-1">
             <h1 className="text-3xl font-bold text-navy">{formatLongDay(s.startsAt)}</h1>
-            {!usual(s) && <p className="text-sm text-ink/60">{whenWhere(s)}</p>}
+            {/* always here: the Training page only mentions time and place when they're not the usual */}
+            <p className="mt-1 text-sm text-ink/60">
+              {formatTime(s.startsAt)}
+              {s.endsAt && ` to ${formatTime(s.endsAt)}`}
+            </p>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.venueAddress ?? TRAINING.venueAddress)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-0.5 inline-block text-sm font-semibold text-navy underline decoration-navy/30 underline-offset-4 hover:decoration-navy"
+            >
+              <MapPin size={14} aria-hidden className="mr-1 inline align-[-2px]" />
+              {s.venueName ?? TRAINING.venueName}
+            </a>
           </div>
           <span className="shrink-0 pt-1.5 text-sm font-semibold text-red">{relativeDay(s.startsAt)}</span>
         </div>

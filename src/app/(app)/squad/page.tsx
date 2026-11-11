@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PlayerCard } from "@/components/player-card";
-import { EmptyState, PageHeader } from "@/components/ui";
+import { EmptyState, PageHeader, RedRule } from "@/components/ui";
 import { POSITIONS } from "@/lib/positions";
 import { requireMember } from "@/server/auth/session";
 import { getSquad } from "@/server/queries/squad";
@@ -15,19 +15,20 @@ export default async function SquadPage() {
 
   return (
     <>
-      <PageHeader title="Team"></PageHeader>
+      <PageHeader title="Team" />
       {players.length === 0 && (
         <EmptyState title="No players yet">Approve sign-ups in Settings and they'll show up here.</EmptyState>
       )}
-      <div className="space-y-12">
+      <div className="space-y-10">
         {POSITIONS.map(({ value, plural }) => {
           const group = players.filter((p) => p.position === value);
           if (group.length === 0) return null;
           return (
             <section key={value} aria-labelledby={`pos-${value}`}>
-              <h2 id={`pos-${value}`} className="mb-4 text-4xl font-extrabold text-navy">
+              {/* a label and a red line, like the finals line on the ladder and the months on the fixture */}
+              <RedRule as="h2" id={`pos-${value}`} className="mb-4">
                 {plural}
-              </h2>
+              </RedRule>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-5">
                 {group.map((p) => (
                   <PlayerCard key={p.id} player={p} isMe={p.id === me.id} />
@@ -37,8 +38,10 @@ export default async function SquadPage() {
           );
         })}
         {coaches.length > 0 && (
-          <section>
-            <h2 className="mb-4 text-4xl font-extrabold text-navy">Coaches</h2>
+          <section aria-labelledby="pos-coaches">
+            <RedRule as="h2" id="pos-coaches" className="mb-4">
+              Coaches
+            </RedRule>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-5">
               {coaches.map((p) => (
                 <PlayerCard key={p.id} player={p} isMe={p.id === me.id} />

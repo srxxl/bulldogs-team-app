@@ -20,15 +20,17 @@ export function TitleRow({ children }: { children: ReactNode }) {
   );
 }
 
-/** A page's title row (title and the bulldog), an optional intro, and actions (buttons) on the right. */
-export function PageHeader({ title, intro, children }: { title: string; intro?: ReactNode; children?: ReactNode }) {
+/**
+ * A page's title row (title and the bulldog) and actions (buttons) on the right. No description under it, on any
+ * page: a useful fact (when training is, when the ladder was updated) goes as a note at the foot of its list.
+ */
+export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <header className="mb-6 md:mb-10">
+    <header className="mb-8 md:mb-10">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
         <TitleRow>{title}</TitleRow>
         {children && <div className="flex flex-wrap gap-2">{children}</div>}
       </div>
-      {intro && <p className="mt-3 max-w-2xl text-pretty text-ink/70">{intro}</p>}
     </header>
   );
 }

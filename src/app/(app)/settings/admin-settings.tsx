@@ -7,7 +7,7 @@ import {
   TrainingToggle,
 } from "@/components/admin-controls";
 import { Avatar } from "@/components/avatar";
-import { Panel, RedRule, SectionTitle } from "@/components/ui";
+import { ButtonLink, Panel, RedRule, SectionTitle } from "@/components/ui";
 import { formatDay, formatTime } from "@/lib/time";
 import { requireAdmin } from "@/server/auth/session";
 import { playHqConfig } from "@/server/playhq/client";
@@ -81,6 +81,15 @@ export async function AdminSettings() {
               <SyncButton connected={connected} />
             </div>
             <LadderPasteForm />
+            <div>
+              <h3 className="mb-1 text-xl font-bold text-navy">Games</h3>
+              <p className="mb-3 text-sm text-ink/70">
+                Add a game PlayHQ hasn't got, like a final or a rescheduled round.
+              </p>
+              <ButtonLink href="/admin/events/new" variant="outline">
+                Add a game
+              </ButtonLink>
+            </div>
           </div>
         </Panel>
 

@@ -70,13 +70,13 @@ export default async function PlayerPage({ params }: PageProps<"/squad/[id]">) {
         <div className="flex flex-col p-6 md:p-10">
           <p className="text-sm font-semibold text-red">{subtitle}</p>
           <h1 className="mt-1 text-6xl font-black leading-[0.85] text-navy md:text-8xl">{p.displayName}</h1>
-          <Hoop tone="onChalk" className="my-8 -mx-6 md:-mx-10" />
+          <Hoop tone="onChalk" className="mt-8 -mx-6 md:-mx-10" />
+          {/* each block below brings its own space above it, so one that isn't there leaves no gap */}
           {p.bio ? (
-            <p className="max-w-prose text-lg text-pretty text-ink/85">{p.bio}</p>
+            <p className="mt-8 max-w-prose text-lg text-pretty text-ink/85">{p.bio}</p>
           ) : (
-            <p className="text-ink/50">
-              {p.id === me.id ? "Add a bit about yourself so the team gets to know you." : "No about me yet."}
-            </p>
+            // a nudge on your own page only; someone else's without one just shows nothing
+            p.id === me.id && <p className="mt-8 text-ink/50">Add a bit about yourself so the team gets to know you.</p>
           )}
           {facts.length > 0 && (
             <dl className="mt-8 grid gap-4 sm:grid-cols-2">

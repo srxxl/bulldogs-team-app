@@ -10,7 +10,6 @@ import {
   lineupSlot,
   note,
   pin,
-  pinCheer,
   pinDone,
   pinPick,
   playerProfile,
@@ -66,12 +65,12 @@ export function getPins(board: Board) {
 }
 
 /**
- * The fitness pins picked for one week (a Perth Monday), oldest pick first. Only fitness is tracked week to week:
- * the nutrition board is recipes and health tips, never picked or logged.
+ * The fitness activities picked for one week (a Perth Monday), oldest pick first. Only fitness is tracked week to
+ * week: the nutrition board is recipes, never picked or logged.
  */
 export function getWeekPicks(weekOf: string) {
   return db
-    .select({ id: pin.id, board: pin.board, title: pin.title, tag: pin.tag, body: pin.body })
+    .select({ id: pin.id, board: pin.board, title: pin.title, tag: pin.tag, body: pin.body, link: pin.link })
     .from(pinPick)
     .innerJoin(pin, eq(pin.id, pinPick.pinId))
     .where(and(eq(pinPick.weekOf, weekOf), eq(pin.board, "fitness")))
@@ -109,22 +108,6 @@ export async function getMyHoopWeeks(userId: string, thisWeek: string) {
     mine: mine.filter((m) => m.weekOf === week).map((m) => ({ pinId: m.pinId, distanceM: m.distanceM })),
   }));
   return { weeks };
-}
-
-/** The "Nice one"s on some logs, with who gave them. */
-export function getCheers(doneIds: string[]) {
-  if (doneIds.length === 0) return Promise.resolve([]);
-  return db
-    .select({
-      doneId: pinCheer.doneId,
-      userId: pinCheer.userId,
-      name: user.name,
-      preferredName: playerProfile.preferredName,
-    })
-    .from(pinCheer)
-    .innerJoin(user, eq(user.id, pinCheer.userId))
-    .leftJoin(playerProfile, eq(playerProfile.userId, pinCheer.userId))
-    .where(inArray(pinCheer.doneId, doneIds));
 }
 
 /** Everyone's logs of this week's picked pins, oldest first, with their names and photos. Everyone sees these. */

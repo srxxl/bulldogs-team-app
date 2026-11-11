@@ -18,6 +18,8 @@ import {
 } from "@/lib/mascot";
 
 const START: Step = { pose: "stand", x: 12, facing: "right", ms: 900 };
+// beside a page title the dog starts sitting at the far end of the row, clear of the title's letters, facing in
+const START_SMALL: Step = { pose: "sit", x: 100, facing: "left", ms: 2500 };
 
 /**
  * Where the dog was on the last page, so flicking to another page carries it on from the same spot rather than
@@ -91,7 +93,8 @@ type Ball = { id: number; x: number; dropped?: boolean };
  */
 export function HomeMascot({ small = false }: { small?: boolean }) {
   // a fresh visit starts at START (as the server drew it); flicking between pages starts where the dog was
-  const [step, setStep] = useState<Step>(() => (typeof window === "undefined" ? START : (remembered() ?? START)));
+  const start = small ? START_SMALL : START;
+  const [step, setStep] = useState<Step>(() => (typeof window === "undefined" ? start : (remembered() ?? start)));
   const [ball, setBall] = useState<Ball | null>(null);
   const [hearts, setHearts] = useState<Burst[]>([]); // a burst of hearts per tap while it begs
   const [still, setStill] = useState(false);
@@ -106,7 +109,8 @@ export function HomeMascot({ small = false }: { small?: boolean }) {
 
   /**
    * Beside a page title, where the clear space starts (0 to 100 along the stage): the dog walks over the title
-   * but moves past this before sitting, napping or doing a trick. 0 when there's no title, or no room beside it.
+   * but moves past this before sitting, napping or doing a trick. 0 when there's no title; the far end (100) when
+   * the title fills the row, as long ones do on a phone, so it doesn't sit on the letters.
    */
   const clearFrom = (): number => {
     const title = stage.current?.closest("[data-title-row]")?.querySelector("h1");
@@ -115,7 +119,7 @@ export function HomeMascot({ small = false }: { small?: boolean }) {
     if (room <= 0) return 0;
     const titleEnd = title.getBoundingClientRect().right - stage.current.getBoundingClientRect().left;
     const from = ((titleEnd + 8) / room) * 100;
-    return from >= 95 ? 0 : Math.max(0, from);
+    return Math.min(100, Math.max(0, from));
   };
 
   /**
@@ -156,11 +160,13 @@ export function HomeMascot({ small = false }: { small?: boolean }) {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setStill(true);
-      setStep({ ...START, pose: "sit" });
+      setStep({ ...start, pose: "sit" });
       return;
     }
     // the greeting is for the first page only; after that it just carries on
-    timer.current = memory ? window.setTimeout(advance, step.ms) : window.setTimeout(() => play([GREETING]), START.ms);
+    timer.current = memory
+      ? window.setTimeout(advance, step.ms)
+      : window.setTimeout(small ? advance : () => play([GREETING]), start.ms);
     for (const name of ONCE) {
       fetch(`/mascot/${name}.svg`)
         .then((r) => (r.ok ? r.text() : Promise.reject()))

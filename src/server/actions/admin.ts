@@ -9,7 +9,7 @@ import { parseLadderPaste } from "@/lib/ladder-paste";
 import { fromLocalInput } from "@/lib/time";
 import { requireAdmin } from "@/server/auth/session";
 import { db } from "@/server/db";
-import { event, eventKindEnum, roleEnum, user } from "@/server/db/schema";
+import { event, roleEnum, user } from "@/server/db/schema";
 import { setSetting } from "@/server/queries/settings";
 import { clearFutureTraining, ensureTraining, replaceLadder, syncPlayHq } from "@/server/sync";
 
@@ -50,7 +50,8 @@ const score = z.preprocess(blank, z.coerce.number().int().min(0).max(99).optiona
 const eventSchema = z
   .object({
     id: z.preprocess(blank, z.string().optional()),
-    kind: z.enum(eventKindEnum.enumValues),
+    // no socials or club events: the fixture is games only, and training is generated (but can be edited)
+    kind: z.enum(["game", "training"]),
     title: z.preprocess(blank, z.string().trim().max(100).optional()),
     startsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Pick a date and time"),
     endsAt: z.preprocess(

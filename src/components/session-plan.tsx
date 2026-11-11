@@ -1,6 +1,24 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ExternalLink, Plus, Search, X } from "lucide-react";
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { ExternalLink, Plus, Search, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useOptimistic, useState, useTransition } from "react";
 import { cn } from "@/lib/cn";
 import { addDrillToSession, createDrill, removeDrillFromSession, reorderSessionDrills } from "@/server/actions/drills";
@@ -32,19 +50,27 @@ export function SessionPlan({
 }) {
   const [order, setOrder] = useOptimistic(drills);
   const [, start] = useTransition();
-  const total = order.reduce((sum, d) => sum + (d.minutes ?? 0), 0);
+  // like the team board: a small move starts a drag with a mouse, a short hold on a phone (so scrolling still works)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
-  const move = (index: number, by: -1 | 1) =>
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const from = order.findIndex((d) => d.id === active.id);
+    const to = order.findIndex((d) => d.id === over.id);
+    if (from < 0 || to < 0) return;
     start(async () => {
-      const next = [...order];
-      const [item] = next.splice(index, 1);
-      next.splice(index + by, 0, item);
+      const next = arrayMove(order, from, to);
       setOrder(next);
       await reorderSessionDrills(
         eventId,
         next.map((d) => d.id),
       );
     });
+  };
   const remove = (id: string) =>
     start(async () => {
       setOrder(order.filter((d) => d.id !== id));
@@ -53,72 +79,97 @@ export function SessionPlan({
 
   return (
     <div>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-ink/60">
-          {order.length === 0
-            ? editable
-              ? "No drills yet. Add from the catalog or write a new one."
-              : "The coaches haven't planned this session yet."
-            : `${order.length} ${order.length === 1 ? "drill" : "drills"}${total > 0 ? `, about ${total} minutes` : ""}`}
-        </p>
-        {editable && <AddDrillSheet eventId={eventId} catalog={catalog} planned={new Set(order.map((d) => d.id))} />}
-      </div>
+      {(order.length === 0 || editable) && (
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-ink/60">
+            {order.length === 0 &&
+              (editable
+                ? "No drills yet. Add from the catalog or write a new one."
+                : "The coaches haven't planned this session yet.")}
+          </p>
+          {editable && <AddDrillSheet eventId={eventId} catalog={catalog} planned={new Set(order.map((d) => d.id))} />}
+        </div>
+      )}
 
       {order.length > 0 && (
-        <ol className="space-y-1.5">
-          {order.map((d, i) => (
-            <li key={d.id} className="flex items-start gap-1 rounded-xl bg-chalk">
-              {/* always open: how to run it is the point of the plan */}
-              <div className="min-w-0 flex-1">
-                <div className="flex min-h-11 items-center gap-3 px-3 py-2">
-                  <span className="display-num w-5 shrink-0 text-2xl font-black text-red">{i + 1}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-semibold text-navy">{d.title}</span>
-                    {(d.minutes != null || d.focus) && (
-                      <span className="block text-xs text-ink/60">
-                        {[d.minutes != null && `${d.minutes} min`, d.focus].filter(Boolean).join(", ")}
-                      </span>
-                    )}
-                  </span>
-                </div>
-                {(d.howTo || d.link) && (
-                  <div className="px-3 pb-3 pl-11">
-                    {d.howTo && <p className="whitespace-pre-line text-sm text-ink/80">{d.howTo}</p>}
-                    {d.link && (
-                      <a
-                        href={d.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-red underline underline-offset-4"
-                      >
-                        <ExternalLink size={14} aria-hidden /> Watch or read more
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-              {editable && (
-                <div className="flex shrink-0 items-center py-1 pr-1">
-                  <IconButton label={`Move ${d.title} up`} disabled={i === 0} onClick={() => move(i, -1)}>
-                    <ArrowUp size={16} />
-                  </IconButton>
-                  <IconButton
-                    label={`Move ${d.title} down`}
-                    disabled={i === order.length - 1}
-                    onClick={() => move(i, 1)}
-                  >
-                    <ArrowDown size={16} />
-                  </IconButton>
-                  <IconButton label={`Remove ${d.title} from this session`} onClick={() => remove(d.id)}>
-                    <X size={16} />
-                  </IconButton>
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={order.map((d) => d.id)} strategy={verticalListSortingStrategy}>
+            <ol className="space-y-1.5">
+              {order.map((d, i) => (
+                <DrillRow key={d.id} drill={d} n={i + 1} editable={editable} onRemove={() => remove(d.id)} />
+              ))}
+            </ol>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
+  );
+}
+
+/** One drill in the plan. Editors drag the whole card to reorder it. */
+function DrillRow({
+  drill: d,
+  n,
+  editable,
+  onRemove,
+}: {
+  drill: PlanDrill;
+  n: number;
+  editable: boolean;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: d.id,
+    disabled: !editable,
+  });
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      {...(editable && { ...attributes, ...listeners, "aria-roledescription": "Drill, drag to reorder" })}
+      className={cn(
+        "flex items-start gap-1 rounded-xl bg-chalk",
+        editable && "cursor-grab touch-manipulation select-none active:cursor-grabbing",
+        isDragging && "relative z-10 shadow-stamp-sm",
+      )}
+    >
+      {/* always open: how to run it is the point of the plan */}
+      <div className="min-w-0 flex-1">
+        <div className="flex min-h-11 items-center gap-3 px-3 py-2">
+          <span className="display-num w-5 shrink-0 text-2xl font-black text-red">{n}</span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-navy">{d.title}</span>
+            {(d.minutes != null || d.focus) && (
+              <span className="block text-xs text-ink/60">
+                {[d.minutes != null && `${d.minutes} min`, d.focus].filter(Boolean).join(", ")}
+              </span>
+            )}
+          </span>
+        </div>
+        {(d.howTo || d.link) && (
+          <div className="px-3 pb-3 pl-11">
+            {d.howTo && <p className="whitespace-pre-line text-sm text-ink/80">{d.howTo}</p>}
+            {d.link && (
+              <a
+                href={d.link}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-red underline underline-offset-4"
+              >
+                <ExternalLink size={14} aria-hidden /> Watch or read more
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+      {editable && (
+        <div className="flex shrink-0 items-center py-1 pr-1">
+          <IconButton label={`Remove ${d.title} from this session`} onClick={onRemove}>
+            <X size={16} />
+          </IconButton>
+        </div>
+      )}
+    </li>
   );
 }
 

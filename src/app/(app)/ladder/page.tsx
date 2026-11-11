@@ -23,10 +23,7 @@ export default async function LadderPage() {
 
   return (
     <>
-      <PageHeader
-        title="Ladder"
-        intro={`${CLUB.league} ${CLUB.grade}${updated ? `, updated ${formatDay(updated)}` : ""}.`}
-      />
+      <PageHeader title="Ladder" />
       {rows.length === 0 ? (
         <EmptyState title="No ladder yet">
           It appears here once it syncs from PlayHQ, or once an admin pastes it into Settings, PFL data.
@@ -96,6 +93,7 @@ export default async function LadderPage() {
               );
             })}
           </ol>
+          {updated && <p className="mt-6 text-sm text-ink/60">Updated {formatDay(updated)}.</p>}
         </section>
       )}
     </>

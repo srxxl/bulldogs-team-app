@@ -223,4 +223,14 @@ describe("mascot behaviour", () => {
     // no title to keep clear of
     expect(makeRoom(here, [sit], 0)).toEqual([sit]);
   });
+
+  it("does tricks at the far end when the title fills the row", () => {
+    const here: MascotState = { pose: "stand", x: 10, facing: "right" };
+    const sit: Step = { pose: "sitside", x: 10, facing: "right", ms: 3000 };
+    const steps = makeRoom(here, [sit], 100, () => 0.5);
+    expect(steps.map((s) => [s.pose, Math.round(s.x)])).toEqual([
+      ["walk", 100],
+      ["sitside", 100],
+    ]);
+  });
 });

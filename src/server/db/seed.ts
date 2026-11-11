@@ -8,7 +8,7 @@ import { CLUB, isUs } from "@/lib/club";
 import { sameTeam } from "@/lib/club-colours";
 import { CLUB_COLOURS } from "@/lib/club-colours.data";
 import { autoFill } from "@/lib/positions";
-import { perthAt, perthWeekday } from "@/lib/time";
+import { perthAt, perthWeekday, perthWeekStart } from "@/lib/time";
 import { TRAINING, upcomingTrainingSlots } from "@/lib/training";
 import { createDb, isLocalDb } from "./client";
 import * as t from "./schema";
@@ -124,20 +124,6 @@ async function main() {
       oppGoals: played ? 2 + ((i * 5) % 6) : null,
       oppBehinds: played ? 1 + ((i * 4) % 5) : null,
     };
-  });
-  games.push({
-    ...games[0],
-    kind: "social" as never,
-    title: "Mid-season quiz night",
-    opponent: null as never,
-    round: null as never,
-    isHome: null as never,
-    startsAt: perthAt(new Date(now.getTime() + 10 * 86400_000), 19),
-    venueName: "Bulldogs clubrooms",
-    teamGoals: null,
-    teamBehinds: null,
-    oppGoals: null,
-    oppBehinds: null,
   });
   // Past seasons against every club on the ladder (built below), so each team's page has a head-to-head:
   // one or two games each in 2024 and 2025, with a spread of wins, losses and the odd draw.
@@ -288,52 +274,7 @@ async function main() {
       },
     ]);
   }
-  await db.insert(t.pin).values([
-    {
-      board: "nutrition",
-      authorId: users[2].id,
-      title: "Overnight oats for game day",
-      body: "½ cup oats, milk, Greek yoghurt, banana, honey. Make it Friday night, eat it 3 hours before the bounce.",
-      tag: "Pre-game",
-    },
-    {
-      board: "nutrition",
-      authorId: users[4].id,
-      title: "Hydration rule of thumb",
-      body: "Pale yellow is the goal. Start drinking the day before, not the morning of.",
-      tag: "Hydration",
-    },
-    {
-      board: "nutrition",
-      authorId: users[5].id,
-      title: "Post-game recovery",
-      body: "Protein + carbs within an hour. Chocolate milk counts.",
-      tag: "Recovery",
-      link: "https://www.ais.gov.au/nutrition",
-    },
-    {
-      board: "fitness",
-      authorId: users[0].id,
-      title: "Pre-season running block",
-      body: "Week 1: 3 × 1km at 5:30 pace, 2 min rest.\nWeek 2: 4 × 1km.\nWeek 3: 6 × 400m fast.",
-      tag: "Running",
-    },
-    {
-      board: "fitness",
-      authorId: users[3].id,
-      title: "Hip mobility, 10 minutes",
-      body: "90/90 switches, couch stretch, glute bridges. Do it before every session.",
-      tag: "Mobility",
-    },
-    {
-      board: "fitness",
-      authorId: users[6].id,
-      title: "ACL prevention warm-up",
-      link: "https://www.afl.com.au/prep-to-play",
-      body: "The AFL's Prep to Play program. 15 minutes, cuts knee injuries a lot.",
-      tag: "Injury prevention",
-    },
-  ]);
+  await seedFitnessAndRecipes(db, users, now);
   const catalog = await db
     .insert(t.drill)
     .values([
@@ -453,6 +394,260 @@ async function main() {
 
   console.log(`Seeded ${users.length} members, ${games.length} events. Dev password: bulldogs-dev`);
   process.exit(0);
+}
+
+/* Fitness and nutrition ---------------------------------------------------- */
+
+const RECIPES: { title: string; body: string; tag: string; link?: string }[] = [
+  {
+    title: "Overnight oats for game day",
+    body: "½ cup oats, milk, Greek yoghurt, banana, honey. Make it Friday night, eat it 3 hours before the bounce.",
+    tag: "Pre-game",
+  },
+  {
+    title: "Chicken and sweet potato traybake",
+    body: "Chicken thighs, sweet potato, red onion, capsicum. Olive oil, paprika, salt. 200°C for 35 minutes. Makes four lunches.",
+    tag: "Dinner",
+  },
+  {
+    title: "Recovery smoothie",
+    body: "Frozen banana, a handful of berries, scoop of Greek yoghurt, milk, a spoon of peanut butter. Within an hour of the siren.",
+    tag: "Recovery",
+  },
+  {
+    title: "Hydration rule of thumb",
+    body: "Pale yellow is the goal. Start drinking the day before, not the morning of.",
+    tag: "Pre-game",
+  },
+  {
+    title: "Banana bread (the less sugary one)",
+    body: "3 ripe bananas, 2 eggs, 1½ cups wholemeal flour, ⅓ cup honey, 1 tsp bicarb, cinnamon. 180°C for 50 minutes. Slice and freeze.",
+    tag: "Snack",
+  },
+  {
+    title: "Post-game recovery",
+    body: "Protein + carbs within an hour. Chocolate milk counts.",
+    tag: "Recovery",
+    link: "https://www.ais.gov.au/nutrition",
+  },
+  {
+    title: "Big pasta night",
+    body: "Wholemeal penne, beef mince bolognese with grated carrot and zucchini hidden in. Friday night before a game.",
+    tag: "Dinner",
+  },
+  {
+    title: "Egg and avo toast",
+    body: "Two eggs any way, half an avo, sourdough, chilli flakes, lemon. Breakfast on training days.",
+    tag: "Breakfast",
+  },
+  {
+    title: "Bliss balls",
+    body: "1 cup dates, ½ cup oats, ¼ cup cocoa, 2 tbsp peanut butter, coconut to roll. Blitz, roll, fridge. Good at half time.",
+    tag: "Snack",
+  },
+  {
+    title: "Tuna rice bowl",
+    body: "Microwave rice, a tin of tuna, edamame, cucumber, soy and sesame. Five minutes after training.",
+    tag: "Recovery",
+  },
+  {
+    title: "Game morning pancakes",
+    body: "1 banana, 2 eggs, ½ cup oats, blended. Small pancakes, maple syrup and berries. 3 hours before the bounce.",
+    tag: "Pre-game",
+  },
+  {
+    title: "Lentil and veg soup",
+    body: "Red lentils, carrot, celery, onion, tinned tomatoes, stock, cumin. 30 minutes on the stove, freezes for weeks.",
+    tag: "Dinner",
+  },
+];
+
+/**
+ * "run": logged with distance and time, around `km`. "timed": time only, around `minutes`. "plain": just done.
+ */
+const ACTIVITIES: {
+  title: string;
+  body: string;
+  tag: string;
+  kind: "run" | "timed" | "plain";
+  km?: number;
+  minutes?: number;
+  link?: string;
+}[] = [
+  {
+    title: "5 km easy run",
+    body: "Conversational pace. If you can't talk, slow down.",
+    tag: "Running",
+    kind: "run",
+    km: 5,
+  },
+  {
+    title: "Pre-season running block",
+    body: "Week 1: 3 × 1km at 5:30 pace, 2 min rest.\nWeek 2: 4 × 1km.\nWeek 3: 6 × 400m fast.",
+    tag: "Running",
+    kind: "run",
+    km: 5.5,
+  },
+  {
+    title: "Hip mobility, 10 minutes",
+    body: "90/90 switches, couch stretch, glute bridges. Do it before every session.",
+    tag: "Mobility",
+    kind: "timed",
+    minutes: 10,
+  },
+  {
+    title: "ACL prevention warm-up",
+    body: "The AFL's Prep to Play program. 15 minutes, cuts knee injuries a lot.",
+    tag: "Injury prevention",
+    kind: "plain",
+    link: "https://www.afl.com.au/prep-to-play",
+  },
+  {
+    title: "Lower body strength",
+    body: "3 × 8 goblet squats, 3 × 8 Romanian deadlifts, 3 × 10 walking lunges each leg, 3 × 12 calf raises.",
+    tag: "Strength",
+    kind: "timed",
+    minutes: 35,
+  },
+  {
+    title: "Core circuit",
+    body: "3 rounds: 30s plank, 30s side plank each side, 12 dead bugs, 10 Copenhagen planks each side.",
+    tag: "Strength",
+    kind: "timed",
+    minutes: 15,
+  },
+  {
+    title: "Hill sprints",
+    body: "Find a hill. 8 × 20 second sprints up, walk back down. Full effort.",
+    tag: "Running",
+    kind: "run",
+    km: 2.5,
+  },
+  {
+    title: "Recovery walk or swim",
+    body: "30 minutes, easy. The day after a game.",
+    tag: "Recovery",
+    kind: "timed",
+    minutes: 30,
+  },
+  {
+    title: "Kicking practice, both feet",
+    body: "50 kicks, 25 on each foot, at a target. Grab a mate or a wall.",
+    tag: "Skills",
+    kind: "plain",
+  },
+  {
+    title: "Foam roll and stretch",
+    body: "Quads, hamstrings, calves, glutes, upper back. A minute on each.",
+    tag: "Recovery",
+    kind: "timed",
+    minutes: 12,
+  },
+];
+
+const NOTES = [
+  "Legs are cooked",
+  "Did it with Tayla, much easier with company",
+  "Felt great",
+  "Hills are evil",
+  "Before work, sunrise was worth it",
+  "Knee feels better already",
+  "Slow but done",
+  "PB!",
+  "Rain didn't stop me",
+  "Back on it after a week off",
+];
+
+// How keen each player is (out of 100), by squad position. Ash (the skip) and Mia never miss.
+/**
+ * Mia (admin@bulldogs.test), the account you sign in with: how much of each week she did, this week first
+ * (index 0) and going back 20 weeks. A streak of two now, a best of four, and plenty of weeks not finished (part
+ * done or nothing at all), so "Your weeks" has something to show. Byes (weeks 5 and 13) have nothing picked.
+ */
+const MIA = [0.5, 1, 1, 0, 0.67, 0, 1, 0.33, 1, 1, 1, 1, 0, 0, 0.5, 0, 1, 0.67, 0.33, 1];
+const BYES = [5, 13];
+
+const KEEN = [100, 100, 80, 70, 55, 85, 35, 60, 45, 75, 25, 65, 50, 40, 90, 30, 55, 20, 70, 45, 60, 35, 50];
+
+/**
+ * Recipes, saved fitness activities, and twenty weeks of picks with the squad's logs, so your
+ * hoop, streaks, the team's week and history all have something in them. One week has nothing picked (a bye).
+ */
+async function seedFitnessAndRecipes(db: ReturnType<typeof createDb>, users: { id: string }[], now: Date) {
+  const squad = users.slice(1, -1); // not the coach, not the pending sign-up
+  // a steady made-up "random": the same numbers every seed
+  const roll = (...n: number[]) => n.reduce((a, b) => (a * 31 + b * 17 + 7) % 1009, 13) % 100;
+  const DAY = 86_400_000;
+
+  await db.insert(t.pin).values(
+    RECIPES.map((r, i) => ({
+      board: "nutrition" as const,
+      authorId: squad[(i * 5) % squad.length].id,
+      ...r,
+      createdAt: new Date(now.getTime() - (RECIPES.length - i) * 3 * DAY),
+    })),
+  );
+  const activities = await db
+    .insert(t.pin)
+    .values(
+      ACTIVITIES.map(({ kind: _, km: __, minutes: ___, ...a }, i) => ({
+        board: "fitness" as const,
+        authorId: i % 3 === 0 ? users[0].id : squad[0].id,
+        ...a,
+        createdAt: new Date(now.getTime() - 150 * DAY + i * DAY),
+      })),
+    )
+    .returning({ id: t.pin.id });
+
+  const picks: (typeof t.pinPick.$inferInsert)[] = [];
+  const done: (typeof t.pinDone.$inferInsert)[] = [];
+  for (let w = MIA.length - 1; w >= 0; w--) {
+    if (BYES.includes(w)) continue; // bye weeks: nothing picked, doesn't break a streak
+    const monday = new Date(now.getTime() - w * 7 * DAY);
+    const weekOf = perthWeekStart(monday);
+    const weekStart = new Date(`${weekOf}T07:00:00+08:00`);
+    // three a week (four in a couple of weeks), always with a run in it
+    const count = w % 3 === 1 ? 4 : 3;
+    const chosen = [...new Set([[0, 1, 6][w % 3], (w * 3 + 2) % 10, (w * 7 + 4) % 10, (w * 5 + 3) % 10])]
+      .filter((n) => ![0, 1, 6].includes(n) || n === [0, 1, 6][w % 3])
+      .slice(0, count);
+    for (const n of chosen) picks.push({ pinId: activities[n].id, weekOf, createdAt: weekStart });
+
+    squad.forEach((u, i) => {
+      chosen.forEach((n, k) => {
+        // this week has only just started, so fewer logs so far
+        const keen = w === 0 ? KEEN[i] * 0.4 : KEEN[i];
+        let does = roll(i, w, k) < keen;
+        if (i === 0) does = w > 0 || k === 0; // Ash: a run of closed weeks, one done this week
+        if (i === 1) does = k < Math.round(MIA[w] * chosen.length); // Mia: see MIA
+        if (!does) return;
+        const when = new Date(
+          Math.min(now.getTime() - 3_600_000, weekStart.getTime() + (roll(i, k, w) % 6) * DAY + 11 * 3_600_000),
+        );
+        const { kind, km = 5, minutes = 15 } = ACTIVITIES[n];
+        // a bit either side of the usual: most run the 5 km as 5 to 5.6 km, the 10 minutes takes 10 to 14
+        const distanceM = kind === "run" ? Math.round(km * 1000 + (roll(w, i, k) % 13) * 50) : null;
+        const pace = 290 + roll(k, i, w) * 1.1; // seconds per km
+        const durationS =
+          kind === "run" && distanceM
+            ? Math.round((distanceM / 1000) * pace)
+            : kind === "timed"
+              ? minutes * 60 + (roll(i, k) % 9) * 30
+              : null;
+        done.push({
+          pinId: activities[n].id,
+          userId: u.id,
+          weekOf,
+          distanceM,
+          durationS,
+          note: roll(i, w, k, 3) < 30 ? NOTES[roll(i, k, w, 1) % NOTES.length] : null,
+          createdAt: when,
+        });
+      });
+    });
+  }
+  await db.insert(t.pinPick).values(picks);
+  await db.insert(t.pinDone).values(done);
 }
 
 main().catch((e) => {

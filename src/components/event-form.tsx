@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useTransition } from "react";
 import { deleteEvent, saveEvent } from "@/server/actions/admin";
 import type { EventKind } from "@/server/db/schema";
 import { Field, FormMessage, Input, Select, SubmitButton, Textarea } from "./forms";
@@ -30,14 +30,13 @@ export type EventFormValues = {
 
 export function EventForm({ values }: { values: EventFormValues }) {
   const router = useRouter();
-  const [kind, setKind] = useState<EventKind>(values.kind);
   const [state, action] = useActionState(saveEvent, null);
   const [deleting, startDelete] = useTransition();
   useEffect(() => {
     if (state?.ok && state.data) router.push(`/fixture/${state.data.id}`);
   }, [state, router]);
 
-  const game = kind === "game";
+  const game = values.kind === "game";
   return (
     <form action={action} className="grid gap-6 lg:grid-cols-2">
       {values.id && <input type="hidden" name="id" value={values.id} />}
@@ -47,14 +46,8 @@ export function EventForm({ values }: { values: EventFormValues }) {
             This game comes from PlayHQ. The next sync will overwrite changes to the date, venue and score.
           </p>
         )}
-        <Field label="Type" name="kind" state={state}>
-          <Select name="kind" value={kind} onChange={(e) => setKind(e.target.value as EventKind)}>
-            <option value="game">Game</option>
-            <option value="training">Training</option>
-            <option value="social">Social</option>
-            <option value="other">Other</option>
-          </Select>
-        </Field>
+        {/* a new event is always a game (the fixture is games only); editing keeps its kind (a game or a training) */}
+        <input type="hidden" name="kind" value={values.kind} />
         {game ? (
           <>
             <Field label="Opponent" name="opponent" state={state}>
@@ -162,7 +155,7 @@ export function EventForm({ values }: { values: EventFormValues }) {
         </label>
         <FormMessage state={state} />
         <div className="flex flex-wrap gap-2">
-          <SubmitButton>{values.id ? "Save changes" : "Add event"}</SubmitButton>
+          <SubmitButton>{values.id ? "Save changes" : "Add game"}</SubmitButton>
           {values.id && (
             <Button
               variant="ghost"

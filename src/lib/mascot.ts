@@ -314,10 +314,11 @@ const OVER_TITLE: ReadonlySet<Pose> = new Set(["walk", "run", "turn", "stand", "
  * The dog walks and fetches across the whole title row, in front of the title, but moves into the clear space
  * beside it (from `clearFrom`, 0 to 100) before it sits, lies down, begs or does a trick there. Any steps of
  * that trick that were at the old spot move with it, up to the next walk. `clearFrom` of 0 means no title to
- * keep clear of.
+ * keep clear of; 100 means the title fills the row (a long one on a phone), so tricks happen at the far end.
  */
 export function makeRoom(current: MascotState, steps: Step[], clearFrom: number, rand: Rand = Math.random): Step[] {
-  if (clearFrom <= 0 || clearFrom >= 100) return steps;
+  if (clearFrom <= 0) return steps;
+  clearFrom = Math.min(100, clearFrom);
   const out: Step[] = [];
   let at: MascotState = current;
   let shift: { from: number; to: number } | null = null;

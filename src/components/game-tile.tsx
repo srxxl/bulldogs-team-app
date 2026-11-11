@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 import { Morph } from "./morph";
 
 /**
- * A tile on a game's page: a summary that grows into its own page when tapped (Morph), and shrinks back into
+ * A tile on a game's page (and on the Fitness hub): a summary that grows into its own page when tapped (Morph), and shrinks back into
  * the tile on the way back. The whole tile is the link (its title's link stretches over it); anything inside
  * that needs its own taps, like the game day timeline, sits above that with `relative z-10`.
  */
@@ -16,6 +16,7 @@ export function GameTile({
   tone = "white",
   backdrop,
   badge,
+  className,
   children,
 }: {
   href: string;
@@ -29,19 +30,24 @@ export function GameTile({
   /** Behind everything in the tile (a club's guernsey design, say). */
   backdrop?: ReactNode;
   badge?: string;
+  /** Extra layout classes, e.g. spanning two rows. */
+  className?: string;
   children: ReactNode;
 }) {
   return (
     <Morph name={name}>
       <div
+        // its page's back button links to #name, so coming back lands on this tile rather than the top
+        id={name}
         className={cn(
-          "relative isolate flex min-w-0 flex-col gap-1.5 overflow-hidden rounded-2xl p-4 transition-colors",
+          "relative isolate flex min-w-0 scroll-mt-6 flex-col gap-1.5 overflow-hidden rounded-2xl p-4 transition-colors",
           big ? "col-span-2 min-h-28 p-5" : "min-h-32",
           {
             white: "bg-white has-[>h2_a:hover]:bg-mist",
             navy: "bg-navy text-white has-[>h2_a:hover]:bg-navy-deep",
             red: "bg-red text-white has-[>h2_a:hover]:bg-red-deep",
           }[tone],
+          className,
         )}
       >
         {backdrop && <div className="absolute inset-0 -z-10">{backdrop}</div>}

@@ -4,7 +4,6 @@ import { Avatar } from "@/components/avatar";
 import { Morph, morphName } from "@/components/morph";
 import { EmptyState, PageHeader } from "@/components/ui";
 import { formatLongDay, relativeDay } from "@/lib/time";
-import { TRAINING } from "@/lib/training";
 import { requireMember } from "@/server/auth/session";
 import { getSessionDrillsFor } from "@/server/queries/drills";
 import { getRsvps, getUpcoming } from "@/server/queries/events";
@@ -26,7 +25,7 @@ export default async function TrainingPage() {
 
   return (
     <>
-      <PageHeader title="Training" intro={`Tuesdays and Thursdays, 6pm to 7:30pm at ${TRAINING.venueName}`} />
+      <PageHeader title="Training" />
       {sessions.length === 0 ? (
         <EmptyState title="It's the off-season">Training polls start again when pre-season kicks off.</EmptyState>
       ) : (

@@ -11,7 +11,7 @@ import { perthWeekStart } from "@/lib/time";
 import { parseDuration } from "@/lib/workout";
 import { requireMember } from "@/server/auth/session";
 import { db } from "@/server/db";
-import { boardEnum, note, pin, pinCheer, pinDone, pinPick } from "@/server/db/schema";
+import { note, pin, pinDone, pinPick } from "@/server/db/schema";
 import { getMyHoopWeeks } from "@/server/queries/content";
 import { getEvent } from "@/server/queries/events";
 import { storeImage } from "@/server/upload";
@@ -47,58 +47,77 @@ export async function deleteNote(id: string): Promise<ActionResult> {
   return ok("Note deleted");
 }
 
-/* Pins (fitness / nutrition boards) ------------------------------------- */
+/* Recipes (nutrition) and activities (fitness) --------------------------- */
 
 const pinSchema = z.object({
-  board: z.enum(boardEnum.enumValues),
-  title: z.string().trim().min(1, "Give it a title").max(100),
+  title: z.string().trim().min(1, "Give it a name").max(100),
   body: z.preprocess(blank, z.string().trim().max(1500).optional()),
   link: z.preprocess(blank, z.url("That doesn't look like a link").max(500).optional()),
   tag: z.preprocess(blank, z.string().trim().max(24).optional()),
 });
 
-export async function createPin(_prev: unknown, formData: FormData): Promise<ActionResult> {
+/** Anyone in the squad can add a recipe to the nutrition board. Recipes are never picked or logged. */
+export async function createRecipe(_prev: unknown, formData: FormData): Promise<ActionResult> {
   const me = await requireMember();
   const parsed = parseForm(pinSchema, formData);
   if ("error" in parsed) return parsed.error;
   const image = await storeImage(formData.get("image"), "pins");
   if (image && "error" in image) return fail(image.error, { image: [image.error] }, formValues(formData));
 
-  await db.insert(pin).values({ ...parsed.data, authorId: me.id, imageUrl: image?.url });
-  revalidatePath(`/boards/${parsed.data.board}`);
-  revalidatePath("/boards");
-  return ok("Pinned");
+  await db.insert(pin).values({ ...parsed.data, board: "nutrition", authorId: me.id, imageUrl: image?.url });
+  revalidatePath("/boards", "layout");
+  return ok("Recipe added");
+}
+
+/**
+ * Writes a new fitness activity, saves it so it can be picked again in a later week (like a drill), and picks it
+ * for this week. Skips, coaches and admins.
+ */
+export async function createActivity(_prev: unknown, formData: FormData): Promise<ActionResult> {
+  const me = await requireMember();
+  if (!canPickPins(me)) return fail("Only skips, coaches and admins can add this week's activities");
+  const parsed = parseForm(pinSchema, formData);
+  if ("error" in parsed) return parsed.error;
+
+  await db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(pin)
+      .values({ ...parsed.data, board: "fitness", authorId: me.id })
+      .returning({ id: pin.id });
+    await tx.insert(pinPick).values({ pinId: created.id, weekOf: perthWeekStart() });
+  });
+  revalidatePath("/boards", "layout");
+  return ok("Added to this week and saved");
 }
 
 export async function deletePin(id: string): Promise<ActionResult> {
   const me = await requireMember();
   const where = canModerate(me) ? eq(pin.id, id) : and(eq(pin.id, id), eq(pin.authorId, me.id));
   const [deleted] = await db.delete(pin).where(where).returning({ board: pin.board });
-  if (!deleted) return fail("You can only remove your own pins");
-  revalidatePath(`/boards/${deleted.board}`);
-  revalidatePath("/boards");
+  if (!deleted) return fail("You can only remove your own recipes");
+  revalidatePath("/boards", "layout");
   return ok("Removed");
 }
 
 const pickSchema = z.object({ id: z.string().min(1), picked: z.boolean() });
 
-/** Pick a pin for this week (it shows on the boards hub until Sunday), or take it off. Leaders and admins. */
+/** Pick a saved activity for this week (it counts toward everyone's hoop until Sunday), or take it off. */
 export async function pickPinForWeek(input: { id: string; picked: boolean }): Promise<ActionResult> {
   const me = await requireMember();
-  if (!canPickPins(me)) return fail("Only skips, coaches and admins can pick this week's pins");
+  if (!canPickPins(me)) return fail("Only skips, coaches and admins can pick this week's activities");
   const parsed = pickSchema.safeParse(input);
-  if (!parsed.success) return fail("Something's off with that pin");
+  if (!parsed.success) return fail("Something's off with that activity");
   const week = perthWeekStart();
   const [updated] = await db.select({ board: pin.board }).from(pin).where(eq(pin.id, parsed.data.id));
-  if (updated?.board === "nutrition") return fail("Only fitness pins are picked for the week");
-  if (updated && parsed.data.picked) {
+  if (!updated) return fail("That activity doesn't exist any more");
+  if (updated.board === "nutrition") return fail("Recipes aren't picked for the week");
+  if (parsed.data.picked) {
     await db.insert(pinPick).values({ pinId: parsed.data.id, weekOf: week }).onConflictDoNothing();
-  } else if (updated) {
+  } else {
     await db.delete(pinPick).where(and(eq(pinPick.pinId, parsed.data.id), eq(pinPick.weekOf, week)));
   }
-  if (!updated) return fail("That pin doesn't exist any more");
   revalidatePath("/boards", "layout");
-  return ok(parsed.data.picked ? "Picked for this week" : "Taken off this week");
+  return ok(parsed.data.picked ? "Added to this week" : "Taken off this week");
 }
 
 /* Doing the week's picks ------------------------------------------------- */
@@ -160,7 +179,7 @@ export async function logPinDone(_prev: unknown, formData: FormData): Promise<Ac
   const wasClosed = hoop(thisWeek(before) ?? { picks: [], mine: [] }).closed;
   const nowClosed = hoop(thisWeek(after) ?? { picks: [], mine: [] }).closed;
   if (!nowClosed || wasClosed) return ok("Logged. Nice work", null);
-  return ok("Hoop closed", {
+  return ok("Complete", {
     total: hoop(thisWeek(after) ?? { picks: [], mine: [] }).total,
     streak: currentStreak(after.weeks, week),
   });
@@ -178,21 +197,4 @@ export async function undoPinDone(pinId: string): Promise<ActionResult> {
   if (!gone) return fail("There's nothing logged to take back");
   revalidatePath("/boards", "layout");
   return ok("Taken back");
-}
-
-/** "Nice one" on a teammate's log, or take it back. Not on your own. */
-export async function toggleCheer(doneId: string): Promise<ActionResult> {
-  const me = await requireMember();
-  const id = z.string().min(1).safeParse(doneId);
-  if (!id.success) return fail("Something's off with that log");
-  const [log] = await db.select({ userId: pinDone.userId }).from(pinDone).where(eq(pinDone.id, id.data));
-  if (!log) return fail("That log's gone");
-  if (log.userId === me.id) return fail("You can't cheer your own");
-  const [gone] = await db
-    .delete(pinCheer)
-    .where(and(eq(pinCheer.doneId, id.data), eq(pinCheer.userId, me.id)))
-    .returning({ doneId: pinCheer.doneId });
-  if (!gone) await db.insert(pinCheer).values({ doneId: id.data, userId: me.id }).onConflictDoNothing();
-  revalidatePath("/boards", "layout");
-  return ok(gone ? "Taken back" : "Cheered");
 }

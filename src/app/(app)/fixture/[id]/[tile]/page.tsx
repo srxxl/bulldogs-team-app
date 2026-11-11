@@ -25,7 +25,12 @@ export default async function GameTilePage({ params }: PageProps<"/fixture/[id]/
     <Morph name={morphName.gameTile(id, tile)}>
       <section className="rounded-[28px] bg-white p-5 md:p-7">
         <div className="mb-4 flex items-start gap-3">
-          <BackButton href={`/fixture/${id}`} to={data.ev.title} className="text-navy" />
+          {/* back to this tile on the game page, not the top of it */}
+          <BackButton
+            href={`/fixture/${id}#${morphName.gameTile(id, tile)}`}
+            to={data.ev.title}
+            className="text-navy"
+          />
           <div className="min-w-0 flex-1">
             <h1 className="text-3xl font-bold text-navy">
               {page.title}
